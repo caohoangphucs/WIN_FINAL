@@ -14,7 +14,7 @@ public class Main {
         if (emf == null) {
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(null,
-                        "chua bat database ong noi oi",
+                        "chua bat database ong noi oi, chay db bang docker di",
                         "Database Connection Error",
                         JOptionPane.ERROR_MESSAGE);
             });

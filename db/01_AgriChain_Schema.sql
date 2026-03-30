@@ -9,6 +9,7 @@
 DROP DATABASE IF EXISTS agri_chain;
 CREATE DATABASE agri_chain CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE agri_chain;
+SET NAMES 'utf8mb4';
 
 -- =====================================================
 -- [1. LOOKUP TABLES]

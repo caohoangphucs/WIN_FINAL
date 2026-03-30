@@ -2,7 +2,10 @@
 
 ## Requirements
 Java 21 AND docker
-
+### Pull
+```bash
+git clone https://github.com/caohoangphucs/WIN_FINAL.git
+```
 ### 1. start db and build app
 ```bash
 docker compose up -d

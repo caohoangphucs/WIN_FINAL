@@ -6,15 +6,31 @@ import jakarta.persistence.Persistence;
 import java.util.List;
 
 public abstract class BaseDAO<T> {
-    protected static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("WinFinalPU");
+    private static EntityManagerFactory emf;
+
+    public static void setEntityManagerFactory(EntityManagerFactory factory) {
+        emf = factory;
+    }
+
+    public static EntityManagerFactory getEntityManagerFactory() {
+        if (emf == null) {
+            emf = Persistence.createEntityManagerFactory("WinFinalPU");
+        }
+        return emf;
+    }
+
     private final Class<T> entityClass;
 
     protected BaseDAO(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
 
+    protected EntityManager getEntityManager() {
+        return getEntityManagerFactory().createEntityManager();
+    }
+
     public void save(T entity) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(entity);
@@ -28,7 +44,7 @@ public abstract class BaseDAO<T> {
     }
 
     public void update(T entity) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             em.merge(entity);
@@ -42,7 +58,7 @@ public abstract class BaseDAO<T> {
     }
 
     public T findById(Object id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             return em.find(entityClass, id);
         } finally {
@@ -51,7 +67,7 @@ public abstract class BaseDAO<T> {
     }
 
     public List<T> findAll() {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             return em.createQuery("from " + entityClass.getSimpleName(), entityClass).getResultList();
         } finally {
@@ -60,7 +76,7 @@ public abstract class BaseDAO<T> {
     }
 
     public void delete(Object id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             T entity = em.find(entityClass, id);

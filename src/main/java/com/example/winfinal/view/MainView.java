@@ -22,6 +22,12 @@ public class MainView extends JFrame {
         JLabel subLabel = new JLabel("Agricultural Supply Chain Management");
         subLabel.setFont(new Font("Arial", Font.ITALIC, 14));
 
+        JButton btnManageFarms = new JButton("Manage Farms (CRUD)");
+        btnManageFarms.addActionListener(e -> {
+            FarmView farmView = new FarmView();
+            farmView.setVisible(true);
+        });
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.gridx = 0;
@@ -30,6 +36,9 @@ public class MainView extends JFrame {
 
         gbc.gridy = 1;
         panel.add(subLabel, gbc);
+
+        gbc.gridy = 2;
+        panel.add(btnManageFarms, gbc);
 
         add(panel);
     }

@@ -14,7 +14,12 @@ public abstract class BaseDAO<T> {
 
     public static EntityManagerFactory getEntityManagerFactory() {
         if (emf == null) {
-            emf = Persistence.createEntityManagerFactory("WinFinalPU");
+            java.util.Map<String, String> properties = new java.util.HashMap<>();
+            String dbUrl = System.getenv("DB_URL");
+            if (dbUrl != null && !dbUrl.isEmpty()) {
+                properties.put("jakarta.persistence.jdbc.url", dbUrl);
+            }
+            emf = Persistence.createEntityManagerFactory("WinFinalPU", properties);
         }
         return emf;
     }

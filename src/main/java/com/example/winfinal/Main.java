@@ -32,7 +32,13 @@ public class Main {
 
     private static EntityManagerFactory checkDatabaseConnection() {
         try {
-            EntityManagerFactory emf = Persistence.createEntityManagerFactory("WinFinalPU");
+            java.util.Map<String, String> properties = new java.util.HashMap<>();
+            String dbUrl = System.getenv("DB_URL");
+            if (dbUrl != null && !dbUrl.isEmpty()) {
+                properties.put("jakarta.persistence.jdbc.url", dbUrl);
+            }
+            
+            EntityManagerFactory emf = Persistence.createEntityManagerFactory("WinFinalPU", properties);
             EntityManager em = emf.createEntityManager();
             em.createNativeQuery("SELECT 1").getSingleResult();
             em.close();

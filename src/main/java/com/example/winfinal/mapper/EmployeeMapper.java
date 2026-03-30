@@ -6,6 +6,7 @@ import com.example.winfinal.entity.core.Employee;
 import com.example.winfinal.entity.lookup.Role;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
@@ -22,6 +23,13 @@ public interface EmployeeMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Employee toEntity(EmployeeDTO dto);
+
+    @Mapping(target = "role", source = "roleCode")
+    @Mapping(target = "department", source = "departmentId")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateEntityFromDTO(EmployeeDTO dto, @MappingTarget Employee entity);
 
     default Role mapRole(String code) {
         if (code == null) return null;

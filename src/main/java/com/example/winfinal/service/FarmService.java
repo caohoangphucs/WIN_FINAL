@@ -7,30 +7,36 @@ import com.example.winfinal.mapper.FarmMapper;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FarmService {
-    private final FarmDAO farmDAO = new FarmDAO();
-    private final FarmMapper farmMapper = FarmMapper.INSTANCE;
+public class FarmService extends BaseService<Farm, FarmDTO> {
+    private static final FarmMapper mapper = FarmMapper.INSTANCE;
 
-    public void createFarm(FarmDTO dto) {
-        Farm farm = farmMapper.toEntity(dto);
-        farmDAO.save(farm);
+    public FarmService() {
+        super(new FarmDAO());
     }
 
-    public void updateFarm(FarmDTO dto) {
-        Farm farm = farmDAO.findById(dto.getId());
-        if (farm != null) {
-            farmMapper.updateEntityFromDTO(dto, farm);
-            farmDAO.update(farm);
-        }
+    @Override
+    protected FarmDTO toDTO(Farm entity) {
+        return mapper.toDTO(entity);
     }
 
-    public void deleteFarm(Long id) {
-        farmDAO.delete(id);
+    @Override
+    protected Farm toEntity(FarmDTO dto) {
+        return mapper.toEntity(dto);
     }
 
-    public List<FarmDTO> getAllFarms() {
-        return farmDAO.findAll().stream()
-                .map(farmMapper::toDTO)
-                .collect(Collectors.toList());
+    @Override
+    protected void updateEntityFromDTO(FarmDTO dto, Farm entity) {
+        mapper.updateEntityFromDTO(dto, entity);
     }
+
+    @Override
+    protected Object getEntityId(FarmDTO dto) {
+        return dto.getId();
+    }
+
+    // --- Backward compatibility aliases ---
+    public void createFarm(FarmDTO dto) { create(dto); }
+    public void updateFarm(FarmDTO dto) { update(dto); }
+    public void deleteFarm(Long id) { delete(id); }
+    public List<FarmDTO> getAllFarms() { return getAll(); }
 }

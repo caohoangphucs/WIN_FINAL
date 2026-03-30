@@ -9,6 +9,7 @@ import com.example.winfinal.entity.master.Season;
 import com.example.winfinal.entity.production.ProductionLot;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
@@ -31,6 +32,17 @@ public interface ProductionLotMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     ProductionLot toEntity(ProductionLotDTO dto);
+
+    @Mapping(target = "status", source = "statusCode")
+    @Mapping(target = "farm", source = "farmId")
+    @Mapping(target = "cropType", source = "cropTypeId")
+    @Mapping(target = "manager", source = "managerId")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "actualHarvestDate", ignore = true)
+    @Mapping(target = "season", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateEntityFromDTO(ProductionLotDTO dto, @MappingTarget ProductionLot entity);
 
     default LotStatus mapStatus(String code) {
         if (code == null) return null;

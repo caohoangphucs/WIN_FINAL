@@ -1,6 +1,8 @@
 # WIN_FINAL
 
-## How to run
+## Requirements
+Java 21
+docker
 
 ### 1. start db and build app
 ```bash

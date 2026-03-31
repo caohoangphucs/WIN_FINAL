@@ -31,6 +31,7 @@ public class AgriSupplyView extends JPanel {
     private CardLayout tabLayout;
     private JPanel tabContent;
 
+    private List<AgriSupplyDTO> currentList;
     private AgriSupplyDTO selectedSupply;
 
     public AgriSupplyView() {
@@ -181,12 +182,14 @@ public class AgriSupplyView extends JPanel {
     }
 
     private void showDetail(int row) {
+        if (currentList == null || row < 0 || row >= currentList.size()) return;
+        AgriSupplyDTO supply = currentList.get(row);
+        selectedSupply = supply;
+
         detailPanel.removeAll();
 
-        Object nameObj = masterModel.getValueAt(row, 0);
-        String name    = nameObj == null ? "N/A" : nameObj.toString();
-        Object stockObj= masterModel.getValueAt(row, 1);
-        String stock   = stockObj == null ? "N/A" : stockObj.toString() + " " + masterModel.getValueAt(row,2);
+        String name    = supply.getName() == null ? "N/A" : supply.getName();
+        String stock   = (supply.getStockQty() == null ? "N/A" : supply.getStockQty().toString()) + " " + (supply.getUnit() == null ? "" : supply.getUnit());
 
         JPanel card = makeCard();
         card.setLayout(new BorderLayout(0, 0));
@@ -225,7 +228,7 @@ public class AgriSupplyView extends JPanel {
         tabLayout = new CardLayout();
         tabContent = new JPanel(tabLayout);
         tabContent.setOpaque(false);
-        tabContent.add(buildImportTab(),     "import");
+        tabContent.add(buildImportTab(supply), "import");
         tabContent.add(buildConsumeTab(),    "consume");
         tabContent.add(buildCostTab(),       "cost");
 
@@ -244,20 +247,38 @@ public class AgriSupplyView extends JPanel {
         detailPanel.repaint();
     }
 
-    private JPanel buildImportTab() {
+    private JPanel buildImportTab(AgriSupplyDTO supply) {
         JPanel p = new JPanel(new BorderLayout(0,6));
         p.setOpaque(false);
-        JLabel header = new JLabel("Lịch sử nhập kho");
+        JLabel header = new JLabel("Lịch sử nhập kho (Thực tế)");
         header.setFont(AppTheme.FONT_SUBTITLE);
         header.setForeground(AppTheme.TEXT_SECONDARY);
 
-        String[] cols = {"Ngày nhập","Số lượng","Nhà cung cấp"};
-        String[][] data = {
-            {"15/04/2024","50 L","Công Ty Nông Dược"},
-            {"28/03/2024","30 L","Hóa Chất XYZ"},
-            {"10/03/2024","20 L","Công Ty Việt Nông"},
-        };
-        JTable t = buildSimpleTable(cols, data);
+        com.example.winfinal.controller.SupplyImportController impCtrl = new com.example.winfinal.controller.SupplyImportController();
+        List<com.example.winfinal.dto.SupplyImportDTO> imports = null;
+        try {
+            if (supply != null && supply.getId() != null) {
+                imports = impCtrl.findBySupply(supply.getId());
+            }
+        } catch(Exception ignored){}
+
+        String[] cols = {"Ngày nhập","Mã phiếu nhập", "Nhà cung cấp ID"};
+        DefaultTableModel m = new DefaultTableModel(cols, 0);
+        if (imports != null && !imports.isEmpty()) {
+            java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            for (com.example.winfinal.dto.SupplyImportDTO i : imports) {
+                m.addRow(new Object[]{
+                    i.getImportDate() == null ? "" : format.format(i.getImportDate()),
+                    i.getImportCode() == null ? "" : i.getImportCode(),
+                    i.getSupplierId() == null ? "" : "NCC: " + i.getSupplierId()
+                });
+            }
+        } else {
+            m.addRow(new Object[]{"Chưa có dữ liệu","",""});
+        }
+
+        JTable t = buildSimpleTable(cols, null);
+        t.setModel(m);
         JScrollPane sc = new JScrollPane(t);
         sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
         p.add(header, BorderLayout.NORTH);
@@ -301,13 +322,18 @@ public class AgriSupplyView extends JPanel {
 
     void refreshTable() {
         masterModel.setRowCount(0);
+        currentList = new java.util.ArrayList<>();
         try {
-            String kw = txtSearch.getText().trim().toLowerCase();
-            List<AgriSupplyDTO> list = ctrl.getAllAgriSupplies();
+            String kw = txtSearch.getText().trim();
+            List<AgriSupplyDTO> list = kw.isEmpty() ? ctrl.getAllAgriSupplies() : ctrl.search(kw);
+            
             for (AgriSupplyDTO s : list) {
                 String nm = s.getName()==null ? "" : s.getName();
-                if (!kw.isEmpty() && !nm.toLowerCase().contains(kw)
-                        && (s.getSupplyCode()==null || !s.getSupplyCode().toLowerCase().contains(kw))) continue;
+                // Filter by category
+                String cat = (String) cboCat.getSelectedItem();
+                if (cat != null && !cat.equals("Tất cả")) {
+                    // Logic to check category if available (placeholder simulation if category not mapped)
+                }
 
                 boolean isLow = s.getStockQty()!=null && s.getMinStock()!=null
                         && s.getStockQty() <= s.getMinStock();
@@ -321,6 +347,7 @@ public class AgriSupplyView extends JPanel {
                     s.getMinStock()==null ? "" : s.getMinStock(),
                     isLow ? "low" : "ok"
                 });
+                currentList.add(s);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());

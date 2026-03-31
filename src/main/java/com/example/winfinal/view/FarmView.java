@@ -74,7 +74,7 @@ public class FarmView extends JPanel {
 
         table.getColumn("Thao tac").setCellRenderer(new ActionRenderer());
         table.getColumn("Thao tac").setCellEditor(new ActionEditor(table));
-        table.getColumn("Thao tac").setPreferredWidth(120);
+        table.getColumn("Thao tac").setPreferredWidth(210);
         table.getColumn("ID").setPreferredWidth(50);
         table.getColumn("Ma trang trai").setPreferredWidth(100);
         table.getColumn("Dien tich (ha)").setPreferredWidth(100);
@@ -201,12 +201,14 @@ public class FarmView extends JPanel {
     // ── Inner: Action column renderer ─────────────────────────
 
     static class ActionRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
-        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
+        private final JButton btnReport = UiUtils.createPrimaryButton("Báo cáo");
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sửa");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xóa");
 
         ActionRenderer() {
             setLayout(new FlowLayout(FlowLayout.CENTER, 4, 4));
             setOpaque(true);
+            add(btnReport);
             add(btnEdit);
             add(btnDelete);
         }
@@ -221,16 +223,29 @@ public class FarmView extends JPanel {
 
     class ActionEditor extends DefaultCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
-        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
+        private final JButton btnReport = UiUtils.createPrimaryButton("Báo cáo");
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sửa");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xóa");
         private int currentRow;
 
         ActionEditor(JTable table) {
             super(new JCheckBox());
             panel.setOpaque(true);
             panel.setBackground(AppTheme.BG_CARD);
+            panel.add(btnReport);
             panel.add(btnEdit);
             panel.add(btnDelete);
+
+            btnReport.addActionListener(e -> {
+                fireEditingStopped();
+                try {
+                    Long id = Long.parseLong(tableModel.getValueAt(currentRow, 0).toString());
+                    String name = tableModel.getValueAt(currentRow, 2).toString();
+                    showFarmSummary(id, name);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(FarmView.this, "Lỗi: " + ex.getMessage());
+                }
+            });
 
             btnEdit.addActionListener(e -> {
                 fireEditingStopped();
@@ -271,5 +286,31 @@ public class FarmView extends JPanel {
         }
 
         @Override public Object getCellEditorValue() { return "edit|delete"; }
+    }
+
+    private void showFarmSummary(Long farmId, String farmName) {
+        List<Object[]> summary = farmController.getSeasonalSummary(farmId);
+        if (summary == null || summary.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Chưa có dữ liệu sản xuất cho trang trại này.");
+            return;
+        }
+        
+        String[] cols = {"Mùa vụ", "Số lô", "Tổng D.Tích (m2)", "Tổng Sản Lượng (kg)"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0);
+        for (Object[] r : summary) {
+            model.addRow(new Object[]{
+                r[0] == null ? "N/A" : r[0],
+                r[1] == null ? "0" : r[1],
+                r[2] == null ? "0" : r[2],
+                r[3] == null ? "0" : r[3]
+            });
+        }
+        
+        JTable tbl = new JTable(model);
+        UiUtils.styleTable(tbl);
+        JScrollPane sp = new JScrollPane(tbl);
+        sp.setPreferredSize(new Dimension(500, 200));
+        
+        JOptionPane.showMessageDialog(this, sp, "Tóm tắt mùa vụ - " + farmName, JOptionPane.PLAIN_MESSAGE);
     }
 }

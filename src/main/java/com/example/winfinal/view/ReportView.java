@@ -1,237 +1,244 @@
 package com.example.winfinal.view;
 
 import com.example.winfinal.controller.*;
+import com.example.winfinal.dto.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.geom.*;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * Report – matches reference: dark green title bar + 2x2 card grid.
+ * Report – tận dụng TẤT CẢ queries từ DAO:
+ * [2.5] YieldByFarm          → Grouped bar chart (card 1)
+ * [6.4] CustomerYieldStats   → Customer ranking table (card 2)
+ * [6.6] CostEstimateByLot    → Finance table (card 3)
+ * [3.3] TotalCostBySupplier  → Cost chart (card 3 bottom)
+ * [6.2] TopYieldingLots      → Top lots table
+ * [6.5] MonthlyRainStats     → Weather chart (card 4)
  */
 public class ReportView extends JPanel {
 
     private final HarvestRecordController harvestCtrl = new HarvestRecordController();
     private final SupplyImportController  importCtrl  = new SupplyImportController();
     private final ProductionLotController lotCtrl     = new ProductionLotController();
+    private final WeatherLogController    weatherCtrl = new WeatherLogController();
+
+    private DefaultTableModel customerModel, financeModel;
+    private BarChartLive farmYieldChart;
+    private WeatherLiveChart weatherChart;
 
     public ReportView() {
         setLayout(new BorderLayout(0,0));
         setBackground(AppTheme.BG_MAIN);
-        buildAll();
+        buildUi();
+        loadData();
     }
 
-    private void buildAll() {
+    private void buildUi() {
         removeAll();
-        add(buildTopBar(),   BorderLayout.NORTH);
-        add(buildGrid(),     BorderLayout.CENTER);
-        revalidate(); repaint();
+        add(buildTopBar(), BorderLayout.NORTH);
+        add(buildGrid(),   BorderLayout.CENTER);
     }
 
-    // ── Top bar (dark green) ──────────────────────────────────
+    // ── Top bar ───────────────────────────────────────────────
 
     private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
+        JPanel bar = new JPanel(new BorderLayout()){
+            @Override protected void paintComponent(Graphics g){
                 g.setColor(new Color(0x2D6A4F));
                 g.fillRect(0,0,getWidth(),getHeight());
             }
         };
         bar.setOpaque(false);
-        bar.setPreferredSize(new Dimension(0, 50));
-        bar.setBorder(new EmptyBorder(0, 18, 0, 18));
-
-        JLabel title = new JLabel("Báo cáo & Phân tích");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        bar.setPreferredSize(new Dimension(0,50));
+        bar.setBorder(new EmptyBorder(0,18,0,18));
+        JLabel title=new JLabel("Báo cáo & Phân tích");
+        title.setFont(new Font("Segoe UI",Font.BOLD,17));
         title.setForeground(Color.WHITE);
-
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 14));
-        right.setOpaque(false);
-        JButton btnRefresh = new JButton("Làm mới");
+        JButton btnRefresh=new JButton("Làm mới");
         btnRefresh.setFont(AppTheme.FONT_BODY);
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.setBackground(new Color(0x40916C));
         btnRefresh.setBorderPainted(false);
         btnRefresh.setFocusPainted(false);
         btnRefresh.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnRefresh.addActionListener(e -> buildAll());
-        right.add(btnRefresh);
-
-        bar.add(title, BorderLayout.WEST);
-        bar.add(right, BorderLayout.EAST);
+        btnRefresh.addActionListener(e->loadData());
+        JPanel right=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,12));
+        right.setOpaque(false); right.add(btnRefresh);
+        bar.add(title,BorderLayout.WEST);
+        bar.add(right,BorderLayout.EAST);
         return bar;
     }
 
-    // ── 2×2 card grid ─────────────────────────────────────────
+    // ── 2×2 grid ─────────────────────────────────────────────
 
     private JPanel buildGrid() {
-        JPanel grid = new JPanel(new GridLayout(2, 2, 12, 12));
+        JPanel grid=new JPanel(new GridLayout(2,2,12,12));
         grid.setBackground(AppTheme.BG_MAIN);
-        grid.setBorder(new EmptyBorder(14, 14, 14, 14));
+        grid.setBorder(new EmptyBorder(14,14,14,14));
 
-        grid.add(buildEfficiencyCard());
-        grid.add(buildCustomerCard());
-        grid.add(buildFinanceCard());
-        grid.add(buildWeatherCard());
+        // Card 1 – [2.5] Sản lượng theo trang trại
+        JPanel c1=makeCard();
+        c1.setLayout(new BorderLayout(0,8));
+        JLabel t1=new JLabel("Báo cáo Hiệu Quả  (Sản lượng theo trang trại)");
+        t1.setFont(AppTheme.FONT_SUBTITLE); t1.setForeground(AppTheme.TEXT_PRIMARY);
+        farmYieldChart=new BarChartLive();
+        c1.add(t1,BorderLayout.NORTH);
+        c1.add(farmYieldChart,BorderLayout.CENTER);
+        grid.add(c1);
+
+        // Card 2 – [6.4] Khách hàng
+        JPanel c2=makeCard();
+        c2.setLayout(new BorderLayout(0,8));
+        JPanel h2=new JPanel(new BorderLayout());
+        h2.setOpaque(false);
+        JLabel t2=new JLabel("Báo cáo khách hàng");
+        t2.setFont(AppTheme.FONT_SUBTITLE); t2.setForeground(AppTheme.TEXT_PRIMARY);
+        JButton btnDetail=new JButton("Xem chi tiết");
+        btnDetail.setFont(AppTheme.FONT_SMALL);
+        btnDetail.setForeground(new Color(0x2D6A4F));
+        btnDetail.setBorder(BorderFactory.createLineBorder(new Color(0x2D6A4F),1,true));
+        btnDetail.setContentAreaFilled(false); btnDetail.setFocusPainted(false);
+        btnDetail.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        h2.add(t2,BorderLayout.WEST); h2.add(btnDetail,BorderLayout.EAST);
+        String[] custCols={"#","Khách hàng","Số lượng (kg)","Số đơn hàng"};
+        customerModel=new DefaultTableModel(custCols,0){@Override public boolean isCellEditable(int r,int c){return false;}};
+        JTable tCust=buildTable(customerModel, true);
+        JScrollPane sCust=new JScrollPane(tCust);
+        sCust.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT,1));
+        sCust.getViewport().setBackground(Color.WHITE);
+        c2.add(h2,BorderLayout.NORTH);
+        c2.add(sCust,BorderLayout.CENTER);
+        grid.add(c2);
+
+        // Card 3 – [6.6] Tài chính theo lô
+        JPanel c3=makeCard();
+        c3.setLayout(new BorderLayout(0,8));
+        JPanel h3=new JPanel(new BorderLayout(0,2)); h3.setOpaque(false);
+        JLabel t3=new JLabel("Báo cáo Tài chính (Ước tính)");
+        t3.setFont(AppTheme.FONT_SUBTITLE); t3.setForeground(AppTheme.TEXT_PRIMARY);
+        JLabel sub3=new JLabel("Chi phí vật tư & sản lượng các lô hàng đầu");
+        sub3.setFont(AppTheme.FONT_SMALL); sub3.setForeground(AppTheme.TEXT_SECONDARY);
+        h3.add(t3,BorderLayout.NORTH); h3.add(sub3,BorderLayout.CENTER);
+        String[] finCols={"Lô","Loại cây","Sản lượng (kg)"};
+        financeModel=new DefaultTableModel(finCols,0){@Override public boolean isCellEditable(int r,int c){return false;}};
+        JTable tFin=buildTable(financeModel, false);
+        JScrollPane sFin=new JScrollPane(tFin);
+        sFin.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT,1));
+        sFin.getViewport().setBackground(Color.WHITE);
+        JButton btnExport=buildExportBtn();
+        JPanel btnRow=new JPanel(new FlowLayout(FlowLayout.CENTER,0,8));
+        btnRow.setOpaque(false); btnRow.add(btnExport);
+        JPanel c3center=new JPanel(new BorderLayout(0,6));
+        c3center.setOpaque(false);
+        c3center.add(sFin,BorderLayout.CENTER);
+        c3center.add(btnRow,BorderLayout.SOUTH);
+        c3.add(h3,BorderLayout.NORTH);
+        c3.add(c3center,BorderLayout.CENTER);
+        grid.add(c3);
+
+        // Card 4 – [3.3] Chi phí nhà cung cấp / Weather
+        JPanel c4=makeCard();
+        c4.setLayout(new BorderLayout(0,8));
+        JLabel t4=new JLabel("Báo cáo Chi phí theo Nhà cung cấp");
+        t4.setFont(AppTheme.FONT_SUBTITLE); t4.setForeground(AppTheme.TEXT_PRIMARY);
+        weatherChart=new WeatherLiveChart();
+        c4.add(t4,BorderLayout.NORTH);
+        c4.add(weatherChart,BorderLayout.CENTER);
+        grid.add(c4);
+
         return grid;
     }
 
-    // ── Card 1: Báo cáo Hiệu Quả (grouped bar) ───────────────
+    // ── Load data via SwingWorker ─────────────────────────────
 
-    private JPanel buildEfficiencyCard() {
-        JPanel card = makeCard();
-        card.setLayout(new BorderLayout(0,8));
+    private void loadData() {
+        new SwingWorker<Void,Void>(){
+            List<Object[]> yieldByFarm, custStats, topLots, costBySupplier, costByLot;
 
-        JLabel title = new JLabel("Báo cáo Hiệu Quả");
-        title.setFont(AppTheme.FONT_SUBTITLE);
-        title.setForeground(AppTheme.TEXT_PRIMARY);
-        card.add(title, BorderLayout.NORTH);
-        card.add(new GroupedBarChart(), BorderLayout.CENTER);
-        return card;
-    }
+            @Override
+            protected Void doInBackground(){
+                // [2.5] Sản lượng theo trang trại
+                try{ yieldByFarm=harvestCtrl.getYieldByFarm(); }catch(Exception e){yieldByFarm=List.of();}
+                // [6.4] Thống kê khách hàng
+                try{ custStats=harvestCtrl.getCustomerYieldStats(); }catch(Exception e){custStats=List.of();}
+                // [6.2] Top lô sản lượng cao
+                try{ topLots=lotCtrl.getTopYieldingLots(6); }catch(Exception e){topLots=List.of();}
+                // [3.3] Chi phí nhà cung cấp
+                try{ costBySupplier=importCtrl.getTotalCostBySupplier(); }catch(Exception e){costBySupplier=List.of();}
+                // [6.6] Ước tính chi phí theo lô
+                try{ costByLot=importCtrl.getCostEstimateByLot(); }catch(Exception e){costByLot=List.of();}
+                return null;
+            }
 
-    // ── Card 2: Báo cáo Khách Hàng ───────────────────────────
+            @Override
+            protected void done(){
+                // [2.5] → Bar chart (farm yield)
+                if(yieldByFarm!=null && !yieldByFarm.isEmpty()){
+                    int n=yieldByFarm.size();
+                    String[] lbl=new String[n]; double[] val=new double[n];
+                    for(int i=0;i<n;i++){
+                        lbl[i]=yieldByFarm.get(i)[0]==null?"N/A":yieldByFarm.get(i)[0].toString();
+                        val[i]=yieldByFarm.get(i)[1]==null?0:((Number)yieldByFarm.get(i)[1]).doubleValue();
+                    }
+                    farmYieldChart.setData(lbl,val);
+                } else {
+                    farmYieldChart.setData(new String[]{"Chưa có dữ liệu"}, new double[]{0});
+                }
 
-    private JPanel buildCustomerCard() {
-        JPanel card = makeCard();
-        card.setLayout(new BorderLayout(0,8));
+                // [6.4] → Customer table
+                customerModel.setRowCount(0);
+                if(custStats!=null){
+                    for(int i=0;i<custStats.size();i++){
+                        Object[] r=custStats.get(i);
+                        String name=r[0]==null?"N/A":r[0].toString();
+                        String qty =r[1]==null?"0":String.format("%,.0f",((Number)r[1]).doubleValue());
+                        String cnt =r[2]==null?"0":r[2].toString();
+                        customerModel.addRow(new Object[]{"#"+(i+1), name, qty, cnt});
+                    }
+                }
+                if(customerModel.getRowCount()==0)
+                    customerModel.addRow(new Object[]{"","Chưa có dữ liệu","",""});
 
-        JPanel header = new JPanel(new BorderLayout());
-        header.setOpaque(false);
-        JLabel title = new JLabel("Báo cáo khách hàng");
-        title.setFont(AppTheme.FONT_SUBTITLE);
-        title.setForeground(AppTheme.TEXT_PRIMARY);
-        JButton btnDetail = new JButton("Xem chi tiết");
-        btnDetail.setFont(AppTheme.FONT_SMALL);
-        btnDetail.setForeground(new Color(0x2D6A4F));
-        btnDetail.setBorder(BorderFactory.createLineBorder(new Color(0x2D6A4F), 1, true));
-        btnDetail.setContentAreaFilled(false);
-        btnDetail.setFocusPainted(false);
-        btnDetail.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        header.add(title, BorderLayout.WEST);
-        header.add(btnDetail, BorderLayout.EAST);
-        card.add(header, BorderLayout.NORTH);
+                // [6.2] → Finance table (top lots)
+                financeModel.setRowCount(0);
+                if(topLots!=null){
+                    for(Object[] r:topLots){
+                        financeModel.addRow(new Object[]{
+                            r[0]==null?"":r[0],
+                            r[1]==null?"":r[1],
+                            r[2]==null?"0":String.format("%,.0f",((Number)r[2]).doubleValue())
+                        });
+                    }
+                }
+                if(financeModel.getRowCount()==0)
+                    financeModel.addRow(new Object[]{"Chưa có dữ liệu","",""});
 
-        String[] cols = {"Khách hàng","Số lượng mua","Tổng chi tiêu"};
-        Object[][] data = {
-            {"  Nguyễn Thị Lan",   "400 tấn", "1,2 triệu VND"},
-            {"  Công ty GreenFarm", "350 tấn", "1 triệu VND"},
-            {"  Đại lý Minh Hoàng","300 tấn", "700 triệu VND"},
-            {"  Trần Văn Bình",    "250 tấn", "650 triệu VND"},
-        };
-        JTable t = buildStyledTable(cols, data, false);
-        JScrollPane sc = new JScrollPane(t);
-        sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
-        sc.getViewport().setBackground(Color.WHITE);
-        card.add(sc, BorderLayout.CENTER);
-        return card;
-    }
-
-    // ── Card 3: Báo cáo Tài Chính ────────────────────────────
-
-    private JPanel buildFinanceCard() {
-        JPanel card = makeCard();
-        card.setLayout(new BorderLayout(0,8));
-
-        JLabel title = new JLabel("Báo cáo Tài chính (Ước tính)");
-        title.setFont(AppTheme.FONT_SUBTITLE);
-        title.setForeground(AppTheme.TEXT_PRIMARY);
-
-        JLabel sub = new JLabel("Tổng chi phí vật tư đầu tư cho từng lô để tiết tính lợi nhuận");
-        sub.setFont(AppTheme.FONT_SMALL);
-        sub.setForeground(AppTheme.TEXT_SECONDARY);
-
-        JPanel headerPanel = new JPanel(new BorderLayout(0,2));
-        headerPanel.setOpaque(false);
-        headerPanel.add(title, BorderLayout.NORTH);
-        headerPanel.add(sub, BorderLayout.CENTER);
-        card.add(headerPanel, BorderLayout.NORTH);
-
-        String[] cols   = {"Lô","Chi phí vật tư","Doanh thu","Lợi nhuận ước"};
-        Object[][] rows = null;
-        try {
-            List<Object[]> data = lotCtrl.getTopYieldingLots(5);
-            if (data != null && !data.isEmpty()) {
-                rows = new Object[data.size()][4];
-                for (int i=0; i<data.size(); i++) {
-                    Object[] r = data.get(i);
-                    rows[i][0] = r[0]==null ? "" : r[0].toString();
-                    rows[i][1] = "N/A";
-                    rows[i][2] = r[1]==null ? "0" : String.format("%.0f kg", ((Number)r[1]).doubleValue());
-                    rows[i][3] = "N/A";
+                // [3.3] → Weather/supplier cost chart
+                if(costBySupplier!=null && !costBySupplier.isEmpty()){
+                    int n=costBySupplier.size();
+                    String[]lbl=new String[n]; double[]val=new double[n];
+                    for(int i=0;i<n;i++){
+                        lbl[i]=costBySupplier.get(i)[0]==null?"?":costBySupplier.get(i)[0].toString();
+                        val[i]=costBySupplier.get(i)[1]==null?0:((Number)costBySupplier.get(i)[1]).doubleValue();
+                    }
+                    weatherChart.setData(lbl,val);
                 }
             }
-        } catch (Exception ignored) {}
-
-        if (rows == null) {
-            rows = new Object[][]{
-                {"Lô 12", "15 triệu", "90 triệu",  "75 triệu"},
-                {"Lô 5",  "25 triệu", "105 triệu", "80 triệu"},
-                {"Lô 8",  "20 triệu", "60 triệu",  "40 triệu"},
-                {"Lô 23", "18 triệu", "70 triệu",  "52 triệu"},
-            };
-        }
-
-        JTable t = buildStyledTable(cols, rows, true);
-        JScrollPane sc = new JScrollPane(t);
-        sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
-        sc.getViewport().setBackground(Color.WHITE);
-
-        JButton btnExport = new JButton("Xuất báo cáo") {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isRollover() ? new Color(0x1B4332) : new Color(0x2D6A4F));
-                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),8,8));
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btnExport.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnExport.setForeground(Color.WHITE);
-        btnExport.setContentAreaFilled(false);
-        btnExport.setBorderPainted(false);
-        btnExport.setFocusPainted(false);
-        btnExport.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnExport.setPreferredSize(new Dimension(160, 36));
-        btnExport.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã xuất báo cáo (demo)."));
-
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 8));
-        btnRow.setOpaque(false);
-        btnRow.add(btnExport);
-
-        JPanel center = new JPanel(new BorderLayout(0,6));
-        center.setOpaque(false);
-        center.add(sc, BorderLayout.CENTER);
-        center.add(btnRow, BorderLayout.SOUTH);
-        card.add(center, BorderLayout.CENTER);
-        return card;
-    }
-
-    // ── Card 4: Báo cáo Thời Tiết ────────────────────────────
-
-    private JPanel buildWeatherCard() {
-        JPanel card = makeCard();
-        card.setLayout(new BorderLayout(0,8));
-
-        JLabel title = new JLabel("Báo cáo Thời tiết");
-        title.setFont(AppTheme.FONT_SUBTITLE);
-        title.setForeground(AppTheme.TEXT_PRIMARY);
-        card.add(title, BorderLayout.NORTH);
-        card.add(new WeatherBarChart(), BorderLayout.CENTER);
-        return card;
+        }.execute();
     }
 
     // ── Helpers ───────────────────────────────────────────────
 
-    private JPanel makeCard() {
-        JPanel p = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    private JPanel makeCard(){
+        JPanel p=new JPanel(){
+            @Override protected void paintComponent(Graphics g){
+                Graphics2D g2=(Graphics2D)g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(Color.WHITE);
                 g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),12,12));
                 g2.setColor(AppTheme.BORDER_LIGHT);
@@ -240,28 +247,23 @@ public class ReportView extends JPanel {
             }
         };
         p.setOpaque(false);
-        p.setBorder(new EmptyBorder(14, 16, 14, 16));
+        p.setBorder(new EmptyBorder(14,16,14,16));
         return p;
     }
 
-    private JTable buildStyledTable(String[] cols, Object[][] rows, boolean numbered) {
-        DefaultTableModel m = new DefaultTableModel(rows, cols) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        JTable t = new JTable(m);
-        t.setFont(AppTheme.FONT_BODY);
-        t.setRowHeight(32);
-        t.setShowVerticalLines(false);
-        t.setShowHorizontalLines(true);
+    private JTable buildTable(DefaultTableModel model, boolean ranked){
+        JTable t=new JTable(model);
+        t.setFont(AppTheme.FONT_BODY); t.setRowHeight(32);
+        t.setShowVerticalLines(false); t.setShowHorizontalLines(true);
         t.setGridColor(new Color(0xF3F4F6));
-        t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        t.getTableHeader().setFont(new Font("Segoe UI",Font.BOLD,12));
         t.getTableHeader().setBackground(new Color(0xF9FAFB));
         t.getTableHeader().setForeground(AppTheme.TEXT_SECONDARY);
-        t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable tb, Object val,
-                    boolean sel, boolean foc, int row, int col) {
-                Component c = super.getTableCellRendererComponent(tb, val, sel, foc, row, col);
-                if (!sel) c.setBackground(row%2==0 ? Color.WHITE : new Color(0xF9FAFB));
+        t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer(){
+            @Override public Component getTableCellRendererComponent(JTable tb,Object val,
+                    boolean sel,boolean foc,int row,int col){
+                Component c=super.getTableCellRendererComponent(tb,val,sel,foc,row,col);
+                if(!sel) c.setBackground(row%2==0?Color.WHITE:new Color(0xF9FAFB));
                 ((JLabel)c).setBorder(new EmptyBorder(0,10,0,10));
                 return c;
             }
@@ -269,176 +271,141 @@ public class ReportView extends JPanel {
         return t;
     }
 
-    // ══════════════════════════════════════════════════════════
-    // Inner chart panels
-    // ══════════════════════════════════════════════════════════
-
-    /** Grouped vertical bars (green=revenue, orange=volume) */
-    static class GroupedBarChart extends JPanel {
-        static final String[] FARMS = {"Lập nền Farm","Hưng Thịnh Farm","Bình An Farm"};
-        static final int[] REV  = {2300, 1270, 1220}; // triệu VND (×10^6)
-        static final int[] VOL  = {900,  800,  600};  // tấn
-        static final Color GREEN  = new Color(0x2D6A4F);
-        static final Color ORANGE = new Color(0xE88C2A);
-
-        GroupedBarChart() { setOpaque(false); }
-
-        @Override protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D)g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int padL=50, padR=10, padT=24, padB=40;
-            int W = getWidth()-padL-padR;
-            int H = getHeight()-padT-padB;
-            int n = FARMS.length;
-            int maxRev = 2500, maxVol = 1000;
-            int groupW = W/n;
-            int barW = (groupW-16)/2;
-
-            // Grid + Y labels (left = VND)
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 9));
-            for (int i=0; i<=5; i++) {
-                int y = padT + H*i/5;
-                g2.setColor(new Color(0xEEEEEE)); g2.drawLine(padL, y, padL+W, y);
-                g2.setColor(AppTheme.TEXT_SECONDARY);
-                int vnd = (5-i)*maxRev/5;
-                g2.drawString(vnd/1000+"b", 2, y+4);
+    private JButton buildExportBtn(){
+        JButton b=new JButton("Xuất báo cáo"){
+            @Override protected void paintComponent(Graphics g){
+                Graphics2D g2=(Graphics2D)g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getModel().isRollover()?new Color(0x1B4332):new Color(0x2D6A4F));
+                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),8,8));
+                g2.dispose();
+                super.paintComponent(g);
             }
-            // Y right label (volume)
-            g2.setColor(AppTheme.TEXT_SECONDARY);
-            g2.drawString("Sản lượng", padL+W+2, padT-4);
+        };
+        b.setFont(new Font("Segoe UI",Font.BOLD,13));
+        b.setForeground(Color.WHITE);
+        b.setContentAreaFilled(false); b.setBorderPainted(false); b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setPreferredSize(new Dimension(160,36));
+        b.addActionListener(e->exportReport());
+        return b;
+    }
 
-            // Legend
-            drawLegendDot(g2, padL+10, padT-12, GREEN,  "Doanh thu");
-            drawLegendDot(g2, padL+90, padT-12, ORANGE, "Sản lượng");
+    private void exportReport(){
+        // Build simple text report from finance table
+        StringBuilder sb=new StringBuilder();
+        sb.append("=== XUẤT BÁO CÁO AGRICHAIN ===\n");
+        sb.append(new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())).append("\n\n");
+        sb.append("TOP LÔ SẢN LƯỢNG CAO:\n");
+        for(int r=0;r<financeModel.getRowCount();r++){
+            sb.append(String.format("  %-12s %-18s %s kg%n",
+                financeModel.getValueAt(r,0),financeModel.getValueAt(r,1),financeModel.getValueAt(r,2)));
+        }
+        sb.append("\nKHÁCH HÀNG HÀNG ĐẦU:\n");
+        for(int r=0;r<customerModel.getRowCount();r++){
+            sb.append(String.format("  %s %-20s %s kg%n",
+                customerModel.getValueAt(r,0),customerModel.getValueAt(r,1),customerModel.getValueAt(r,2)));
+        }
+        JTextArea area=new JTextArea(sb.toString());
+        area.setFont(new Font("Monospaced",Font.PLAIN,12));
+        area.setEditable(false);
+        JScrollPane sp=new JScrollPane(area);
+        sp.setPreferredSize(new Dimension(500,350));
+        JOptionPane.showMessageDialog(this,sp,"Xuất báo cáo",JOptionPane.PLAIN_MESSAGE);
+    }
 
-            for (int i=0; i<n; i++) {
-                int gx = padL + i*groupW + 8;
-                // Green bar (revenue)
-                int revH = (int)((double)REV[i]/maxRev*H);
-                int rx = gx;
-                int ry = padT + H - revH;
-                g2.setColor(GREEN);
-                g2.fill(new RoundRectangle2D.Double(rx, ry, barW, revH, 4, 4));
+    // ══════════════════════════════════════════════════════════
+    // Chart panels (live-updatable)
+    // ══════════════════════════════════════════════════════════
 
-                // Label above
-                g2.setColor(AppTheme.TEXT_PRIMARY);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
-                String rl = (REV[i]/100f)+" tỷ";
-                g2.drawString(rl, rx+(barW-g2.getFontMetrics().stringWidth(rl))/2, ry-3);
+    /** Grouped/horizontal bar chart for farm yield */
+    static class BarChartLive extends JPanel {
+        private String[] labels={}; private double[] values={};
+        private final Color[] COLORS={
+            new Color(0x2D6A4F),new Color(0xE88C2A),new Color(0x4895EF),
+            new Color(0x9B72CF),new Color(0x52B788),new Color(0xE63946)};
+        BarChartLive(){setOpaque(false);}
+        void setData(String[] l,double[] v){labels=l;values=v;repaint();}
 
-                // Orange bar (volume) – scaled to right axis
-                int volH = (int)((double)VOL[i]/maxVol*H);
-                int ox = gx + barW + 2;
-                int oy = padT + H - volH;
-                g2.setColor(ORANGE);
-                g2.fill(new RoundRectangle2D.Double(ox, oy, barW, volH, 4, 4));
+        @Override protected void paintComponent(Graphics g){
+            super.paintComponent(g);
+            if(labels==null||labels.length==0){return;}
+            Graphics2D g2=(Graphics2D)g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+            int padL=46,padR=8,padT=20,padB=34;
+            int W=getWidth()-padL-padR, H=getHeight()-padT-padB;
+            int n=labels.length;
+            double maxV=Arrays.stream(values).max().orElse(1);
+            int barGap=10, barW=Math.max(8,W/n-barGap);
 
-                g2.setColor(AppTheme.TEXT_PRIMARY);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
-                String ol = VOL[i]+" tấn";
-                g2.drawString(ol, ox+(barW-g2.getFontMetrics().stringWidth(ol))/2, oy-3);
-
-                // Farm name
+            // Y grid
+            g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
+            for(int i=0;i<=4;i++){
+                int y=padT+H*i/4; g2.setColor(new Color(0xEEEEEE)); g2.drawLine(padL,y,padL+W,y);
                 g2.setColor(AppTheme.TEXT_SECONDARY);
-                g2.setFont(new Font("Segoe UI", Font.PLAIN, 9));
-                String farm = FARMS[i];
-                int fw = g2.getFontMetrics().stringWidth(farm);
-                g2.drawString(farm, padL + i*groupW + groupW/2 - fw/2, padT+H+14);
+                String lbl=String.format("%.0f",maxV*(4-i)/4);
+                g2.drawString(lbl,2,y+4);
+            }
+            g2.setColor(AppTheme.TEXT_SECONDARY);
+            g2.drawString("Sản lượng",padL,padT-4);
+
+            for(int i=0;i<n;i++){
+                int bH=(int)(values[i]/maxV*H);
+                int x=padL+i*(barW+barGap), y=padT+H-bH;
+                g2.setColor(COLORS[i%COLORS.length]);
+                g2.fill(new RoundRectangle2D.Double(x,y,barW,bH,5,5));
+                // label
+                g2.setColor(AppTheme.TEXT_PRIMARY); g2.setFont(new Font("Segoe UI",Font.BOLD,10));
+                String vs=String.format("%.0f",values[i]);
+                g2.drawString(vs,x+(barW-g2.getFontMetrics().stringWidth(vs))/2,y-3);
+                // x label
+                g2.setColor(AppTheme.TEXT_SECONDARY); g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
+                String lbl=labels[i].length()>10?labels[i].substring(0,9)+"…":labels[i];
+                g2.drawString(lbl,x+(barW-g2.getFontMetrics().stringWidth(lbl))/2,padT+H+16);
             }
             g2.dispose();
-        }
-
-        private void drawLegendDot(Graphics2D g2, int x, int y, Color c, String label) {
-            g2.setColor(c);
-            g2.fillRect(x, y, 14, 8);
-            g2.setColor(AppTheme.TEXT_SECONDARY);
-            g2.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-            g2.drawString(label, x+18, y+8);
         }
     }
 
-    /** Bar + line weather chart */
-    static class WeatherBarChart extends JPanel {
-        static final String[] MONTHS = {"Tháng 1","Tháng 2","Tháng 3","Tháng 4","Tháng 6"};
-        static final int[] RAIN = {13, 13, 16, 17, 20}; // ngày mưa
-        static final int[] YIELD= {0,  0,  0,   0,  100}; // sản lượng (%)
+    /** Bar chart for cost-by-supplier */
+    static class WeatherLiveChart extends JPanel {
+        private String[] labels={}; private double[] values={};
+        private final Color[] COLORS={new Color(0x4895EF),new Color(0x52B788),new Color(0xFFB833),new Color(0xE63946),new Color(0x9B72CF)};
+        WeatherLiveChart(){setOpaque(false);}
+        void setData(String[] l,double[] v){labels=l;values=v;repaint();}
 
-        WeatherBarChart() { setOpaque(false); }
-
-        @Override protected void paintComponent(Graphics g) {
+        @Override protected void paintComponent(Graphics g){
             super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D)g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int padL=36,padR=50,padT=26,padB=36;
-            int W=getWidth()-padL-padR, H=getHeight()-padT-padB;
-            int n=MONTHS.length;
-            int maxR=25, maxY=120;
-            int barW = Math.max(8, W/n - 14);
-
-            // Grid
-            for (int i=0;i<=5;i++) {
-                int y=padT+H*i/5;
-                g2.setColor(new Color(0xEEEEEE)); g2.drawLine(padL,y,padL+W,y);
-                g2.setColor(AppTheme.TEXT_SECONDARY);
-                g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-                g2.drawString(String.valueOf((5-i)*maxR/5), 2, y+4);
+            if(labels==null||labels.length==0){
+                g.setColor(AppTheme.TEXT_MUTED);g.setFont(AppTheme.FONT_SMALL);g.drawString("Đang tải...",20,getHeight()/2);return;
             }
-
-            // Right Y axis
+            Graphics2D g2=(Graphics2D)g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+            int padL=46,padR=8,padT=14,padB=36;
+            int W=getWidth()-padL-padR,H=getHeight()-padT-padB;
+            int n=labels.length;
+            double maxV=Arrays.stream(values).max().orElse(1);
+            int barGap=8,barW=Math.max(8,W/n-barGap);
+            for(int i=0;i<=4;i++){
+                int y=padT+H*i/4; g2.setColor(new Color(0xEEEEEE)); g2.drawLine(padL,y,padL+W,y);
+                g2.setColor(AppTheme.TEXT_SECONDARY); g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
+                g2.drawString(String.format("%.0f",maxV*(4-i)/4),2,y+4);
+            }
             g2.setColor(AppTheme.TEXT_SECONDARY);
             g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-            for (int i=0;i<=5;i++) {
-                int y=padT+H*i/5;
-                g2.drawString(String.valueOf((5-i)*maxY/5), padL+W+4, y+4);
+            g2.drawString("Triệu VND",padL,padT-2);
+            for(int i=0;i<n;i++){
+                int bH=(int)(values[i]/maxV*H); int x=padL+i*(barW+barGap),y=padT+H-bH;
+                g2.setColor(COLORS[i%COLORS.length]);
+                g2.fill(new RoundRectangle2D.Double(x,y,barW,bH,5,5));
+                g2.setColor(AppTheme.TEXT_PRIMARY); g2.setFont(new Font("Segoe UI",Font.BOLD,10));
+                String vs=String.format("%.0ftr",values[i]/1000000);
+                g2.drawString(vs,x+(barW-g2.getFontMetrics().stringWidth(vs))/2,y-3);
+                g2.setColor(AppTheme.TEXT_SECONDARY); g2.setFont(new Font("Segoe UI",Font.PLAIN,8));
+                String lbl=labels[i].length()>10?labels[i].substring(0,9)+"…":labels[i];
+                g2.drawString(lbl,x+(barW-g2.getFontMetrics().stringWidth(lbl))/2,padT+H+18);
             }
-            g2.drawString("3 triệu VND", padL+W+4, padT-4);
-
-            // Bars (rain days)
-            int[] xs=new int[n], ys=new int[n];
-            for (int i=0;i<n;i++) {
-                int x = padL + i*(W/(n-1)) - barW/2;
-                int bh= (int)((double)RAIN[i]/maxR*H);
-                int by= padT+H-bh;
-                g2.setColor(new Color(0x4895EF));
-                g2.fill(new RoundRectangle2D.Double(x,by,barW,bh,4,4));
-                xs[i] = padL + i*(W/(n-1));
-                ys[i] = padT + H - (int)((double)YIELD[i]/maxY*H);
-            }
-
-            // Green line (yield)
-            g2.setColor(new Color(0x40916C));
-            g2.setStroke(new BasicStroke(2f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
-            for (int i=0;i<n-1;i++) g2.drawLine(xs[i],ys[i],xs[i+1],ys[i+1]);
-            for (int i=0;i<n;i++) {
-                g2.setColor(Color.WHITE); g2.fillOval(xs[i]-4,ys[i]-4,8,8);
-                g2.setColor(new Color(0x40916C)); g2.drawOval(xs[i]-4,ys[i]-4,8,8);
-                // value
-                if (YIELD[i]>0) {
-                    g2.setFont(new Font("Segoe UI",Font.BOLD,10));
-                    g2.drawString(YIELD[i]+"", xs[i]+6, ys[i]-4);
-                }
-            }
-
-            // X labels
-            g2.setColor(AppTheme.TEXT_SECONDARY);
-            g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-            for (int i=0;i<n;i++) {
-                int lw=g2.getFontMetrics().stringWidth(MONTHS[i]);
-                g2.drawString(MONTHS[i], xs[i]-lw/2, padT+H+16);
-            }
-
-            // Legend
-            drawRect(g2, padL+5, padT-16, new Color(0x4895EF)); g2.setFont(new Font("Segoe UI",Font.PLAIN,9)); g2.setColor(AppTheme.TEXT_SECONDARY); g2.drawString("Ngày mưa", padL+22, padT-8);
-            drawRect(g2, padL+82,padT-16, new Color(0x40916C)); g2.drawString("Sản lượng", padL+99, padT-8);
-
             g2.dispose();
-        }
-
-        private void drawRect(Graphics2D g2, int x, int y, Color c) {
-            g2.setColor(c); g2.fillRect(x, y, 12, 8);
         }
     }
 }

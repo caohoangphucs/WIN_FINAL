@@ -144,7 +144,7 @@ public class ProductionLotView extends JPanel {
         // Action column
         table.getColumnModel().getColumn(4).setCellRenderer(new ActionBtnRenderer());
         table.getColumnModel().getColumn(4).setCellEditor(new LotActionEditor(table));
-        table.getColumnModel().getColumn(4).setPreferredWidth(120);
+        table.getColumnModel().getColumn(4).setPreferredWidth(170);
         table.getColumnModel().getColumn(0).setPreferredWidth(110);
         table.getColumnModel().getColumn(1).setPreferredWidth(110);
         table.getColumnModel().getColumn(3).setPreferredWidth(100);
@@ -160,15 +160,16 @@ public class ProductionLotView extends JPanel {
     void refreshTable() {
         tableModel.setRowCount(0);
         try {
-            List<ProductionLotDTO> lots = ctrl.getAllLots();
             String kw = txtSearch.getText().trim().toLowerCase();
             String st = (String) cboStatus.getSelectedItem();
+            if (st != null && st.startsWith("Tất cả")) st = null;
+
+            // Sử dụng DAO query [1.8] Tìm kiếm động thay vì lọc bộ nhớ danh sách đầy đủ
+            List<ProductionLotDTO> lots = ctrl.search(null, st, null, null);
 
             for (ProductionLotDTO l : lots) {
                 String code = l.getLotCode() == null ? "" : l.getLotCode();
                 if (!kw.isEmpty() && !code.toLowerCase().contains(kw)) continue;
-                if (st != null && st.startsWith("Tất cả") && !st.equals("Tất cả trạng thái")) continue;
-                if (st != null && !st.startsWith("Tất cả") && !st.equals(l.getStatusCode())) continue;
 
                 tableModel.addRow(new Object[]{
                     l.getLotCode(),
@@ -293,18 +294,24 @@ public class ProductionLotView extends JPanel {
     }
 
     static class ActionBtnRenderer extends JPanel implements TableCellRenderer {
-        private final JButton btn;
+        private final JButton btnTrace = new JButton("Truy xuất");
+        private final JButton btnStats = new JButton("Thống kê");
         ActionBtnRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 0, 5));
+            setLayout(new FlowLayout(FlowLayout.CENTER, 4, 0));
             setOpaque(true);
-            btn = new JButton("Xem nhật ký");
-            btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            btn.setForeground(Color.WHITE);
-            btn.setBackground(new Color(0x2563EB));
-            btn.setBorderPainted(false);
-            btn.setFocusPainted(false);
-            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            add(btn);
+            
+            btnTrace.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            btnTrace.setForeground(Color.WHITE);
+            btnTrace.setBackground(new Color(0x2563EB));
+            btnTrace.setBorderPainted(false); btnTrace.setFocusPainted(false);
+
+            btnStats.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            btnStats.setForeground(Color.WHITE);
+            btnStats.setBackground(new Color(0x059669));
+            btnStats.setBorderPainted(false); btnStats.setFocusPainted(false);
+
+            add(btnTrace);
+            add(btnStats);
         }
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
             String status = t.getModel().getValueAt(r, 2) == null ? "" : t.getModel().getValueAt(r, 2).toString();
@@ -314,28 +321,86 @@ public class ProductionLotView extends JPanel {
     }
 
     class LotActionEditor extends DefaultCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-        private final JButton btn = new JButton("Xem nhật ký");
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        private final JButton btnTrace = new JButton("Truy xuất");
+        private final JButton btnStats = new JButton("Thống kê");
         private int currentRow;
 
         LotActionEditor(JTable t) {
             super(new JCheckBox());
-            btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            btn.setForeground(Color.WHITE);
-            btn.setBackground(new Color(0x2563EB));
-            btn.setBorderPainted(false);
-            btn.setFocusPainted(false);
-            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            
+            btnTrace.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            btnTrace.setForeground(Color.WHITE);
+            btnTrace.setBackground(new Color(0x2563EB));
+            btnTrace.setBorderPainted(false); btnTrace.setFocusPainted(false);
+            
+            btnStats.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            btnStats.setForeground(Color.WHITE);
+            btnStats.setBackground(new Color(0x059669));
+            btnStats.setBorderPainted(false); btnStats.setFocusPainted(false);
+
             panel.setOpaque(true);
             panel.setBackground(Color.WHITE);
-            panel.add(btn);
+            panel.add(btnTrace);
+            panel.add(btnStats);
 
-            btn.addActionListener(e -> {
+            btnTrace.addActionListener(e -> {
                 fireEditingStopped();
                 String lotCode = tableModel.getValueAt(currentRow, 0) == null ? ""
                         : tableModel.getValueAt(currentRow, 0).toString();
-                JOptionPane.showMessageDialog(ProductionLotView.this,
-                        "Xem nhật ký lô: " + lotCode, "Nhật ký", JOptionPane.INFORMATION_MESSAGE);
+                
+                com.example.winfinal.controller.CultivationLogController logCtrl = new com.example.winfinal.controller.CultivationLogController();
+                List<Object[]> logs = logCtrl.getTraceabilityLogs(lotCode);
+                
+                if (logs == null || logs.isEmpty()) {
+                    JOptionPane.showMessageDialog(ProductionLotView.this, "Chưa có nhật ký canh tác cho lô này.", "Nhật ký", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                
+                String[] cols = {"Thời gian", "Hoạt động", "Vật tư", "Liều lượng", "Người thực hiện"};
+                DefaultTableModel m = new DefaultTableModel(cols, 0);
+                for (Object[] r : logs) {
+                    m.addRow(new Object[]{
+                        r[0] == null ? "" : r[0].toString(),
+                        r[1], r[2], r[3], r[4]
+                    });
+                }
+                JTable logTbl = new JTable(m);
+                UiUtils.styleTable(logTbl);
+                logTbl.getColumnModel().getColumn(0).setPreferredWidth(140);
+                JScrollPane sp = new JScrollPane(logTbl);
+                sp.setPreferredSize(new Dimension(600, 300));
+                
+                JOptionPane.showMessageDialog(ProductionLotView.this, sp, "Nhật ký truy xuất nguồn gốc - Lô " + lotCode, JOptionPane.PLAIN_MESSAGE);
+            });
+
+            btnStats.addActionListener(e -> {
+                fireEditingStopped();
+                String lotCode = tableModel.getValueAt(currentRow, 0) == null ? "" : tableModel.getValueAt(currentRow, 0).toString();
+                // Get Lot ID from controller based on code
+                ProductionLotDTO currentLot = null;
+                try { currentLot = ctrl.findByLotCode(lotCode); } catch(Exception ignored){}
+                if (currentLot == null || currentLot.getId() == null) return;
+                
+                com.example.winfinal.controller.CultivationLogController logCtrl = new com.example.winfinal.controller.CultivationLogController();
+                List<Object[]> stats = logCtrl.getActivityStatsByLot(currentLot.getId());
+                
+                if (stats == null || stats.isEmpty()) {
+                    JOptionPane.showMessageDialog(ProductionLotView.this, "Chưa có hoạt động nào.", "Thống kê", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                
+                String[] cols = {"Loại hoạt động", "Số lần thực hiện"};
+                DefaultTableModel m = new DefaultTableModel(cols, 0);
+                for (Object[] r : stats) {
+                    m.addRow(new Object[]{ r[0], r[1] });
+                }
+                JTable statsTbl = new JTable(m);
+                UiUtils.styleTable(statsTbl);
+                JScrollPane sp = new JScrollPane(statsTbl);
+                sp.setPreferredSize(new Dimension(300, 200));
+                
+                JOptionPane.showMessageDialog(ProductionLotView.this, sp, "Thống kê hoạt động canh tác - Lô " + lotCode, JOptionPane.PLAIN_MESSAGE);
             });
         }
         @Override public Component getTableCellEditorComponent(JTable t, Object v, boolean s, int r, int c) {

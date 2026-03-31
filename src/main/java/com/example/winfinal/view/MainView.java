@@ -137,6 +137,11 @@ public class MainView extends JFrame {
         };
 
         btn.setText(label);
+        btn.setIcon(new Icon() {
+            @Override public void paintIcon(Component c, Graphics g, int x, int y) {}
+            @Override public int getIconWidth() { return 1; }
+            @Override public int getIconHeight() { return 1; }
+        });
         btn.setFont(AppTheme.FONT_SIDEBAR);
         btn.setForeground(AppTheme.SIDEBAR_TEXT);
         btn.setHorizontalAlignment(SwingConstants.LEFT);
@@ -144,9 +149,13 @@ public class MainView extends JFrame {
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setMaximumSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 42));
+        btn.setMinimumSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 42));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         btn.setPreferredSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 42));
-        btn.setBorder(new EmptyBorder(0, 18, 0, 12));
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btn.setMargin(new Insets(0, 0, 0, 0));
+        btn.setIconTextGap(0);
+        btn.setBorder(new EmptyBorder(0, 15, 0, 12));
 
         btn.addActionListener(e -> {
             setActive(btn);

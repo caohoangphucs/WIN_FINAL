@@ -71,4 +71,26 @@ public class SupplyImportService extends BaseService<SupplyImport, SupplyImportD
     protected Object getEntityId(SupplyImportDTO dto) {
         return dto.getId();
     }
+
+    // [3.3] Tổng chi phí nhập kho theo nhà cung cấp
+    // Trả về: Object[] { supplierName, totalAmount }
+    public List<Object[]> getTotalCostBySupplier() {
+        return ((SupplyImportDAO) dao).getTotalCostBySupplier();
+    }
+
+    // [3.4] Lịch sử nhập kho của một vật tư cụ thể
+    public List<SupplyImportDTO> findBySupply(Long supplyId) {
+        return ((SupplyImportDAO) dao).findBySupply(supplyId)
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    // [6.6] Ước tính chi phí vật tư theo lô (dùng giá trung bình nhập kho)
+    public List<Object[]> getCostEstimateByLot() {
+        return detailDAO.getCostEstimateByLot();
+    }
+
+    // Giá trung bình nhập kho của một vật tư (dùng khi validate trước khi tạo đơn)
+    public Double getAvgUnitPrice(Long supplyId) {
+        return detailDAO.getAvgUnitPrice(supplyId);
+    }
 }

@@ -20,6 +20,20 @@ public class FarmService extends BaseService<Farm, FarmDTO> {
     @Override protected void updateEntityFromDTO(FarmDTO d, Farm e) { mapper.updateEntityFromDTO(d, e); }
     @Override protected Object getEntityId(FarmDTO d) { return d.getId(); }
 
+    @Override
+    protected void validate(FarmDTO dto) {
+        super.validate(dto);
+        if (dto.getFarmCode() == null || dto.getFarmCode().trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã trang trại không được để trống");
+        }
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên trang trại không được để trống");
+        }
+        if (dto.getTotalArea() != null && dto.getTotalArea() < 0) {
+            throw new IllegalArgumentException("Diện tích (totalArea) không thể âm");
+        }
+    }
+
     // Backward compatibility aliases
     public void createFarm(FarmDTO dto) { create(dto); }
     public void updateFarm(FarmDTO dto) { update(dto); }

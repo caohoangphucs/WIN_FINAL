@@ -21,6 +21,23 @@ public class EmployeeService extends BaseService<Employee, EmployeeDTO> {
     @Override protected void updateEntityFromDTO(EmployeeDTO d, Employee e) { mapper.updateEntityFromDTO(d, e); }
     @Override protected Object getEntityId(EmployeeDTO d) { return d.getId(); }
 
+    @Override
+    protected void validate(EmployeeDTO dto) {
+        super.validate(dto);
+        if (dto.getEmpCode() == null || dto.getEmpCode().trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã nhân viên không được để trống");
+        }
+        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ tên nhân viên không được để trống");
+        }
+        if (dto.getRoleCode() == null || dto.getRoleCode().trim().isEmpty()) {
+            throw new IllegalArgumentException("Vai trò (roleCode) không được để trống");
+        }
+        if (dto.getId() == null && existsByEmpCode(dto.getEmpCode())) {
+            throw new IllegalArgumentException("Mã nhân viên đã tồn tại trong hệ thống: " + dto.getEmpCode());
+        }
+    }
+
     // [1.6] Tìm nhân viên theo tên hoặc mã
     public List<EmployeeDTO> search(String keyword) {
         return employeeDAO.search(keyword).stream().map(this::toDTO).collect(Collectors.toList());

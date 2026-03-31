@@ -21,19 +21,29 @@ public abstract class BaseService<T, D> {
     protected abstract void updateEntityFromDTO(D dto, T entity);
     protected abstract Object getEntityId(D dto);
 
+    protected void validate(D dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("Dữ liệu không được để trống (null)");
+        }
+    }
+
     public void create(D dto) {
+        validate(dto);
         T entity = toEntity(dto);
         dao.save(entity);
     }
 
     public void update(D dto) {
+        validate(dto);
         Object id = getEntityId(dto);
-        if (id == null) return;
+        if (id == null) throw new IllegalArgumentException("ID không được để trống khi phân bổ cập nhật (update)");
         
         T entity = dao.findById(id);
         if (entity != null) {
             updateEntityFromDTO(dto, entity);
             dao.update(entity);
+        } else {
+            throw new IllegalArgumentException("Không tìm thấy thực thể với ID: " + id);
         }
     }
 

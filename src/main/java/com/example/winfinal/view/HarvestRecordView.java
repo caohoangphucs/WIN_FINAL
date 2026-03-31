@@ -39,14 +39,14 @@ public class HarvestRecordView extends JPanel {
 
         JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         titleRow.setOpaque(false);
-        titleRow.add(UiUtils.createSectionTitle("🌽  Nhật Ký Thu Hoạch"));
+        titleRow.add(UiUtils.createSectionTitle("Nhat Ky Thu Hoach"));
 
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filterBar.setOpaque(false);
 
-        searchField = UiUtils.createSearchField("🔍  Tìm theo mã lô...");
-        JButton btnSearch = UiUtils.createSecondaryButton("Tìm");
-        JButton btnAdd    = UiUtils.createPrimaryButton("＋  Ghi thu hoạch");
+        searchField = UiUtils.createSearchField("Tim theo ma lo...");
+        JButton btnSearch = UiUtils.createSecondaryButton("Tim");
+        JButton btnAdd    = UiUtils.createPrimaryButton("+ Ghi thu hoach");
 
         btnSearch.addActionListener(e -> refreshTable(searchField.getText().trim()));
         searchField.addActionListener(e -> refreshTable(searchField.getText().trim()));
@@ -62,8 +62,8 @@ public class HarvestRecordView extends JPanel {
     }
 
     private JPanel buildTable() {
-        String[] cols = {"ID", "Lô ID", "Ngày thu hoạch", "Năng suất (kg)",
-                         "Chất lượng", "Nhân viên ID", "Khách hàng ID", "Thao tác"};
+        String[] cols = {"ID", "Lo ID", "Ngay thu hoach", "Nang suat (kg)",
+                         "Chat luong", "Nhan vien ID", "Khach hang ID", "Thao tac"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
         };
@@ -80,9 +80,9 @@ public class HarvestRecordView extends JPanel {
             return lbl;
         });
 
-        table.getColumn("Thao tác").setCellRenderer(new FarmView.ActionRenderer());
-        table.getColumn("Thao tác").setCellEditor(new HarvestActionEditor(table));
-        table.getColumn("Thao tác").setPreferredWidth(130);
+        table.getColumn("Thao tac").setCellRenderer(new FarmView.ActionRenderer());
+        table.getColumn("Thao tac").setCellEditor(new HarvestActionEditor(table));
+        table.getColumn("Thao tac").setPreferredWidth(130);
         table.getColumn("ID").setPreferredWidth(50);
 
         JScrollPane scroll = new JScrollPane(table);
@@ -119,14 +119,14 @@ public class HarvestRecordView extends JPanel {
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
         }
     }
 
     void openDialog(HarvestRecordDTO existing) {
         boolean isEdit = existing != null;
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "✏️  Sửa bản ghi thu hoạch" : "➕  Ghi thu hoạch mới",
+                isEdit ? "Sua ban ghi thu hoach" : "Ghi thu hoach moi",
                 Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setSize(420, 360);
         dlg.setLocationRelativeTo(this);
@@ -136,13 +136,13 @@ public class HarvestRecordView extends JPanel {
         form.setBackground(AppTheme.BG_CARD);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtLot   = UiUtils.addFormField(form, "Lô ID *");
-        JTextField txtDate  = UiUtils.addFormField(form, "Ngày thu hoạch (dd/MM/yyyy) *");
-        JTextField txtYield = UiUtils.addFormField(form, "Năng suất (kg)");
-        JTextField txtEmp   = UiUtils.addFormField(form, "Nhân viên ID");
-        JTextField txtCust  = UiUtils.addFormField(form, "Khách hàng ID");
+        JTextField txtLot   = UiUtils.addFormField(form, "Lo ID *");
+        JTextField txtDate  = UiUtils.addFormField(form, "Ngay thu hoach (dd/MM/yyyy) *");
+        JTextField txtYield = UiUtils.addFormField(form, "Nang suat (kg)");
+        JTextField txtEmp   = UiUtils.addFormField(form, "Nhan vien ID");
+        JTextField txtCust  = UiUtils.addFormField(form, "Khach hang ID");
 
-        JLabel lblGrade = new JLabel("Chất lượng");
+        JLabel lblGrade = new JLabel("Chat luong");
         lblGrade.setFont(AppTheme.FONT_BODY);
         lblGrade.setForeground(AppTheme.TEXT_SECONDARY);
         JComboBox<String> cboGrade = new JComboBox<>(new String[]{"A", "B", "C", "D"});
@@ -161,8 +161,8 @@ public class HarvestRecordView extends JPanel {
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
-        JButton btnSave   = UiUtils.createPrimaryButton("💾  Lưu");
+        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
 
         btnCancel.addActionListener(e -> dlg.dispose());
         btnSave.addActionListener(e -> {
@@ -184,7 +184,7 @@ public class HarvestRecordView extends JPanel {
                 dlg.dispose();
                 refreshTable(null);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
             }
         });
 
@@ -197,8 +197,8 @@ public class HarvestRecordView extends JPanel {
 
     class HarvestActionEditor extends DefaultCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("✏️ Sửa");
-        private final JButton btnDelete = UiUtils.createDangerButton("🗑 Xóa");
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
         private int currentRow;
 
         HarvestActionEditor(JTable t) {
@@ -215,20 +215,21 @@ public class HarvestRecordView extends JPanel {
                     dto.setId(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                     openDialog(dto);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(HarvestRecordView.this, "Lỗi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(HarvestRecordView.this, "Loi: " + ex.getMessage());
                 }
             });
 
             btnDelete.addActionListener(e -> {
                 fireEditingStopped();
-                int cf = JOptionPane.showConfirmDialog(HarvestRecordView.this, "Xóa bản ghi này?",
-                        "Xác nhận", JOptionPane.YES_NO_OPTION);
+                int cf = JOptionPane.showConfirmDialog(HarvestRecordView.this, "Xoa ban ghi nay?",
+                        "Xac nhan", JOptionPane.YES_NO_OPTION);
                 if (cf == JOptionPane.YES_OPTION) {
                     try {
-                        ctrl.deleteHarvestRecord(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
+                        ctrl.deleteHarvestRecord(Long.parseLong(
+                                tableModel.getValueAt(currentRow, 0).toString()));
                         refreshTable(null);
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(HarvestRecordView.this, "Lỗi: " + ex.getMessage());
+                        JOptionPane.showMessageDialog(HarvestRecordView.this, "Loi: " + ex.getMessage());
                     }
                 }
             });

@@ -38,13 +38,13 @@ public class CultivationLogView extends JPanel {
 
         JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         titleRow.setOpaque(false);
-        titleRow.add(UiUtils.createSectionTitle("📋  Nhật Ký Canh Tác"));
+        titleRow.add(UiUtils.createSectionTitle("Nhat Ky Canh Tac"));
 
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filterBar.setOpaque(false);
 
-        JButton btnAdd = UiUtils.createPrimaryButton("＋  Ghi hoạt động");
-        JButton btnRefresh = UiUtils.createSecondaryButton("↻  Làm mới");
+        JButton btnAdd     = UiUtils.createPrimaryButton("+ Ghi hoat dong");
+        JButton btnRefresh = UiUtils.createSecondaryButton("Lam moi");
 
         btnAdd.addActionListener(e -> openDialog(null));
         btnRefresh.addActionListener(e -> refreshTable());
@@ -58,19 +58,19 @@ public class CultivationLogView extends JPanel {
     }
 
     private JPanel buildTable() {
-        String[] cols = {"ID", "Lô ID", "Ngày thực hiện", "Loại hoạt động",
-                         "Mô tả", "Vật tư ID", "Số lượng", "Đơn vị", "Thao tác"};
+        String[] cols = {"ID", "Lo ID", "Ngay thuc hien", "Loai hoat dong",
+                         "Vat tu ID", "Lieu luong", "Nhan vien ID", "Thao tac"};
         tableModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return c == 8; }
+            @Override public boolean isCellEditable(int r, int c) { return c == 7; }
         };
         table = new JTable(tableModel);
         UiUtils.styleTable(table);
 
-        table.getColumn("Thao tác").setCellRenderer(new FarmView.ActionRenderer());
-        table.getColumn("Thao tác").setCellEditor(new LogActionEditor(table));
-        table.getColumn("Thao tác").setPreferredWidth(130);
+        table.getColumn("Thao tac").setCellRenderer(new FarmView.ActionRenderer());
+        table.getColumn("Thao tac").setCellEditor(new LogActionEditor(table));
+        table.getColumn("Thao tac").setPreferredWidth(130);
         table.getColumn("ID").setPreferredWidth(50);
-        table.getColumn("Lô ID").setPreferredWidth(70);
+        table.getColumn("Lo ID").setPreferredWidth(70);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -90,33 +90,33 @@ public class CultivationLogView extends JPanel {
                 tableModel.addRow(new Object[]{
                     l.getId(), l.getLotId(),
                     l.getAppliedAt() == null ? "" : sdf.format(l.getAppliedAt()),
-                    l.getActivityTypeCode(), "—",
-                    l.getSupplyId(), l.getDosageUsed(), "—",
+                    l.getActivityTypeCode(),
+                    l.getSupplyId(), l.getDosageUsed(), l.getEmployeeId(),
                     "edit|delete"
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
         }
     }
 
     void openDialog(CultivationLogDTO existing) {
         boolean isEdit = existing != null;
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "✏️  Sửa nhật ký" : "➕  Ghi hoạt động canh tác",
+                isEdit ? "Sua nhat ky" : "Ghi hoat dong canh tac",
                 Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(440, 420);
+        dlg.setSize(440, 400);
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
 
-        JPanel form = new JPanel(new GridLayout(8, 2, 10, 12));
+        JPanel form = new JPanel(new GridLayout(7, 2, 10, 12));
         form.setBackground(AppTheme.BG_CARD);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtLot   = UiUtils.addFormField(form, "Lô ID *");
-        JTextField txtDate  = UiUtils.addFormField(form, "Ngày (dd/MM/yyyy) *");
+        JTextField txtLot  = UiUtils.addFormField(form, "Lo ID *");
+        JTextField txtDate = UiUtils.addFormField(form, "Ngay (dd/MM/yyyy) *");
 
-        JLabel lblType = new JLabel("Loại hoạt động");
+        JLabel lblType = new JLabel("Loai hoat dong");
         lblType.setFont(AppTheme.FONT_BODY);
         lblType.setForeground(AppTheme.TEXT_SECONDARY);
         String[] types = {"BON_PHAN", "PHUN_THUOC", "TUOI_NUOC", "LAM_CO",
@@ -126,27 +126,25 @@ public class CultivationLogView extends JPanel {
         form.add(lblType);
         form.add(cboType);
 
-        JTextField txtDesc  = UiUtils.addFormField(form, "Mô tả");
-        JTextField txtSup   = UiUtils.addFormField(form, "Vật tư ID");
-        JTextField txtQty   = UiUtils.addFormField(form, "Số lượng dùng");
-        JTextField txtUnit  = UiUtils.addFormField(form, "Đơn vị");
-        JTextField txtEmp   = UiUtils.addFormField(form, "Nhân viên ID");
+        JTextField txtSup  = UiUtils.addFormField(form, "Vat tu ID");
+        JTextField txtQty  = UiUtils.addFormField(form, "Lieu luong su dung");
+        JTextField txtEmp  = UiUtils.addFormField(form, "Nhan vien ID");
+        form.add(new JLabel());
+        form.add(new JLabel());
 
         if (isEdit) {
             txtLot.setText(existing.getLotId() == null ? "" : existing.getLotId().toString());
             txtDate.setText(existing.getAppliedAt() == null ? "" : sdf.format(existing.getAppliedAt()));
-            txtDesc.setText("");
             if (existing.getActivityTypeCode() != null) cboType.setSelectedItem(existing.getActivityTypeCode());
             txtSup.setText(existing.getSupplyId() == null ? "" : existing.getSupplyId().toString());
             txtQty.setText(existing.getDosageUsed() == null ? "" : existing.getDosageUsed().toString());
-            txtUnit.setText("");
             txtEmp.setText(existing.getEmployeeId() == null ? "" : existing.getEmployeeId().toString());
         }
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
-        JButton btnSave   = UiUtils.createPrimaryButton("💾  Lưu");
+        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
 
         btnCancel.addActionListener(e -> dlg.dispose());
         btnSave.addActionListener(e -> {
@@ -168,7 +166,7 @@ public class CultivationLogView extends JPanel {
                 dlg.dispose();
                 refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
             }
         });
 
@@ -181,8 +179,8 @@ public class CultivationLogView extends JPanel {
 
     class LogActionEditor extends DefaultCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("✏️ Sửa");
-        private final JButton btnDelete = UiUtils.createDangerButton("🗑 Xóa");
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
         private int currentRow;
 
         LogActionEditor(JTable t) {
@@ -199,20 +197,20 @@ public class CultivationLogView extends JPanel {
                     dto.setId(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                     openDialog(dto);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(CultivationLogView.this, "Lỗi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(CultivationLogView.this, "Loi: " + ex.getMessage());
                 }
             });
 
             btnDelete.addActionListener(e -> {
                 fireEditingStopped();
                 int cf = JOptionPane.showConfirmDialog(CultivationLogView.this,
-                        "Xóa nhật ký này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+                        "Xoa nhat ky nay?", "Xac nhan", JOptionPane.YES_NO_OPTION);
                 if (cf == JOptionPane.YES_OPTION) {
                     try {
                         ctrl.deleteLog(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                         refreshTable();
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(CultivationLogView.this, "Lỗi: " + ex.getMessage());
+                        JOptionPane.showMessageDialog(CultivationLogView.this, "Loi: " + ex.getMessage());
                     }
                 }
             });

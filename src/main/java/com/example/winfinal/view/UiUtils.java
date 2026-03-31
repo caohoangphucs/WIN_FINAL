@@ -13,6 +13,8 @@ import java.awt.geom.RoundRectangle2D;
 public final class UiUtils {
 
     private UiUtils() {}
+    
+
 
     // ── Rounded panel (card) ──────────────────────────────────
 
@@ -54,7 +56,8 @@ public final class UiUtils {
         card.setBorder(new EmptyBorder(16, 20, 16, 16));
 
         JLabel iconLabel = new JLabel(icon);
-        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 28));
+        iconLabel.setFont(AppTheme.FONT_SUBTITLE);
+        iconLabel.setForeground(accentColor);
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(AppTheme.FONT_SMALL);

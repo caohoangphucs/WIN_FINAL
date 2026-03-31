@@ -10,8 +10,7 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * Pest Report screen — shows all reports with severity-color coding.
- * Uses only PestReport.getId() and loads full data via service queries.
+ * Pest Report screen with severity-color coding.
  */
 public class PestReportView extends JPanel {
 
@@ -34,20 +33,20 @@ public class PestReportView extends JPanel {
     private JPanel buildHeader() {
         JPanel p = new JPanel(new BorderLayout(12, 8));
         p.setOpaque(false);
-        p.add(UiUtils.createSectionTitle("🐛  Báo Cáo Sâu Bệnh"), BorderLayout.NORTH);
+        p.add(UiUtils.createSectionTitle("Bao Cao Sau Benh"), BorderLayout.NORTH);
 
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         bar.setOpaque(false);
 
-        JButton btnAll      = UiUtils.createSecondaryButton("Tất cả");
-        JButton btnCritical = UiUtils.createDangerButton("🚨 CRITICAL / HIGH");
-        JButton btnAdd      = UiUtils.createPrimaryButton("＋  Báo cáo mới");
+        JButton btnAll      = UiUtils.createSecondaryButton("Tat ca");
+        JButton btnCritical = UiUtils.createDangerButton("CRITICAL / HIGH");
+        JButton btnAdd      = UiUtils.createPrimaryButton("+ Bao cao moi");
 
         btnAll.addActionListener(e -> refreshTable(false));
         btnCritical.addActionListener(e -> refreshTable(true));
         btnAdd.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "Chức năng thêm sâu bệnh cần nhập qua Entity (lot, employee, severity JPA relations).",
-                "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+                "Chuc nang them sau benh can nhap qua Entity (lot, employee, severity JPA relations).",
+                "Thong bao", JOptionPane.INFORMATION_MESSAGE));
 
         bar.add(btnAll);
         bar.add(btnCritical);
@@ -57,14 +56,14 @@ public class PestReportView extends JPanel {
     }
 
     private JPanel buildTable() {
-        String[] cols = {"ID", "Lot (ID)", "Severity", "Employee (ID)", "Ghi chú"};
+        String[] cols = {"ID", "Lo (ID)", "Muc do", "Nhan vien (ID)", "Ghi chu"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         table = new JTable(tableModel);
         UiUtils.styleTable(table);
 
-        // Severity badge — column 2
+        // Severity badge
         table.getColumnModel().getColumn(2).setCellRenderer((t, val, sel, foc, row, col) -> {
             String sev = val == null ? "" : val.toString();
             Color[] clrs = severityColor(sev);
@@ -75,7 +74,7 @@ public class PestReportView extends JPanel {
         });
 
         table.getColumn("ID").setPreferredWidth(50);
-        table.getColumn("Lot (ID)").setPreferredWidth(80);
+        table.getColumn("Lo (ID)").setPreferredWidth(80);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -104,17 +103,14 @@ public class PestReportView extends JPanel {
                     ? ctrl.getHighSeverityReports()
                     : ctrl.getAllReports();
             for (PestReport p : list) {
-                String lotInfo = "", sevCode = "", empInfo = "";
-                try { lotInfo = p.getLot() == null ? "—" : String.valueOf(p.getLot().getId()); }
-                catch (Exception ignored) {}
-                try { sevCode = p.getSeverity() == null ? "—" : p.getSeverity().getCode(); }
-                catch (Exception ignored) {}
-                try { empInfo = p.getEmployee() == null ? "—" : String.valueOf(p.getEmployee().getId()); }
-                catch (Exception ignored) {}
+                String lotInfo = "--", sevCode = "--", empInfo = "--";
+                try { lotInfo = p.getLot()      == null ? "--" : String.valueOf(p.getLot().getId());      } catch (Exception ignored) {}
+                try { sevCode = p.getSeverity() == null ? "--" : p.getSeverity().getCode();              } catch (Exception ignored) {}
+                try { empInfo = p.getEmployee() == null ? "--" : String.valueOf(p.getEmployee().getId()); } catch (Exception ignored) {}
                 tableModel.addRow(new Object[]{p.getId(), lotInfo, sevCode, empInfo, ""});
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
         }
     }
 }

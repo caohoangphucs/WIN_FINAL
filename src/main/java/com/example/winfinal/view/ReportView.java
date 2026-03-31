@@ -8,30 +8,30 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * Report screen: statistical summaries using custom-painted charts.
+ * Report screen: statistical summaries with custom-painted charts.
  */
 public class ReportView extends JPanel {
 
-    private final HarvestRecordController harvestCtrl     = new HarvestRecordController();
-    private final SupplyImportController  importCtrl      = new SupplyImportController();
-    private final ProductionLotController lotCtrl         = new ProductionLotController();
+    private final HarvestRecordController harvestCtrl = new HarvestRecordController();
+    private final SupplyImportController  importCtrl  = new SupplyImportController();
+    private final ProductionLotController lotCtrl     = new ProductionLotController();
 
     public ReportView() {
         setLayout(new BorderLayout(0, 0));
         setBackground(AppTheme.BG_MAIN);
         setBorder(new EmptyBorder(28, 28, 28, 28));
 
-        add(buildHeader(),  BorderLayout.NORTH);
-        add(buildCharts(),  BorderLayout.CENTER);
+        add(buildHeader(), BorderLayout.NORTH);
+        add(buildCharts(), BorderLayout.CENTER);
     }
 
     private JPanel buildHeader() {
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
         p.setBorder(new EmptyBorder(0, 0, 20, 0));
-        p.add(UiUtils.createSectionTitle("📈  Báo Cáo & Thống Kê"), BorderLayout.WEST);
+        p.add(UiUtils.createSectionTitle("Bao Cao & Thong Ke"), BorderLayout.WEST);
 
-        JButton btnRefresh = UiUtils.createSecondaryButton("↻  Làm mới");
+        JButton btnRefresh = UiUtils.createSecondaryButton("Lam moi");
         btnRefresh.addActionListener(e -> {
             removeAll();
             add(buildHeader(), BorderLayout.NORTH);
@@ -61,49 +61,44 @@ public class ReportView extends JPanel {
     // ── Chart 1: Yield by Crop Type (horizontal bar) ─────────
 
     private JPanel buildYieldByCropChart() {
-        JPanel card = createChartCard("🌾  Năng suất trung bình theo loại cây");
+        JPanel card = createChartCard("Nang suat trung binh theo loai cay");
         List<Object[]> data = null;
         try { data = harvestCtrl.getAvgYieldByCropType(); } catch (Exception ignored) {}
 
-        if (data == null || data.isEmpty()) {
-            card.add(buildNoDataLabel());
-        } else {
-            card.add(new HorizBarChart(data), BorderLayout.CENTER);
-        }
+        if (data == null || data.isEmpty()) card.add(buildNoDataLabel());
+        else card.add(new HorizBarChart(data), BorderLayout.CENTER);
         return card;
     }
 
     // ── Chart 2: Quality Grade Donut ─────────────────────────
 
     private JPanel buildQualityGradeChart() {
-        JPanel card = createChartCard("🏅  Phân phối chất lượng thu hoạch");
+        JPanel card = createChartCard("Phan phoi chat luong thu hoach");
         List<Object[]> data = null;
         try { data = harvestCtrl.getQualityGradeStats(); } catch (Exception ignored) {}
 
-        if (data == null || data.isEmpty()) {
-            card.add(buildNoDataLabel());
-        } else {
-            card.add(new DonutChart(data), BorderLayout.CENTER);
-        }
+        if (data == null || data.isEmpty()) card.add(buildNoDataLabel());
+        else card.add(new DonutChart(data), BorderLayout.CENTER);
         return card;
     }
 
     // ── Table 3: Top Yielding Lots ────────────────────────────
 
     private JPanel buildTopLotsTable() {
-        JPanel card = createChartCard("🥇  Top 5 lô năng suất cao nhất");
+        JPanel card = createChartCard("Top 5 lo nang suat cao nhat");
         try {
             List<Object[]> data = lotCtrl.getTopYieldingLots(5);
             if (data == null || data.isEmpty()) {
                 card.add(buildNoDataLabel());
             } else {
-                String[] cols = {"#", "Mã lô", "Tổng năng suất (kg)"};
+                String[] cols = {"#", "Ma lo", "Tong nang suat (kg)"};
                 String[][] rows = new String[data.size()][3];
                 for (int i = 0; i < data.size(); i++) {
                     Object[] r = data.get(i);
                     rows[i][0] = String.valueOf(i + 1);
                     rows[i][1] = r[0] == null ? "" : r[0].toString();
-                    rows[i][2] = r[1] == null ? "0" : String.format("%.1f", ((Number) r[1]).doubleValue());
+                    rows[i][2] = r[1] == null ? "0"
+                            : String.format("%.1f", ((Number) r[1]).doubleValue());
                 }
                 JTable t = new JTable(rows, cols);
                 UiUtils.styleTable(t);
@@ -118,16 +113,16 @@ public class ReportView extends JPanel {
         return card;
     }
 
-    // ── Table 4: Cost by Supplier ─────────────────────────────
+    // ── Table 4: Cost By Supplier ─────────────────────────────
 
     private JPanel buildCostBySupplierTable() {
-        JPanel card = createChartCard("💰  Tổng chi phí nhập kho theo nhà cung cấp");
+        JPanel card = createChartCard("Tong chi phi nhap kho theo nha cung cap");
         try {
             List<Object[]> data = importCtrl.getTotalCostBySupplier();
             if (data == null || data.isEmpty()) {
                 card.add(buildNoDataLabel());
             } else {
-                String[] cols = {"Nhà cung cấp", "Tổng chi phí (VNĐ)"};
+                String[] cols = {"Nha cung cap", "Tong chi phi (VND)"};
                 String[][] rows = new String[data.size()][2];
                 for (int i = 0; i < data.size(); i++) {
                     Object[] r = data.get(i);
@@ -164,7 +159,7 @@ public class ReportView extends JPanel {
     }
 
     private JLabel buildNoDataLabel() {
-        JLabel lbl = new JLabel("Không có dữ liệu hoặc chưa kết nối DB");
+        JLabel lbl = new JLabel("Khong co du lieu hoac chua ket noi DB");
         lbl.setFont(AppTheme.FONT_BODY);
         lbl.setForeground(AppTheme.TEXT_MUTED);
         lbl.setHorizontalAlignment(SwingConstants.CENTER);
@@ -176,8 +171,8 @@ public class ReportView extends JPanel {
     static class HorizBarChart extends JPanel {
         private final List<Object[]> data;
         private final Color[] palette = {
-            new Color(0x52B788), new Color(0x40916C), new Color(0x74C69D),
-            new Color(0x2D6A4F), new Color(0x95D5B2)
+            new Color(0x52B788), new Color(0x40916C),
+            new Color(0x74C69D), new Color(0x2D6A4F), new Color(0x95D5B2)
         };
 
         HorizBarChart(List<Object[]> data) {
@@ -226,7 +221,8 @@ public class ReportView extends JPanel {
     static class DonutChart extends JPanel {
         private final List<Object[]> data;
         private final Color[] palette = {
-            new Color(0x52B788), new Color(0x4895EF), new Color(0xFFB833), new Color(0xE63946)
+            new Color(0x52B788), new Color(0x4895EF),
+            new Color(0xFFB833), new Color(0xE63946)
         };
 
         DonutChart(List<Object[]> data) {
@@ -246,32 +242,27 @@ public class ReportView extends JPanel {
                     .sum();
             if (total == 0) { g2.dispose(); return; }
 
-            int size = Math.min(getWidth(), getHeight()) - 40;
+            int size = Math.min(getWidth(), getHeight()) - 50;
             int x = (getWidth() - size) / 2;
             int y = (getHeight() - size) / 2;
             double startAngle = 0;
 
             for (int i = 0; i < data.size(); i++) {
-                double val = data.get(i)[1] == null ? 0 : ((Number) data.get(i)[1]).doubleValue();
+                double val   = data.get(i)[1] == null ? 0 : ((Number) data.get(i)[1]).doubleValue();
                 double sweep = val / total * 360.0;
-
                 g2.setColor(palette[i % palette.length]);
-                g2.fill(new java.awt.geom.Arc2D.Double(x, y, size, size,
-                        startAngle, sweep, java.awt.geom.Arc2D.PIE));
-
+                g2.fill(new java.awt.geom.Arc2D.Double(
+                        x, y, size, size, startAngle, sweep, java.awt.geom.Arc2D.PIE));
                 startAngle += sweep;
             }
 
             // Donut hole
             int holeSize = size / 2;
-            int hx = x + (size - holeSize) / 2;
-            int hy = y + (size - holeSize) / 2;
             g2.setColor(AppTheme.BG_CARD);
-            g2.fillOval(hx, hy, holeSize, holeSize);
+            g2.fillOval(x + (size - holeSize) / 2, y + (size - holeSize) / 2, holeSize, holeSize);
 
             // Legend
-            int legY = y + size + 12;
-            int legX = x;
+            int legY = y + size + 14, legX = x;
             g2.setFont(AppTheme.FONT_SMALL);
             for (int i = 0; i < data.size(); i++) {
                 String label = data.get(i)[0] == null ? "N/A" : data.get(i)[0].toString();
@@ -279,11 +270,9 @@ public class ReportView extends JPanel {
                 g2.setColor(palette[i % palette.length]);
                 g2.fillOval(legX, legY - 10, 12, 12);
                 g2.setColor(AppTheme.TEXT_SECONDARY);
-                g2.drawString(label + " (" + (int)(val / total * 100) + "%)",
-                        legX + 16, legY);
+                g2.drawString(label + " (" + (int)(val / total * 100) + "%)", legX + 16, legY);
                 legX += 90;
             }
-
             g2.dispose();
         }
     }

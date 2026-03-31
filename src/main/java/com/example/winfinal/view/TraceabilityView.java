@@ -10,15 +10,15 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * Traceability screen: enter a lot code → full timeline of events.
+ * Traceability screen: enter a lot code and see a timeline of events.
  */
 public class TraceabilityView extends JPanel {
 
-    private final ProductionLotController lotCtrl         = new ProductionLotController();
+    private final ProductionLotController  lotCtrl         = new ProductionLotController();
     private final CultivationLogController cultivationCtrl = new CultivationLogController();
-    private final IrrigationLogController irrigationCtrl   = new IrrigationLogController();
-    private final PestReportController pestCtrl            = new PestReportController();
-    private final HarvestRecordController harvestCtrl      = new HarvestRecordController();
+    private final IrrigationLogController  irrigationCtrl  = new IrrigationLogController();
+    private final PestReportController     pestCtrl        = new PestReportController();
+    private final HarvestRecordController  harvestCtrl     = new HarvestRecordController();
 
     private JTextField txtLotCode;
     private JPanel timelinePanel;
@@ -39,16 +39,16 @@ public class TraceabilityView extends JPanel {
         JPanel p = new JPanel(new BorderLayout(0, 16));
         p.setOpaque(false);
 
-        JLabel title = UiUtils.createSectionTitle("🔍  Truy Xuất Nguồn Gốc");
+        JLabel title = UiUtils.createSectionTitle("Truy Xuat Nguon Goc");
 
         JPanel inputRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         inputRow.setOpaque(false);
 
-        txtLotCode = UiUtils.createSearchField("Nhập mã lô, vd: FARM001-2026-001");
+        txtLotCode = UiUtils.createSearchField("Nhap ma lo, vd: FARM001-2026-001");
         txtLotCode.setPreferredSize(new Dimension(320, AppTheme.BUTTON_HEIGHT));
 
-        JButton btnTrace = UiUtils.createPrimaryButton("🔍  Truy xuất");
-        JButton btnClear = UiUtils.createSecondaryButton("Xóa");
+        JButton btnTrace = UiUtils.createPrimaryButton("Truy xuat");
+        JButton btnClear = UiUtils.createSecondaryButton("Xoa");
 
         btnTrace.addActionListener(e -> doTrace());
         txtLotCode.addActionListener(e -> doTrace());
@@ -59,7 +59,7 @@ public class TraceabilityView extends JPanel {
             timelinePanel.repaint();
         });
 
-        inputRow.add(new JLabel("Mã lô: "));
+        inputRow.add(new JLabel("Ma lo:"));
         inputRow.add(txtLotCode);
         inputRow.add(btnTrace);
         inputRow.add(btnClear);
@@ -83,18 +83,18 @@ public class TraceabilityView extends JPanel {
         return scroll;
     }
 
-    // ── Trace action ──────────────────────────────────────────
+    // ── Trace logic ───────────────────────────────────────────
 
     private void doTrace() {
         String lotCode = txtLotCode.getText().trim();
         if (lotCode.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã lô.");
+            JOptionPane.showMessageDialog(this, "Vui long nhap ma lo.");
             return;
         }
 
         timelinePanel.removeAll();
 
-        // Lot info header
+        // Lot info card
         try {
             ProductionLotDTO lot = lotCtrl.getFullTraceabilityInfo(lotCode);
             if (lot != null) {
@@ -103,8 +103,7 @@ public class TraceabilityView extends JPanel {
             }
         } catch (Exception ignored) {}
 
-        // Section header
-        timelinePanel.add(buildSectionLabel("📅  Timeline hoạt động"));
+        timelinePanel.add(buildSectionLabel("Timeline hoat dong"));
         timelinePanel.add(Box.createVerticalStrut(8));
 
         // Cultivation logs
@@ -114,8 +113,8 @@ public class TraceabilityView extends JPanel {
                 String date = row[0] == null ? "N/A" : row[0].toString();
                 String type = row[1] == null ? "" : row[1].toString();
                 String desc = row[2] == null ? "" : row[2].toString();
-                timelinePanel.add(buildTimelineItem("📋", date, type + " – " + desc,
-                        AppTheme.PRIMARY, false));
+                timelinePanel.add(buildTimelineItem("[CANH TAC]", date,
+                        type + " - " + desc, AppTheme.PRIMARY, false));
                 timelinePanel.add(Box.createVerticalStrut(6));
             }
         } catch (Exception ignored) {}
@@ -125,9 +124,9 @@ public class TraceabilityView extends JPanel {
             List<Object[]> logs = irrigationCtrl.getTraceabilityLogs(lotCode);
             for (Object[] row : logs) {
                 String date = row[0] == null ? "N/A" : row[0].toString();
-                String vol  = row[1] == null ? "" : "Lượng nước: " + row[1] + " L";
-                timelinePanel.add(buildTimelineItem("💧", date, "Tưới tiêu – " + vol,
-                        AppTheme.INFO, false));
+                String vol  = row[1] == null ? "" : "Luong nuoc: " + row[1] + " L";
+                timelinePanel.add(buildTimelineItem("[TUOI TIEU]", date,
+                        "Tuoi tieu - " + vol, AppTheme.INFO, false));
                 timelinePanel.add(Box.createVerticalStrut(6));
             }
         } catch (Exception ignored) {}
@@ -136,13 +135,13 @@ public class TraceabilityView extends JPanel {
         try {
             List<Object[]> logs = pestCtrl.getTraceabilityLogs(lotCode);
             for (Object[] row : logs) {
-                String date = row[0] == null ? "N/A" : row[0].toString();
-                String type = row[1] == null ? "" : row[1].toString();
-                String sev  = row[2] == null ? "" : row[2].toString();
-                boolean critical = sev.equalsIgnoreCase("CRITICAL") || sev.equalsIgnoreCase("HIGH");
-                timelinePanel.add(buildTimelineItem("🐛", date,
-                        "Sâu bệnh: " + type + " [" + sev + "]",
-                        critical ? AppTheme.DANGER : AppTheme.WARNING, critical));
+                String date     = row[0] == null ? "N/A" : row[0].toString();
+                String type     = row[1] == null ? "" : row[1].toString();
+                String sev      = row[2] == null ? "" : row[2].toString();
+                boolean serious = sev.equalsIgnoreCase("CRITICAL") || sev.equalsIgnoreCase("HIGH");
+                timelinePanel.add(buildTimelineItem("[SAU BENH]", date,
+                        "Sau benh: " + type + " [" + sev + "]",
+                        serious ? AppTheme.DANGER : AppTheme.WARNING, serious));
                 timelinePanel.add(Box.createVerticalStrut(6));
             }
         } catch (Exception ignored) {}
@@ -152,15 +151,15 @@ public class TraceabilityView extends JPanel {
             var harvests = harvestCtrl.findByLotCode(lotCode);
             for (var h : harvests) {
                 String date  = h.getHarvestDate() == null ? "N/A" : sdf.format(h.getHarvestDate());
-                String yield = "Năng suất: " + h.getYieldKg() + " kg, Chất lượng: " + h.getQualityGradeCode();
-                timelinePanel.add(buildTimelineItem("✅", date, "THU HOẠCH – " + yield,
-                        AppTheme.SUCCESS, false));
+                String yInfo = "Nang suat: " + h.getYieldKg() + " kg, Chat luong: " + h.getQualityGradeCode();
+                timelinePanel.add(buildTimelineItem("[THU HOACH]", date,
+                        yInfo, AppTheme.SUCCESS, false));
                 timelinePanel.add(Box.createVerticalStrut(6));
             }
         } catch (Exception ignored) {}
 
         if (timelinePanel.getComponentCount() <= 2) {
-            JLabel empty = new JLabel("Không tìm thấy dữ liệu cho mã lô: " + lotCode);
+            JLabel empty = new JLabel("Khong tim thay du lieu cho ma lo: " + lotCode);
             empty.setFont(AppTheme.FONT_BODY);
             empty.setForeground(AppTheme.TEXT_SECONDARY);
             empty.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -179,16 +178,16 @@ public class TraceabilityView extends JPanel {
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(AppTheme.PRIMARY, 1, true),
                 new EmptyBorder(12, 16, 12, 16)));
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
 
-        addInfoItem(card, "Mã lô", lot.getLotCode());
-        addInfoItem(card, "Trạng thái", lot.getStatusCode());
-        addInfoItem(card, "Diện tích", lot.getAreaM2() + " m²");
-        addInfoItem(card, "Ngày trồng",
+        addInfoItem(card, "Ma lo",              lot.getLotCode());
+        addInfoItem(card, "Trang thai",          lot.getStatusCode());
+        addInfoItem(card, "Dien tich",           lot.getAreaM2() + " m2");
+        addInfoItem(card, "Ngay trong",
                 lot.getPlantDate() == null ? "N/A" : sdf.format(lot.getPlantDate()));
-        addInfoItem(card, "Dự kiến thu hoạch",
+        addInfoItem(card, "Du kien thu hoach",
                 lot.getExpectedHarvestDate() == null ? "N/A" : sdf.format(lot.getExpectedHarvestDate()));
-        addInfoItem(card, "Farm ID", String.valueOf(lot.getFarmId()));
+        addInfoItem(card, "Farm ID",             String.valueOf(lot.getFarmId()));
         return card;
     }
 
@@ -198,7 +197,7 @@ public class TraceabilityView extends JPanel {
         JLabel lbl = new JLabel(label);
         lbl.setFont(AppTheme.FONT_SMALL);
         lbl.setForeground(AppTheme.TEXT_SECONDARY);
-        JLabel val = new JLabel(value == null ? "—" : value);
+        JLabel val = new JLabel(value == null ? "-" : value);
         val.setFont(AppTheme.FONT_SUBTITLE);
         val.setForeground(AppTheme.TEXT_PRIMARY);
         item.add(lbl, BorderLayout.NORTH);
@@ -208,7 +207,7 @@ public class TraceabilityView extends JPanel {
 
     // ── Timeline item ─────────────────────────────────────────
 
-    private JPanel buildTimelineItem(String icon, String date, String text,
+    private JPanel buildTimelineItem(String tag, String date, String text,
                                      Color accentColor, boolean isAlert) {
         JPanel item = new JPanel() {
             @Override
@@ -217,41 +216,29 @@ public class TraceabilityView extends JPanel {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(AppTheme.BG_CARD);
                 g2.fill(new java.awt.geom.RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 10, 10));
-                // left accent
                 g2.setColor(accentColor);
                 g2.fill(new java.awt.geom.RoundRectangle2D.Double(0, 0, 4, getHeight(), 4, 4));
                 g2.dispose();
             }
         };
         item.setOpaque(false);
-        item.setLayout(new BorderLayout(12, 0));
-        item.setBorder(new EmptyBorder(10, 14, 10, 14));
+        item.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
         item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
-        JLabel iconLbl = new JLabel(icon);
-        iconLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+        JLabel tagLbl = new JLabel(tag);
+        tagLbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        tagLbl.setForeground(accentColor);
 
         JLabel dateLbl = new JLabel(date);
         dateLbl.setFont(AppTheme.FONT_SMALL);
         dateLbl.setForeground(AppTheme.TEXT_SECONDARY);
-        dateLbl.setPreferredSize(new Dimension(100, 0));
+        dateLbl.setPreferredSize(new Dimension(90, 0));
 
         JLabel textLbl = new JLabel(text);
         textLbl.setFont(isAlert ? AppTheme.FONT_SUBTITLE : AppTheme.FONT_BODY);
         textLbl.setForeground(isAlert ? accentColor : AppTheme.TEXT_PRIMARY);
 
-        item.add(iconLbl, BorderLayout.WEST);
-        item.add(dateLbl, BorderLayout.CENTER);
-        // push text to the right of date
-        JPanel right = new JPanel(new BorderLayout());
-        right.setOpaque(false);
-        right.add(textLbl, BorderLayout.CENTER);
-        item.add(right, BorderLayout.EAST);
-
-        // Proper left-to-right layout
-        item.removeAll();
-        item.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 6));
-        item.add(iconLbl);
+        item.add(tagLbl);
         item.add(dateLbl);
         item.add(textLbl);
         return item;

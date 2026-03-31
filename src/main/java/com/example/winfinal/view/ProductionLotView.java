@@ -8,11 +8,10 @@ import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
- * Production Lot management: search/filter bar + tabbed detail panel.
+ * Production Lot management: search/filter + add/edit dialog.
  */
 public class ProductionLotView extends JPanel {
 
@@ -21,8 +20,6 @@ public class ProductionLotView extends JPanel {
 
     private JTable table;
     private DefaultTableModel tableModel;
-
-    // Filter widgets
     private JTextField txtSearch;
     private JComboBox<String> cboStatus;
 
@@ -37,25 +34,23 @@ public class ProductionLotView extends JPanel {
         refreshTable();
     }
 
-    // ── Header + filter bar ───────────────────────────────────
-
     private JPanel buildHeader() {
         JPanel p = new JPanel(new BorderLayout(12, 8));
         p.setOpaque(false);
 
-        JLabel title = UiUtils.createSectionTitle("🌾  Quản lý Lô Sản Xuất");
+        JLabel title = UiUtils.createSectionTitle("Quan ly Lo San Xuat");
 
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filterBar.setOpaque(false);
 
-        txtSearch = UiUtils.createSearchField("🔍  Mã lô, vị trí...");
-        cboStatus = new JComboBox<>(new String[]{"Tất cả trạng thái",
+        txtSearch = UiUtils.createSearchField("Ma lo, vi tri...");
+        cboStatus = new JComboBox<>(new String[]{"Tat ca trang thai",
                 "PLANNING", "GROWING", "HARVESTING", "DONE", "CANCELLED"});
         cboStatus.setFont(AppTheme.FONT_BODY);
         cboStatus.setPreferredSize(new Dimension(170, AppTheme.BUTTON_HEIGHT));
 
-        JButton btnFilter = UiUtils.createSecondaryButton("🔍  Lọc");
-        JButton btnAdd    = UiUtils.createPrimaryButton("＋  Thêm lô");
+        JButton btnFilter = UiUtils.createSecondaryButton("Loc");
+        JButton btnAdd    = UiUtils.createPrimaryButton("+ Them lo");
 
         btnFilter.addActionListener(e -> refreshTable());
         btnAdd.addActionListener(e -> openDialog(null));
@@ -71,11 +66,9 @@ public class ProductionLotView extends JPanel {
         return p;
     }
 
-    // ── Table ─────────────────────────────────────────────────
-
     private JPanel buildTable() {
-        String[] cols = {"ID", "Mã lô", "Trạng thái", "Diện tích (m²)",
-                         "Ngày trồng", "Dự kiến thu hoạch", "Farm ID", "Thao tác"};
+        String[] cols = {"ID", "Ma lo", "Trang thai", "Dien tich (m2)",
+                         "Ngay trong", "Du kien thu hoach", "Farm ID", "Thao tac"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
         };
@@ -83,11 +76,11 @@ public class ProductionLotView extends JPanel {
         UiUtils.styleTable(table);
         styleStatusColumn();
 
-        table.getColumn("Thao tác").setCellRenderer(new FarmView.ActionRenderer());
-        table.getColumn("Thao tác").setCellEditor(new LotActionEditor(table));
-        table.getColumn("Thao tác").setPreferredWidth(130);
+        table.getColumn("Thao tac").setCellRenderer(new FarmView.ActionRenderer());
+        table.getColumn("Thao tac").setCellEditor(new LotActionEditor(table));
+        table.getColumn("Thao tac").setPreferredWidth(130);
         table.getColumn("ID").setPreferredWidth(50);
-        table.getColumn("Mã lô").setPreferredWidth(130);
+        table.getColumn("Ma lo").setPreferredWidth(130);
         table.getColumn("Farm ID").setPreferredWidth(70);
 
         JScrollPane scroll = new JScrollPane(table);
@@ -126,14 +119,12 @@ public class ProductionLotView extends JPanel {
         });
     }
 
-    // ── Data ──────────────────────────────────────────────────
-
     void refreshTable() {
         tableModel.setRowCount(0);
         try {
             String keyword = txtSearch.getText().trim();
-            String status  = cboStatus == null ? null : (String) cboStatus.getSelectedItem();
-            boolean filterStatus = status != null && !status.startsWith("Tất cả");
+            String status  = (String) cboStatus.getSelectedItem();
+            boolean filterStatus = status != null && !status.startsWith("Tat ca");
 
             List<ProductionLotDTO> lots = ctrl.getAllLots();
             for (ProductionLotDTO l : lots) {
@@ -153,16 +144,14 @@ public class ProductionLotView extends JPanel {
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
         }
     }
-
-    // ── Add/Edit Dialog ───────────────────────────────────────
 
     void openDialog(ProductionLotDTO existing) {
         boolean isEdit = (existing != null);
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "✏️  Sửa lô sản xuất" : "➕  Thêm lô sản xuất",
+                isEdit ? "Sua lo san xuat" : "Them lo san xuat",
                 Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setSize(440, 480);
         dlg.setLocationRelativeTo(this);
@@ -172,16 +161,16 @@ public class ProductionLotView extends JPanel {
         form.setBackground(AppTheme.BG_CARD);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtCode    = UiUtils.addFormField(form, "Mã lô *");
-        JTextField txtArea    = UiUtils.addFormField(form, "Diện tích (m²)");
-        JTextField txtLoc     = UiUtils.addFormField(form, "Mô tả vị trí");
-        JTextField txtPlant   = UiUtils.addFormField(form, "Ngày trồng (dd/MM/yyyy)");
-        JTextField txtHarvest = UiUtils.addFormField(form, "Ngày thu hoạch dự kiến");
+        JTextField txtCode    = UiUtils.addFormField(form, "Ma lo *");
+        JTextField txtArea    = UiUtils.addFormField(form, "Dien tich (m2)");
+        JTextField txtLoc     = UiUtils.addFormField(form, "Mo ta vi tri");
+        JTextField txtPlant   = UiUtils.addFormField(form, "Ngay trong (dd/MM/yyyy)");
+        JTextField txtHarvest = UiUtils.addFormField(form, "Ngay thu hoach du kien");
         JTextField txtFarm    = UiUtils.addFormField(form, "Farm ID");
-        JTextField txtCrop    = UiUtils.addFormField(form, "Loại cây ID");
+        JTextField txtCrop    = UiUtils.addFormField(form, "Loai cay ID");
         JTextField txtMgr     = UiUtils.addFormField(form, "Manager ID");
 
-        JLabel lblStatus = new JLabel("Trạng thái");
+        JLabel lblStatus = new JLabel("Trang thai");
         lblStatus.setFont(AppTheme.FONT_BODY);
         lblStatus.setForeground(AppTheme.TEXT_SECONDARY);
         JComboBox<String> cboSt = new JComboBox<>(
@@ -205,8 +194,8 @@ public class ProductionLotView extends JPanel {
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
-        JButton btnSave   = UiUtils.createPrimaryButton("💾  Lưu");
+        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
 
         btnCancel.addActionListener(e -> dlg.dispose());
         btnSave.addActionListener(e -> {
@@ -234,7 +223,7 @@ public class ProductionLotView extends JPanel {
                 dlg.dispose();
                 refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
             }
         });
 
@@ -245,12 +234,10 @@ public class ProductionLotView extends JPanel {
         dlg.setVisible(true);
     }
 
-    // ── Inner: action column editor ───────────────────────────
-
     class LotActionEditor extends DefaultCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("✏️ Sửa");
-        private final JButton btnDelete = UiUtils.createDangerButton("🗑 Xóa");
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
         private int currentRow;
 
         LotActionEditor(JTable t) {
@@ -273,20 +260,20 @@ public class ProductionLotView extends JPanel {
                     dto.setFarmId(farm == null ? null : Long.parseLong(farm.toString()));
                     openDialog(dto);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(ProductionLotView.this, "Lỗi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(ProductionLotView.this, "Loi: " + ex.getMessage());
                 }
             });
 
             btnDelete.addActionListener(e -> {
                 fireEditingStopped();
                 int confirm = JOptionPane.showConfirmDialog(ProductionLotView.this,
-                        "Xóa lô này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+                        "Xoa lo nay?", "Xac nhan", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     try {
                         ctrl.deleteLot(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                         refreshTable();
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(ProductionLotView.this, "Lỗi: " + ex.getMessage());
+                        JOptionPane.showMessageDialog(ProductionLotView.this, "Loi: " + ex.getMessage());
                     }
                 }
             });
@@ -297,7 +284,6 @@ public class ProductionLotView extends JPanel {
             currentRow = r;
             return panel;
         }
-
         @Override public Object getCellEditorValue() { return "edit|delete"; }
     }
 }

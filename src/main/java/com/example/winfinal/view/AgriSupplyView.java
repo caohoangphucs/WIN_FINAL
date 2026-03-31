@@ -10,7 +10,7 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * Agricultural Supply (Vật tư) management: CRUD + low-stock alert badge.
+ * Agricultural Supply (Vat tu) management: CRUD + low-stock alert.
  */
 public class AgriSupplyView extends JPanel {
 
@@ -38,17 +38,17 @@ public class AgriSupplyView extends JPanel {
 
         JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         titleRow.setOpaque(false);
-        titleRow.add(UiUtils.createSectionTitle("📦  Quản lý Vật Tư Nông Nghiệp"));
+        titleRow.add(UiUtils.createSectionTitle("Quan ly Vat Tu Nong Nghiep"));
 
-        lblLowStock = UiUtils.createBadge("⚠️ 0 sắp hết", new Color(0xFEF3C7), new Color(0x92400E));
+        lblLowStock = UiUtils.createBadge("0 sap het", new Color(0xFEF3C7), new Color(0x92400E));
         titleRow.add(lblLowStock);
 
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filterBar.setOpaque(false);
-        searchField = UiUtils.createSearchField("🔍  Tên, mã vật tư...");
-        JButton btnSearch = UiUtils.createSecondaryButton("Tìm");
-        JButton btnShowLow= UiUtils.createSecondaryButton("⚠️ Tồn kho thấp");
-        JButton btnAdd    = UiUtils.createPrimaryButton("＋  Thêm vật tư");
+        searchField = UiUtils.createSearchField("Tim ten, ma vat tu...");
+        JButton btnSearch  = UiUtils.createSecondaryButton("Tim");
+        JButton btnShowLow = UiUtils.createSecondaryButton("Ton kho thap");
+        JButton btnAdd     = UiUtils.createPrimaryButton("+ Them vat tu");
 
         btnSearch.addActionListener(e -> refreshTable(searchField.getText().trim()));
         searchField.addActionListener(e -> refreshTable(searchField.getText().trim()));
@@ -60,36 +60,36 @@ public class AgriSupplyView extends JPanel {
         filterBar.add(btnShowLow);
         filterBar.add(btnAdd);
 
-        p.add(titleRow,   BorderLayout.NORTH);
-        p.add(filterBar,  BorderLayout.SOUTH);
+        p.add(titleRow,  BorderLayout.NORTH);
+        p.add(filterBar, BorderLayout.SOUTH);
         return p;
     }
 
     private JPanel buildTable() {
-        String[] cols = {"ID", "Mã vật tư", "Tên vật tư", "Đơn vị",
-                         "Tồn kho", "Tồn tối thiểu", "Tình trạng", "Thao tác"};
+        String[] cols = {"ID", "Ma vat tu", "Ten vat tu", "Don vi",
+                         "Ton kho", "Ton toi thieu", "Tinh trang", "Thao tac"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
         };
         table = new JTable(tableModel);
         UiUtils.styleTable(table);
 
-        // Stock status column
+        // Stock status badge
         table.getColumnModel().getColumn(6).setCellRenderer((t, val, sel, foc, row, col) -> {
             String status = val == null ? "" : val.toString();
-            Color bg = status.equals("Thấp") ? new Color(0xFEE2E2) : new Color(0xDCFCE7);
-            Color fg = status.equals("Thấp") ? AppTheme.DANGER : new Color(0x166534);
+            Color bg = status.equals("Thap") ? new Color(0xFEE2E2) : new Color(0xDCFCE7);
+            Color fg = status.equals("Thap") ? AppTheme.DANGER : new Color(0x166534);
             JLabel lbl = UiUtils.createBadge(status, bg, fg);
             lbl.setOpaque(true);
             lbl.setBackground(sel ? AppTheme.BG_TABLE_HEADER : AppTheme.BG_CARD);
             return lbl;
         });
 
-        table.getColumn("Thao tác").setCellRenderer(new FarmView.ActionRenderer());
-        table.getColumn("Thao tác").setCellEditor(new SupplyActionEditor(table));
-        table.getColumn("Thao tác").setPreferredWidth(130);
+        table.getColumn("Thao tac").setCellRenderer(new FarmView.ActionRenderer());
+        table.getColumn("Thao tac").setCellEditor(new SupplyActionEditor(table));
+        table.getColumn("Thao tac").setPreferredWidth(130);
         table.getColumn("ID").setPreferredWidth(50);
-        table.getColumn("Mã vật tư").setPreferredWidth(100);
+        table.getColumn("Ma vat tu").setPreferredWidth(100);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -114,14 +114,14 @@ public class AgriSupplyView extends JPanel {
                 tableModel.addRow(new Object[]{
                     s.getId(), s.getSupplyCode(), s.getName(), s.getUnit(),
                     s.getStockQty(), s.getMinStock(),
-                    isLow ? "Thấp" : "Đủ",
+                    isLow ? "Thap" : "Du",
                     "edit|delete"
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
         }
-        lblLowStock.setText("⚠️ " + lowCount + " sắp hết");
+        lblLowStock.setText(lowCount + " sap het");
         lblLowStock.setVisible(lowCount > 0);
     }
 
@@ -132,18 +132,18 @@ public class AgriSupplyView extends JPanel {
             for (AgriSupplyDTO s : list) {
                 tableModel.addRow(new Object[]{
                     s.getId(), s.getSupplyCode(), s.getName(), s.getUnit(),
-                    s.getStockQty(), s.getMinStock(), "Thấp", "edit|delete"
+                    s.getStockQty(), s.getMinStock(), "Thap", "edit|delete"
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
         }
     }
 
     void openDialog(AgriSupplyDTO existing) {
         boolean isEdit = existing != null;
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "✏️  Sửa vật tư" : "➕  Thêm vật tư",
+                isEdit ? "Sua vat tu" : "Them vat tu",
                 Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setSize(420, 380);
         dlg.setLocationRelativeTo(this);
@@ -153,13 +153,13 @@ public class AgriSupplyView extends JPanel {
         form.setBackground(AppTheme.BG_CARD);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtCode    = UiUtils.addFormField(form, "Mã vật tư *");
-        JTextField txtName    = UiUtils.addFormField(form, "Tên vật tư *");
-        JTextField txtUnit    = UiUtils.addFormField(form, "Đơn vị");
-        JTextField txtStock   = UiUtils.addFormField(form, "Tồn kho hiện tại");
-        JTextField txtMin     = UiUtils.addFormField(form, "Tồn kho tối thiểu");
-        JTextField txtCat     = UiUtils.addFormField(form, "Category ID");
-        JTextField txtSup     = UiUtils.addFormField(form, "Supplier ID");
+        JTextField txtCode  = UiUtils.addFormField(form, "Ma vat tu *");
+        JTextField txtName  = UiUtils.addFormField(form, "Ten vat tu *");
+        JTextField txtUnit  = UiUtils.addFormField(form, "Don vi");
+        JTextField txtStock = UiUtils.addFormField(form, "Ton kho hien tai");
+        JTextField txtMin   = UiUtils.addFormField(form, "Ton kho toi thieu");
+        JTextField txtCat   = UiUtils.addFormField(form, "Category ID");
+        JTextField txtSup   = UiUtils.addFormField(form, "Supplier ID");
 
         if (isEdit) {
             txtCode.setText(existing.getSupplyCode());
@@ -173,8 +173,8 @@ public class AgriSupplyView extends JPanel {
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
-        JButton btnSave   = UiUtils.createPrimaryButton("💾  Lưu");
+        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
 
         btnCancel.addActionListener(e -> dlg.dispose());
         btnSave.addActionListener(e -> {
@@ -198,7 +198,7 @@ public class AgriSupplyView extends JPanel {
                 dlg.dispose();
                 refreshTable(null);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
             }
         });
 
@@ -211,8 +211,8 @@ public class AgriSupplyView extends JPanel {
 
     class SupplyActionEditor extends DefaultCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("✏️ Sửa");
-        private final JButton btnDelete = UiUtils.createDangerButton("🗑 Xóa");
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
         private int currentRow;
 
         SupplyActionEditor(JTable t) {
@@ -237,20 +237,20 @@ public class AgriSupplyView extends JPanel {
                     dto.setMinStock(min == null ? null : Double.parseDouble(min.toString()));
                     openDialog(dto);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(AgriSupplyView.this, "Lỗi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(AgriSupplyView.this, "Loi: " + ex.getMessage());
                 }
             });
 
             btnDelete.addActionListener(e -> {
                 fireEditingStopped();
-                int cf = JOptionPane.showConfirmDialog(AgriSupplyView.this, "Xóa vật tư này?",
-                        "Xác nhận", JOptionPane.YES_NO_OPTION);
+                int cf = JOptionPane.showConfirmDialog(AgriSupplyView.this, "Xoa vat tu nay?",
+                        "Xac nhan", JOptionPane.YES_NO_OPTION);
                 if (cf == JOptionPane.YES_OPTION) {
                     try {
                         ctrl.deleteAgriSupply(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                         refreshTable(null);
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(AgriSupplyView.this, "Lỗi: " + ex.getMessage());
+                        JOptionPane.showMessageDialog(AgriSupplyView.this, "Loi: " + ex.getMessage());
                     }
                 }
             });

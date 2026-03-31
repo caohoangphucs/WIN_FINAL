@@ -5,13 +5,14 @@ import com.example.winfinal.dto.ProductionLotDTO;
 
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.*;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * Production Lot management: search/filter + add/edit dialog.
+ * Production Lot – matches reference: filter bar + table with alert row highlighting.
  */
 public class ProductionLotView extends JPanel {
 
@@ -21,269 +22,395 @@ public class ProductionLotView extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtSearch;
-    private JComboBox<String> cboStatus;
+    private JComboBox<String> cboFarm, cboStatus, cboCrop, cboSeason;
 
     public ProductionLotView() {
-        setLayout(new BorderLayout(0, 16));
+        setLayout(new BorderLayout(0, 12));
         setBackground(AppTheme.BG_MAIN);
-        setBorder(new EmptyBorder(28, 28, 28, 28));
+        setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        add(buildHeader(),  BorderLayout.NORTH);
-        add(buildTable(),   BorderLayout.CENTER);
-
-        refreshTable();
+        add(buildTitleBar(),   BorderLayout.NORTH);
+        add(buildFilterArea(), BorderLayout.CENTER);
     }
 
-    private JPanel buildHeader() {
-        JPanel p = new JPanel(new BorderLayout(12, 8));
+    // ── Title ─────────────────────────────────────────────────
+
+    private JPanel buildTitleBar() {
+        JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
+        p.setBorder(new EmptyBorder(0,0,14,0));
 
-        JLabel title = UiUtils.createSectionTitle("Quan ly Lo San Xuat");
+        JLabel title = new JLabel("Quản lý Lô Sản Xuất");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(AppTheme.TEXT_PRIMARY);
 
-        JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        filterBar.setOpaque(false);
+        JLabel sub = new JLabel("Farm & Production Grid");
+        sub.setFont(AppTheme.FONT_BODY);
+        sub.setForeground(AppTheme.TEXT_SECONDARY);
 
-        txtSearch = UiUtils.createSearchField("Ma lo, vi tri...");
-        cboStatus = new JComboBox<>(new String[]{"Tat ca trang thai",
-                "PLANNING", "GROWING", "HARVESTING", "DONE", "CANCELLED"});
-        cboStatus.setFont(AppTheme.FONT_BODY);
-        cboStatus.setPreferredSize(new Dimension(170, AppTheme.BUTTON_HEIGHT));
+        JPanel left = new JPanel();
+        left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+        left.setOpaque(false);
+        left.add(title);
+        left.add(sub);
 
-        JButton btnFilter = UiUtils.createSecondaryButton("Loc");
-        JButton btnAdd    = UiUtils.createPrimaryButton("+ Them lo");
-
-        btnFilter.addActionListener(e -> refreshTable());
-        btnAdd.addActionListener(e -> openDialog(null));
-
-        filterBar.add(txtSearch);
-        filterBar.add(cboStatus);
-        filterBar.add(btnFilter);
-        filterBar.add(Box.createHorizontalStrut(6));
-        filterBar.add(btnAdd);
-
-        p.add(title,     BorderLayout.NORTH);
-        p.add(filterBar, BorderLayout.SOUTH);
+        p.add(left, BorderLayout.WEST);
         return p;
     }
 
-    private JPanel buildTable() {
-        String[] cols = {"ID", "Ma lo", "Trang thai", "Dien tich (m2)",
-                         "Ngay trong", "Du kien thu hoach", "Farm ID", "Thao tac"};
+    // ── Filter + table area ───────────────────────────────────
+
+    private JPanel buildFilterArea() {
+        JPanel wrap = new JPanel(new BorderLayout(0, 10));
+        wrap.setOpaque(false);
+
+        // Filter card
+        JPanel filterCard = makeCard();
+        filterCard.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
+
+        cboFarm   = makeCombo("Trang trại", new String[]{"Trang trại A","Trang trại B","Trang trại C"});
+        cboStatus = makeCombo("Trạng thái", new String[]{"Tất cả trạng thái","PLANNING","GROWING","HARVESTING","DONE","CANCELLED"});
+        cboCrop   = makeCombo("Loại cây",   new String[]{"Tất cả loại cây","Rau","Lúa","Trái Cây","Hoa"});
+        cboSeason = makeCombo("Mùa vụ",     new String[]{"Tất cả mùa vụ","Xuân","Hạ","Thu","Đông"});
+        JButton btnFilter = makePrimaryBtn("Lọc");
+
+        filterCard.add(makeComboLabel("Trang trại:")); filterCard.add(cboFarm);
+        filterCard.add(makeComboLabel("Trạng thái:")); filterCard.add(cboStatus);
+        filterCard.add(makeComboLabel("Loại cây:"));  filterCard.add(cboCrop);
+        filterCard.add(makeComboLabel("Mùa vụ."));    filterCard.add(cboSeason);
+        filterCard.add(btnFilter);
+
+        btnFilter.addActionListener(e -> refreshTable());
+
+        // Search row
+        JPanel searchRow = new JPanel(new BorderLayout(8, 0));
+        searchRow.setOpaque(false);
+        searchRow.setPreferredSize(new Dimension(0, 38));
+        txtSearch = UiUtils.createSearchField("Tìm theo mã lô...");
+        txtSearch.setPreferredSize(new Dimension(240, 34));
+
+        JButton btnSearch = makePrimaryBtn("Tìm");
+        btnSearch.addActionListener(e -> refreshTable());
+        txtSearch.addActionListener(e -> refreshTable());
+
+        JButton btnAdd = makeOutlineBtn("+ Thêm lô");
+        btnAdd.addActionListener(e -> openDialog(null));
+
+        JPanel searchWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        searchWrap.setOpaque(false);
+        searchWrap.add(txtSearch);
+        searchWrap.add(btnSearch);
+        searchWrap.add(btnAdd);
+        searchRow.add(searchWrap, BorderLayout.EAST);
+
+        // Table card
+        JPanel tableCard = makeCard();
+        tableCard.setLayout(new BorderLayout());
+        tableCard.add(buildTable(), BorderLayout.CENTER);
+
+        wrap.add(filterCard,  BorderLayout.NORTH);
+        JPanel mid = new JPanel(new BorderLayout(0,6));
+        mid.setOpaque(false);
+        mid.add(searchRow, BorderLayout.NORTH);
+        mid.add(tableCard, BorderLayout.CENTER);
+        wrap.add(mid, BorderLayout.CENTER);
+
+        refreshTable();
+        return wrap;
+    }
+
+    private JScrollPane buildTable() {
+        String[] cols = {"Mã Lô", "Ngày Trồng", "Trạng Thái", "Diện Tích", "Thao Tác"};
         tableModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return c == 7; }
+            @Override public boolean isCellEditable(int r, int c) { return c==4; }
         };
         table = new JTable(tableModel);
-        UiUtils.styleTable(table);
-        styleStatusColumn();
+        table.setFont(AppTheme.FONT_BODY);
+        table.setRowHeight(38);
+        table.setShowVerticalLines(false);
+        table.setShowHorizontalLines(true);
+        table.setGridColor(AppTheme.BORDER_LIGHT);
+        table.setBackground(Color.WHITE);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBackground(AppTheme.BG_TABLE_HEADER);
+        table.getTableHeader().setForeground(AppTheme.TEXT_PRIMARY);
+        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0,0,2,0, AppTheme.PRIMARY));
 
-        table.getColumn("Thao tac").setCellRenderer(new FarmView.ActionRenderer());
-        table.getColumn("Thao tac").setCellEditor(new LotActionEditor(table));
-        table.getColumn("Thao tac").setPreferredWidth(130);
-        table.getColumn("ID").setPreferredWidth(50);
-        table.getColumn("Ma lo").setPreferredWidth(130);
-        table.getColumn("Farm ID").setPreferredWidth(70);
+        // Status column renderer
+        table.getColumnModel().getColumn(2).setCellRenderer(new LotStatusRenderer());
+        // Row highlight renderer for others
+        table.setDefaultRenderer(Object.class, new LotRowRenderer());
+
+        // Action column
+        table.getColumnModel().getColumn(4).setCellRenderer(new ActionBtnRenderer());
+        table.getColumnModel().getColumn(4).setCellEditor(new LotActionEditor(table));
+        table.getColumnModel().getColumn(4).setPreferredWidth(120);
+        table.getColumnModel().getColumn(0).setPreferredWidth(110);
+        table.getColumnModel().getColumn(1).setPreferredWidth(110);
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
-        scroll.getViewport().setBackground(AppTheme.BG_CARD);
-
-        JPanel card = UiUtils.createCard();
-        card.setLayout(new BorderLayout());
-        card.add(scroll, BorderLayout.CENTER);
-        return card;
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(Color.WHITE);
+        return scroll;
     }
 
-    private void styleStatusColumn() {
-        table.getColumnModel().getColumn(2).setCellRenderer((t, val, sel, foc, row, col) -> {
-            String status = val == null ? "" : val.toString();
-            Color bg = switch (status) {
-                case "GROWING"    -> new Color(0xDCFCE7);
-                case "PLANNING"   -> new Color(0xEFF6FF);
-                case "HARVESTING" -> new Color(0xFEF9C3);
-                case "DONE"       -> new Color(0xF3F4F6);
-                case "CANCELLED"  -> new Color(0xFEE2E2);
-                default           -> AppTheme.BG_CARD;
-            };
-            Color fg = switch (status) {
-                case "GROWING"    -> new Color(0x166534);
-                case "PLANNING"   -> new Color(0x1E40AF);
-                case "HARVESTING" -> new Color(0x854D0E);
-                case "DONE"       -> AppTheme.TEXT_SECONDARY;
-                case "CANCELLED"  -> AppTheme.DANGER;
-                default           -> AppTheme.TEXT_PRIMARY;
-            };
-            JLabel lbl = UiUtils.createBadge(status, bg, fg);
-            lbl.setOpaque(true);
-            lbl.setBackground(sel ? AppTheme.BG_TABLE_HEADER : AppTheme.BG_CARD);
-            return lbl;
-        });
-    }
+    // ── Data ──────────────────────────────────────────────────
 
     void refreshTable() {
         tableModel.setRowCount(0);
         try {
-            String keyword = txtSearch.getText().trim();
-            String status  = (String) cboStatus.getSelectedItem();
-            boolean filterStatus = status != null && !status.startsWith("Tat ca");
-
             List<ProductionLotDTO> lots = ctrl.getAllLots();
+            String kw = txtSearch.getText().trim().toLowerCase();
+            String st = (String) cboStatus.getSelectedItem();
+
             for (ProductionLotDTO l : lots) {
-                if (!keyword.isEmpty()) {
-                    String code = l.getLotCode() == null ? "" : l.getLotCode();
-                    String loc  = l.getLocationDesc() == null ? "" : l.getLocationDesc();
-                    if (!code.toLowerCase().contains(keyword.toLowerCase())
-                            && !loc.toLowerCase().contains(keyword.toLowerCase())) continue;
-                }
-                if (filterStatus && !status.equals(l.getStatusCode())) continue;
+                String code = l.getLotCode() == null ? "" : l.getLotCode();
+                if (!kw.isEmpty() && !code.toLowerCase().contains(kw)) continue;
+                if (st != null && st.startsWith("Tất cả") && !st.equals("Tất cả trạng thái")) continue;
+                if (st != null && !st.startsWith("Tất cả") && !st.equals(l.getStatusCode())) continue;
 
                 tableModel.addRow(new Object[]{
-                    l.getId(), l.getLotCode(), l.getStatusCode(), l.getAreaM2(),
+                    l.getLotCode(),
                     l.getPlantDate() == null ? "" : sdf.format(l.getPlantDate()),
-                    l.getExpectedHarvestDate() == null ? "" : sdf.format(l.getExpectedHarvestDate()),
-                    l.getFarmId(), "edit|delete"
+                    l.getStatusCode(),
+                    l.getAreaM2() == null ? "" : l.getAreaM2() + " ha",
+                    "view"
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Loi: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
     }
 
     void openDialog(ProductionLotDTO existing) {
         boolean isEdit = (existing != null);
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "Sua lo san xuat" : "Them lo san xuat",
-                Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(440, 480);
+                isEdit ? "Sửa lô" : "Thêm lô sản xuất", Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(440, 460);
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
 
-        JPanel form = new JPanel(new GridLayout(9, 2, 10, 12));
-        form.setBackground(AppTheme.BG_CARD);
+        JPanel form = new JPanel(new GridLayout(8, 2, 10, 12));
+        form.setBackground(Color.WHITE);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtCode    = UiUtils.addFormField(form, "Ma lo *");
-        JTextField txtArea    = UiUtils.addFormField(form, "Dien tich (m2)");
-        JTextField txtLoc     = UiUtils.addFormField(form, "Mo ta vi tri");
-        JTextField txtPlant   = UiUtils.addFormField(form, "Ngay trong (dd/MM/yyyy)");
-        JTextField txtHarvest = UiUtils.addFormField(form, "Ngay thu hoach du kien");
+        JTextField txtCode    = UiUtils.addFormField(form, "Mã lô *");
+        JTextField txtArea    = UiUtils.addFormField(form, "Diện tích (ha)");
+        JTextField txtLoc     = UiUtils.addFormField(form, "Vị trí");
+        JTextField txtPlant   = UiUtils.addFormField(form, "Ngày trồng (dd/MM/yyyy)");
+        JTextField txtHarvest = UiUtils.addFormField(form, "Thu hoạch dự kiến");
         JTextField txtFarm    = UiUtils.addFormField(form, "Farm ID");
-        JTextField txtCrop    = UiUtils.addFormField(form, "Loai cay ID");
-        JTextField txtMgr     = UiUtils.addFormField(form, "Manager ID");
+        JTextField txtCrop    = UiUtils.addFormField(form, "Loại cây ID");
 
-        JLabel lblStatus = new JLabel("Trang thai");
-        lblStatus.setFont(AppTheme.FONT_BODY);
-        lblStatus.setForeground(AppTheme.TEXT_SECONDARY);
-        JComboBox<String> cboSt = new JComboBox<>(
-                new String[]{"PLANNING", "GROWING", "HARVESTING", "DONE", "CANCELLED"});
+        JLabel lSt = new JLabel("Trạng thái");
+        lSt.setFont(AppTheme.FONT_BODY); lSt.setForeground(AppTheme.TEXT_SECONDARY);
+        JComboBox<String> cboSt = new JComboBox<>(new String[]{"PLANNING","GROWING","HARVESTING","DONE","CANCELLED"});
         cboSt.setFont(AppTheme.FONT_BODY);
-        form.add(lblStatus);
-        form.add(cboSt);
+        form.add(lSt); form.add(cboSt);
 
-        if (isEdit) {
-            txtCode.setText(existing.getLotCode());
-            txtArea.setText(existing.getAreaM2() == null ? "" : existing.getAreaM2().toString());
-            txtLoc.setText(existing.getLocationDesc());
-            txtPlant.setText(existing.getPlantDate() == null ? "" : sdf.format(existing.getPlantDate()));
-            txtHarvest.setText(existing.getExpectedHarvestDate() == null ? ""
-                    : sdf.format(existing.getExpectedHarvestDate()));
-            txtFarm.setText(existing.getFarmId() == null ? "" : existing.getFarmId().toString());
-            txtCrop.setText(existing.getCropTypeId() == null ? "" : existing.getCropTypeId().toString());
-            txtMgr.setText(existing.getManagerId() == null ? "" : existing.getManagerId().toString());
-            if (existing.getStatusCode() != null) cboSt.setSelectedItem(existing.getStatusCode());
-        }
+        if (isEdit && existing.getStatusCode()!=null) cboSt.setSelectedItem(existing.getStatusCode());
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
-        btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
-        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
-
-        btnCancel.addActionListener(e -> dlg.dispose());
-        btnSave.addActionListener(e -> {
+        btnBar.setBackground(Color.WHITE);
+        JButton bCancel = UiUtils.createSecondaryButton("Hủy");
+        JButton bSave   = makePrimaryBtn("Lưu");
+        bCancel.addActionListener(e -> dlg.dispose());
+        bSave.addActionListener(e -> {
             try {
                 ProductionLotDTO dto = isEdit ? existing : new ProductionLotDTO();
                 dto.setLotCode(txtCode.getText().trim());
-                dto.setAreaM2(txtArea.getText().trim().isEmpty() ? null
-                        : Double.parseDouble(txtArea.getText().trim()));
+                dto.setAreaM2(txtArea.getText().trim().isEmpty() ? null : Double.parseDouble(txtArea.getText().trim()));
                 dto.setLocationDesc(txtLoc.getText().trim());
                 dto.setStatusCode((String) cboSt.getSelectedItem());
-                dto.setPlantDate(txtPlant.getText().trim().isEmpty() ? null
-                        : sdf.parse(txtPlant.getText().trim()));
-                dto.setExpectedHarvestDate(txtHarvest.getText().trim().isEmpty() ? null
-                        : sdf.parse(txtHarvest.getText().trim()));
-                dto.setFarmId(txtFarm.getText().trim().isEmpty() ? null
-                        : Long.parseLong(txtFarm.getText().trim()));
-                dto.setCropTypeId(txtCrop.getText().trim().isEmpty() ? null
-                        : Long.parseLong(txtCrop.getText().trim()));
-                dto.setManagerId(txtMgr.getText().trim().isEmpty() ? null
-                        : Long.parseLong(txtMgr.getText().trim()));
-
-                if (isEdit) ctrl.updateLot(dto);
-                else        ctrl.createLot(dto);
-
-                dlg.dispose();
-                refreshTable();
+                dto.setPlantDate(txtPlant.getText().trim().isEmpty() ? null : sdf.parse(txtPlant.getText().trim()));
+                dto.setExpectedHarvestDate(txtHarvest.getText().trim().isEmpty() ? null : sdf.parse(txtHarvest.getText().trim()));
+                dto.setFarmId(txtFarm.getText().trim().isEmpty() ? null : Long.parseLong(txtFarm.getText().trim()));
+                dto.setCropTypeId(txtCrop.getText().trim().isEmpty() ? null : Long.parseLong(txtCrop.getText().trim()));
+                if (isEdit) ctrl.updateLot(dto); else ctrl.createLot(dto);
+                dlg.dispose(); refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
             }
         });
-
-        btnBar.add(btnCancel);
-        btnBar.add(btnSave);
-        dlg.add(form,   BorderLayout.CENTER);
+        btnBar.add(bCancel); btnBar.add(bSave);
+        dlg.add(form, BorderLayout.CENTER);
         dlg.add(btnBar, BorderLayout.SOUTH);
         dlg.setVisible(true);
     }
 
+    // ── Renderers ─────────────────────────────────────────────
+
+    /** Highlights CANCELLED/HARVESTING rows in red, others normal */
+    static class LotRowRenderer extends DefaultTableCellRenderer {
+        @Override public Component getTableCellRendererComponent(JTable t, Object val,
+                boolean sel, boolean foc, int row, int col) {
+            JLabel c = (JLabel) super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+            String status = t.getModel().getValueAt(row, 2) == null ? "" : t.getModel().getValueAt(row, 2).toString();
+            boolean isAlert = status.equals("CANCELLED");
+            if (!sel) {
+                c.setBackground(isAlert ? new Color(0xFFE4E6) : (row%2==0 ? Color.WHITE : AppTheme.BG_TABLE_ROW_ALT));
+                c.setForeground(isAlert ? AppTheme.DANGER : AppTheme.TEXT_PRIMARY);
+                if (isAlert) c.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                else c.setFont(AppTheme.FONT_BODY);
+            }
+            c.setBorder(new EmptyBorder(0, 12, 0, 12));
+            return c;
+        }
+    }
+
+    /** Status column with colored text */
+    static class LotStatusRenderer extends DefaultTableCellRenderer {
+        @Override public Component getTableCellRendererComponent(JTable t, Object val,
+                boolean sel, boolean foc, int row, int col) {
+            JLabel c = (JLabel) super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+            String status = val == null ? "" : val.toString();
+            String display = switch (status) {
+                case "GROWING"    -> "Đang Sinh Trưởng";
+                case "PLANNING"   -> "Đã Trồng";
+                case "HARVESTING" -> "Đang Thu Hoạch";
+                case "DONE"       -> "Đã Thu Hoạch";
+                case "CANCELLED"  -> "Sâu Bệnh";
+                default -> status;
+            };
+            Color fg = switch (status) {
+                case "GROWING"    -> new Color(0x16A34A);
+                case "PLANNING"   -> new Color(0x2563EB);
+                case "HARVESTING" -> new Color(0xD97706);
+                case "DONE"       -> AppTheme.TEXT_SECONDARY;
+                case "CANCELLED"  -> AppTheme.DANGER;
+                default -> AppTheme.TEXT_PRIMARY;
+            };
+            c.setText(display);
+            c.setForeground(sel ? Color.WHITE : fg);
+            c.setFont(AppTheme.FONT_BODY);
+            c.setBorder(new EmptyBorder(0, 12, 0, 12));
+            String rowStatus = t.getModel().getValueAt(row, 2) == null ? "" : t.getModel().getValueAt(row, 2).toString();
+            if (!sel) c.setBackground(rowStatus.equals("CANCELLED") ? new Color(0xFFE4E6)
+                    : row%2==0 ? Color.WHITE : AppTheme.BG_TABLE_ROW_ALT);
+            return c;
+        }
+    }
+
+    static class ActionBtnRenderer extends JPanel implements TableCellRenderer {
+        private final JButton btn;
+        ActionBtnRenderer() {
+            setLayout(new FlowLayout(FlowLayout.CENTER, 0, 5));
+            setOpaque(true);
+            btn = new JButton("Xem nhật ký");
+            btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(new Color(0x2563EB));
+            btn.setBorderPainted(false);
+            btn.setFocusPainted(false);
+            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            add(btn);
+        }
+        @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
+            String status = t.getModel().getValueAt(r, 2) == null ? "" : t.getModel().getValueAt(r, 2).toString();
+            setBackground(status.equals("CANCELLED") ? new Color(0xFFE4E6) : r%2==0 ? Color.WHITE : AppTheme.BG_TABLE_ROW_ALT);
+            return this;
+        }
+    }
+
     class LotActionEditor extends DefaultCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
-        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
+        private final JButton btn = new JButton("Xem nhật ký");
         private int currentRow;
 
         LotActionEditor(JTable t) {
             super(new JCheckBox());
+            btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(new Color(0x2563EB));
+            btn.setBorderPainted(false);
+            btn.setFocusPainted(false);
+            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             panel.setOpaque(true);
-            panel.setBackground(AppTheme.BG_CARD);
-            panel.add(btnEdit);
-            panel.add(btnDelete);
+            panel.setBackground(Color.WHITE);
+            panel.add(btn);
 
-            btnEdit.addActionListener(e -> {
+            btn.addActionListener(e -> {
                 fireEditingStopped();
-                try {
-                    ProductionLotDTO dto = new ProductionLotDTO();
-                    dto.setId(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
-                    dto.setLotCode(tableModel.getValueAt(currentRow, 1).toString());
-                    dto.setStatusCode(tableModel.getValueAt(currentRow, 2).toString());
-                    Object area = tableModel.getValueAt(currentRow, 3);
-                    dto.setAreaM2(area == null ? null : Double.parseDouble(area.toString()));
-                    Object farm = tableModel.getValueAt(currentRow, 6);
-                    dto.setFarmId(farm == null ? null : Long.parseLong(farm.toString()));
-                    openDialog(dto);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(ProductionLotView.this, "Loi: " + ex.getMessage());
-                }
-            });
-
-            btnDelete.addActionListener(e -> {
-                fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(ProductionLotView.this,
-                        "Xoa lo nay?", "Xac nhan", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    try {
-                        ctrl.deleteLot(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
-                        refreshTable();
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(ProductionLotView.this, "Loi: " + ex.getMessage());
-                    }
-                }
+                String lotCode = tableModel.getValueAt(currentRow, 0) == null ? ""
+                        : tableModel.getValueAt(currentRow, 0).toString();
+                JOptionPane.showMessageDialog(ProductionLotView.this,
+                        "Xem nhật ký lô: " + lotCode, "Nhật ký", JOptionPane.INFORMATION_MESSAGE);
             });
         }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable t, Object v, boolean s, int r, int c) {
+        @Override public Component getTableCellEditorComponent(JTable t, Object v, boolean s, int r, int c) {
             currentRow = r;
             return panel;
         }
-        @Override public Object getCellEditorValue() { return "edit|delete"; }
+        @Override public Object getCellEditorValue() { return "view"; }
+    }
+
+    // ── UI helpers ────────────────────────────────────────────
+
+    private JComboBox<String> makeCombo(String title, String[] items) {
+        String[] opts = new String[items.length+1];
+        opts[0] = title;
+        System.arraycopy(items, 0, opts, 1, items.length);
+        JComboBox<String> c = new JComboBox<>(items);
+        c.setFont(AppTheme.FONT_BODY);
+        c.setPreferredSize(new Dimension(155, 30));
+        return c;
+    }
+
+    private JLabel makeComboLabel(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        l.setForeground(AppTheme.TEXT_SECONDARY);
+        return l;
+    }
+
+    private JButton makePrimaryBtn(String text) {
+        JButton b = new JButton(text) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D)g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getModel().isRollover() ? new Color(0x1D4ED8) : new Color(0x2563EB));
+                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),8,8));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        b.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        b.setForeground(Color.WHITE);
+        b.setContentAreaFilled(false);
+        b.setBorderPainted(false);
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setPreferredSize(new Dimension(80, 30));
+        return b;
+    }
+
+    private JButton makeOutlineBtn(String text) {
+        JButton b = new JButton(text);
+        b.setFont(AppTheme.FONT_BODY);
+        b.setForeground(new Color(0x2563EB));
+        b.setBackground(Color.WHITE);
+        b.setBorder(BorderFactory.createLineBorder(new Color(0x2563EB), 1, true));
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setPreferredSize(new Dimension(100, 30));
+        return b;
+    }
+
+    private JPanel makeCard() {
+        JPanel p = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D)g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),10,10));
+                g2.setColor(AppTheme.BORDER_LIGHT);
+                g2.draw(new RoundRectangle2D.Double(0,0,getWidth()-1,getHeight()-1,10,10));
+                g2.dispose();
+            }
+        };
+        p.setOpaque(false);
+        p.setBorder(new EmptyBorder(10, 14, 10, 14));
+        return p;
     }
 }

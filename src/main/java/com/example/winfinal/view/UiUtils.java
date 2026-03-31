@@ -136,8 +136,9 @@ public final class UiUtils {
                 });
             }
 
-            public String getRealText() {
-                return showPlaceholder ? "" : getText();
+            @Override
+            public String getText() {
+                return showPlaceholder ? "" : super.getText();
             }
         };
         field.setFont(AppTheme.FONT_BODY);

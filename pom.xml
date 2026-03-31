@@ -56,6 +56,13 @@
     </dependency>
 
 
+    <!-- FlatLaf - Modern Swing Look & Feel -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.4</version>
+    </dependency>
+
     <!-- Testing -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

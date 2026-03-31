@@ -1,198 +1,275 @@
 package com.example.winfinal.view;
 
-import com.example.winfinal.dto.FarmDTO;
 import com.example.winfinal.controller.FarmController;
+import com.example.winfinal.dto.FarmDTO;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class FarmView extends JFrame {
+/**
+ * Farm management screen (CRUD).
+ */
+public class FarmView extends JPanel {
+
     private final FarmController farmController = new FarmController();
-    
-    private JTable farmTable;
+
+    private JTable table;
     private DefaultTableModel tableModel;
-    
-    private JTextField txtId, txtFarmCode, txtName, txtAddress, txtTotalArea, txtOwnerName, txtPhone;
-    private JButton btnAdd, btnUpdate, btnDelete, btnClear;
+    private JTextField searchField;
 
     public FarmView() {
-        setTitle("Farm Management - CRUD");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 16));
+        setBackground(AppTheme.BG_MAIN);
+        setBorder(new EmptyBorder(28, 28, 28, 28));
 
-        initComponents();
-        refreshTable();
+        add(buildHeader(),  BorderLayout.NORTH);
+        add(buildTable(),   BorderLayout.CENTER);
+
+        refreshTable(null);
     }
 
-    private void initComponents() {
-        // --- Form Panel ---
-        JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    // ── Header ────────────────────────────────────────────────
 
-        formPanel.add(new JLabel("ID (Read-only):"));
-        txtId = new JTextField();
-        txtId.setEditable(false);
-        formPanel.add(txtId);
+    private JPanel buildHeader() {
+        JPanel p = new JPanel(new BorderLayout(12, 0));
+        p.setOpaque(false);
+        p.setBorder(new EmptyBorder(0, 0, 8, 0));
 
-        formPanel.add(new JLabel("Farm Code:"));
-        txtFarmCode = new JTextField();
-        formPanel.add(txtFarmCode);
+        JLabel title = UiUtils.createSectionTitle("Quan ly Trang Trai");
 
-        formPanel.add(new JLabel("Name:"));
-        txtName = new JTextField();
-        formPanel.add(txtName);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        right.setOpaque(false);
 
-        formPanel.add(new JLabel("Address:"));
-        txtAddress = new JTextField();
-        formPanel.add(txtAddress);
+        searchField = UiUtils.createSearchField("Tim theo ten, dia chi...");
+        JButton btnSearch = UiUtils.createSecondaryButton("Tim");
+        JButton btnAdd    = UiUtils.createPrimaryButton("+ Them trang trai");
 
-        formPanel.add(new JLabel("Total Area:"));
-        txtTotalArea = new JTextField();
-        formPanel.add(txtTotalArea);
+        btnSearch.addActionListener(e -> refreshTable(searchField.getText().trim()));
+        searchField.addActionListener(e -> refreshTable(searchField.getText().trim()));
+        btnAdd.addActionListener(e -> openDialog(null));
 
-        formPanel.add(new JLabel("Owner Name:"));
-        txtOwnerName = new JTextField();
-        formPanel.add(txtOwnerName);
+        right.add(searchField);
+        right.add(btnSearch);
+        right.add(btnAdd);
 
-        formPanel.add(new JLabel("Phone:"));
-        txtPhone = new JTextField();
-        formPanel.add(txtPhone);
+        p.add(title, BorderLayout.WEST);
+        p.add(right,  BorderLayout.EAST);
+        return p;
+    }
 
-        // --- Button Panel ---
-        JPanel buttonPanel = new JPanel();
-        btnAdd = new JButton("Add");
-        btnUpdate = new JButton("Update");
-        btnDelete = new JButton("Delete");
-        btnClear = new JButton("Clear");
+    // ── Table ─────────────────────────────────────────────────
 
-        buttonPanel.add(btnAdd);
-        buttonPanel.add(btnUpdate);
-        buttonPanel.add(btnDelete);
-        buttonPanel.add(btnClear);
-
-        // --- Table ---
-        String[] columns = {"ID", "Code", "Name", "Address", "Area", "Owner", "Phone"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+    private JPanel buildTable() {
+        String[] cols = {"ID", "Ma trang trai", "Ten trang trai", "Dia chi",
+                         "Dien tich (ha)", "Chu so huu", "So dien thoai", "Thao tac"};
+        tableModel = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return c == 7; }
+            @Override public Class<?> getColumnClass(int c) { return String.class; }
         };
-        farmTable = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(farmTable);
+        table = new JTable(tableModel);
+        UiUtils.styleTable(table);
 
-        // --- Layout assembly ---
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(formPanel, BorderLayout.CENTER);
-        topPanel.add(buttonPanel, BorderLayout.SOUTH);
+        table.getColumn("Thao tac").setCellRenderer(new ActionRenderer());
+        table.getColumn("Thao tac").setCellEditor(new ActionEditor(table));
+        table.getColumn("Thao tac").setPreferredWidth(120);
+        table.getColumn("ID").setPreferredWidth(50);
+        table.getColumn("Ma trang trai").setPreferredWidth(100);
+        table.getColumn("Dien tich (ha)").setPreferredWidth(100);
 
-        add(topPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
+        scroll.getViewport().setBackground(AppTheme.BG_CARD);
 
-        // --- Events ---
-        btnAdd.addActionListener(e -> addFarm());
-        btnUpdate.addActionListener(e -> updateFarm());
-        btnDelete.addActionListener(e -> deleteFarm());
-        btnClear.addActionListener(e -> clearForm());
+        JPanel card = UiUtils.createCard();
+        card.setLayout(new BorderLayout());
+        card.add(scroll, BorderLayout.CENTER);
+        return card;
+    }
 
-        farmTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && farmTable.getSelectedRow() != -1) {
-                populateForm();
+    // ── Data ──────────────────────────────────────────────────
+
+    void refreshTable(String keyword) {
+        tableModel.setRowCount(0);
+        try {
+            List<FarmDTO> farms = farmController.getAllFarms();
+            for (FarmDTO f : farms) {
+                String name = f.getName() == null ? "" : f.getName();
+                String addr = f.getAddress() == null ? "" : f.getAddress();
+                if (keyword == null || keyword.isEmpty()
+                        || name.toLowerCase().contains(keyword.toLowerCase())
+                        || addr.toLowerCase().contains(keyword.toLowerCase())) {
+                    tableModel.addRow(new Object[]{
+                        f.getId(), f.getFarmCode(), f.getName(), f.getAddress(),
+                        f.getTotalArea(), f.getOwnerName(), f.getPhone(), "edit|delete"
+                    });
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Loi tai du lieu: " + ex.getMessage());
+        }
+    }
+
+    // ── Add/Edit Dialog ───────────────────────────────────────
+
+    void openDialog(FarmDTO existing) {
+        boolean isEdit = (existing != null);
+        JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
+                isEdit ? "Sua trang trai" : "Them trang trai",
+                Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(420, 400);
+        dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout(0, 0));
+
+        JPanel form = new JPanel(new GridLayout(7, 2, 10, 12));
+        form.setBackground(AppTheme.BG_CARD);
+        form.setBorder(new EmptyBorder(24, 24, 16, 24));
+
+        JTextField txtCode  = UiUtils.addFormField(form, "Ma trang trai *");
+        JTextField txtName  = UiUtils.addFormField(form, "Ten trang trai *");
+        JTextField txtAddr  = UiUtils.addFormField(form, "Dia chi");
+        JTextField txtArea  = UiUtils.addFormField(form, "Dien tich (ha)");
+        JTextField txtOwner = UiUtils.addFormField(form, "Chu so huu");
+        JTextField txtPhone = UiUtils.addFormField(form, "So dien thoai");
+        form.add(new JLabel());
+
+        if (isEdit) {
+            txtCode.setText(existing.getFarmCode());
+            txtName.setText(existing.getName());
+            txtAddr.setText(existing.getAddress());
+            txtArea.setText(existing.getTotalArea() == null ? "" : existing.getTotalArea().toString());
+            txtOwner.setText(existing.getOwnerName());
+            txtPhone.setText(existing.getPhone());
+        }
+
+        JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
+        btnBar.setBackground(AppTheme.BG_CARD);
+        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
+
+        btnCancel.addActionListener(e -> dlg.dispose());
+        btnSave.addActionListener(e -> {
+            try {
+                FarmDTO dto = isEdit ? existing : new FarmDTO();
+                dto.setFarmCode(txtCode.getText().trim());
+                dto.setName(txtName.getText().trim());
+                dto.setAddress(txtAddr.getText().trim());
+                String areaText = txtArea.getText().trim();
+                dto.setTotalArea(areaText.isEmpty() ? null : Double.parseDouble(areaText));
+                dto.setOwnerName(txtOwner.getText().trim());
+                dto.setPhone(txtPhone.getText().trim());
+
+                if (isEdit) farmController.updateFarm(dto);
+                else        farmController.createFarm(dto);
+
+                dlg.dispose();
+                refreshTable(null);
+                JOptionPane.showMessageDialog(this,
+                        isEdit ? "Cap nhat thanh cong!" : "Them trang trai thanh cong!",
+                        "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(dlg, "Dien tich phai la so thuc.");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
             }
         });
+
+        btnBar.add(btnCancel);
+        btnBar.add(btnSave);
+
+        dlg.add(form,   BorderLayout.CENTER);
+        dlg.add(btnBar, BorderLayout.SOUTH);
+        dlg.setVisible(true);
     }
 
-    private void refreshTable() {
-        tableModel.setRowCount(0);
-        List<FarmDTO> farms = farmController.getAllFarms();
-        for (FarmDTO f : farms) {
-            tableModel.addRow(new Object[]{
-                f.getId(), f.getFarmCode(), f.getName(), f.getAddress(), 
-                f.getTotalArea(), f.getOwnerName(), f.getPhone()
+    void deleteFarm(long id) {
+        int r = JOptionPane.showConfirmDialog(this,
+                "Ban chac chan muon xoa trang trai nay?",
+                "Xac nhan xoa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (r == JOptionPane.YES_OPTION) {
+            try {
+                farmController.deleteFarm(id);
+                refreshTable(null);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Loi xoa: " + ex.getMessage());
+            }
+        }
+    }
+
+    // ── Inner: Action column renderer ─────────────────────────
+
+    static class ActionRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
+
+        ActionRenderer() {
+            setLayout(new FlowLayout(FlowLayout.CENTER, 4, 4));
+            setOpaque(true);
+            add(btnEdit);
+            add(btnDelete);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object v,
+                boolean s, boolean f, int r, int c) {
+            setBackground(r % 2 == 0 ? AppTheme.BG_CARD : AppTheme.BG_TABLE_ROW_ALT);
+            return this;
+        }
+    }
+
+    class ActionEditor extends DefaultCellEditor {
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
+        private int currentRow;
+
+        ActionEditor(JTable table) {
+            super(new JCheckBox());
+            panel.setOpaque(true);
+            panel.setBackground(AppTheme.BG_CARD);
+            panel.add(btnEdit);
+            panel.add(btnDelete);
+
+            btnEdit.addActionListener(e -> {
+                fireEditingStopped();
+                int row = currentRow;
+                try {
+                    Long id = Long.parseLong(tableModel.getValueAt(row, 0).toString());
+                    FarmDTO dto = new FarmDTO();
+                    dto.setId(id);
+                    dto.setFarmCode(tableModel.getValueAt(row, 1).toString());
+                    dto.setName(tableModel.getValueAt(row, 2).toString());
+                    dto.setAddress(tableModel.getValueAt(row, 3).toString());
+                    Object area = tableModel.getValueAt(row, 4);
+                    dto.setTotalArea(area == null ? null : Double.parseDouble(area.toString()));
+                    dto.setOwnerName(tableModel.getValueAt(row, 5).toString());
+                    dto.setPhone(tableModel.getValueAt(row, 6).toString());
+                    openDialog(dto);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(FarmView.this, "Loi: " + ex.getMessage());
+                }
+            });
+
+            btnDelete.addActionListener(e -> {
+                fireEditingStopped();
+                try {
+                    Long id = Long.parseLong(tableModel.getValueAt(currentRow, 0).toString());
+                    deleteFarm(id);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(FarmView.this, "Loi: " + ex.getMessage());
+                }
             });
         }
-    }
 
-    private void addFarm() {
-        try {
-            FarmDTO dto = getDtoFromForm();
-            farmController.createFarm(dto);
-            JOptionPane.showMessageDialog(this, "Farm added successfully!");
-            refreshTable();
-            clearForm();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+        @Override
+        public Component getTableCellEditorComponent(JTable t, Object v,
+                boolean s, int row, int col) {
+            currentRow = row;
+            return panel;
         }
-    }
 
-    private void updateFarm() {
-        try {
-            if (txtId.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select a farm to update");
-                return;
-            }
-            FarmDTO dto = getDtoFromForm();
-            dto.setId(Long.parseLong(txtId.getText()));
-            farmController.updateFarm(dto);
-            JOptionPane.showMessageDialog(this, "Farm updated successfully!");
-            refreshTable();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
-        }
-    }
-
-    private void deleteFarm() {
-        try {
-            if (txtId.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select a farm to delete");
-                return;
-            }
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                farmController.deleteFarm(Long.parseLong(txtId.getText()));
-                JOptionPane.showMessageDialog(this, "Farm deleted successfully!");
-                refreshTable();
-                clearForm();
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
-        }
-    }
-
-    private void populateForm() {
-        int row = farmTable.getSelectedRow();
-        txtId.setText(tableModel.getValueAt(row, 0).toString());
-        txtFarmCode.setText(tableModel.getValueAt(row, 1).toString());
-        txtName.setText(tableModel.getValueAt(row, 2).toString());
-        txtAddress.setText(tableModel.getValueAt(row, 3).toString());
-        txtTotalArea.setText(tableModel.getValueAt(row, 4).toString());
-        txtOwnerName.setText(tableModel.getValueAt(row, 5).toString());
-        txtPhone.setText(tableModel.getValueAt(row, 6).toString());
-    }
-
-    private void clearForm() {
-        txtId.setText("");
-        txtFarmCode.setText("");
-        txtName.setText("");
-        txtAddress.setText("");
-        txtTotalArea.setText("");
-        txtOwnerName.setText("");
-        txtPhone.setText("");
-        farmTable.clearSelection();
-    }
-
-    private FarmDTO getDtoFromForm() {
-        FarmDTO dto = new FarmDTO();
-        dto.setFarmCode(txtFarmCode.getText());
-        dto.setName(txtName.getText());
-        dto.setAddress(txtAddress.getText());
-        dto.setTotalArea(Double.parseDouble(txtTotalArea.getText()));
-        dto.setOwnerName(txtOwnerName.getText());
-        dto.setPhone(txtPhone.getText());
-        return dto;
+        @Override public Object getCellEditorValue() { return "edit|delete"; }
     }
 }

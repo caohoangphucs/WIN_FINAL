@@ -2,14 +2,24 @@ package com.example.winfinal;
 
 import com.example.winfinal.dao.BaseDAO;
 import com.example.winfinal.view.MainView;
+import com.formdev.flatlaf.FlatLightLaf;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class Main {
     public static void main(String[] args) {
+        // Apply modern FlatLaf theme (must be before any Swing component creation)
+        try {
+            FlatLightLaf.setup();
+            UIManager.put("Button.arc", 8);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("TextComponent.arc", 6);
+        } catch (Exception ignored) {}
+
         EntityManagerFactory emf = checkDatabaseConnection();
         if (emf == null) {
             SwingUtilities.invokeLater(() -> {

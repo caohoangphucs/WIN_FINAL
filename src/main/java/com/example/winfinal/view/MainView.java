@@ -1,45 +1,195 @@
 package com.example.winfinal.view;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 
+/**
+ * Main application window: left sidebar + content area (CardLayout).
+ */
 public class MainView extends JFrame {
 
-    public MainView() {
-        setTitle("AgriChain - Welcome");
-        setSize(400, 200);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+    private static final String PAGE_DASHBOARD   = "Dashboard";
+    private static final String PAGE_FARM        = "Trang tr\u1EA1i";
+    private static final String PAGE_LOT         = "L\u00F4 s\u1EA3n xu\u1EA5t";
+    private static final String PAGE_SUPPLY      = "V\u1EADt t\u01B0";
+    private static final String PAGE_HARVEST     = "Thu ho\u1EA1ch";
+    private static final String PAGE_CULTIVATION = "Canh t\u00E1c";
+    private static final String PAGE_PEST        = "S\u00E2u b\u1EC7nh";
+    private static final String PAGE_TRACEABILITY= "Truy xu\u1EA5t";
+    private static final String PAGE_REPORT      = "B\u00E1o c\u00E1o";
 
-        initComponents();
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel contentPane = new JPanel(cardLayout);
+
+    private JButton activeBtn = null;
+
+    public MainView() {
+        setTitle("AgriChain - Agricultural Supply Chain Management");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1280, 780);
+        setMinimumSize(new Dimension(960, 600));
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(AppTheme.BG_MAIN);
+
+        add(buildSidebar(), BorderLayout.WEST);
+        add(buildContent(), BorderLayout.CENTER);
     }
 
-    private void initComponents() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        JLabel welcomeLabel = new JLabel("Ok chạy ngon rồi giờ code UI đi cu");
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        
-        JLabel subLabel = new JLabel("Agricultural Supply Chain Management");
-        subLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+    // ── Sidebar ───────────────────────────────────────────────
 
-        JButton btnManageFarms = new JButton("Manage Farms (CRUD)");
-        btnManageFarms.addActionListener(e -> {
-            FarmView farmView = new FarmView();
-            farmView.setVisible(true);
+    private JPanel buildSidebar() {
+        JPanel sidebar = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(AppTheme.SIDEBAR_BG);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+            }
+        };
+        sidebar.setPreferredSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 0));
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.setOpaque(false);
+
+        // Logo header
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 18));
+        header.setOpaque(false);
+        header.setMaximumSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 70));
+        JLabel logo = new JLabel("AgriChain");
+        logo.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        logo.setForeground(Color.WHITE);
+        header.add(logo);
+        sidebar.add(header);
+
+        sidebar.add(createSidebarSeparator());
+        sidebar.add(Box.createVerticalStrut(8));
+
+        // Nav items  (no icons)
+        String[] navItems = {
+            PAGE_DASHBOARD,
+            PAGE_FARM,
+            PAGE_LOT,
+            PAGE_SUPPLY,
+            PAGE_HARVEST,
+            PAGE_CULTIVATION,
+            PAGE_PEST,
+            PAGE_TRACEABILITY,
+            PAGE_REPORT,
+        };
+
+        for (String label : navItems) {
+            JButton btn = createNavButton(label);
+            sidebar.add(btn);
+            sidebar.add(Box.createVerticalStrut(2));
+            if (label.equals(PAGE_DASHBOARD)) {
+                activeBtn = btn;
+                setActive(btn);
+            }
+        }
+
+        sidebar.add(Box.createVerticalGlue());
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 12));
+        bottom.setOpaque(false);
+        bottom.setMaximumSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 50));
+        JLabel ver = new JLabel("v1.0.0  -  AgriChain");
+        ver.setFont(AppTheme.FONT_SMALL);
+        ver.setForeground(AppTheme.SIDEBAR_TEXT);
+        bottom.add(ver);
+        sidebar.add(createSidebarSeparator());
+        sidebar.add(bottom);
+
+        return sidebar;
+    }
+
+    private JButton createNavButton(String label) {
+        JButton btn = new JButton() {
+            boolean hovered = false;
+
+            {
+                addMouseListener(new MouseAdapter() {
+                    @Override public void mouseEntered(MouseEvent e) { hovered = true;  repaint(); }
+                    @Override public void mouseExited(MouseEvent e)  { hovered = false; repaint(); }
+                });
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                boolean active = (this == activeBtn);
+                if (active) {
+                    g2.setColor(AppTheme.SIDEBAR_ITEM_ACTIVE);
+                    g2.fill(new RoundRectangle2D.Double(8, 2, getWidth() - 16, getHeight() - 4, 10, 10));
+                } else if (hovered) {
+                    g2.setColor(AppTheme.SIDEBAR_ITEM_HOVER);
+                    g2.fill(new RoundRectangle2D.Double(8, 2, getWidth() - 16, getHeight() - 4, 10, 10));
+                }
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        btn.setText(label);
+        btn.setFont(AppTheme.FONT_SIDEBAR);
+        btn.setForeground(AppTheme.SIDEBAR_TEXT);
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setMaximumSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 42));
+        btn.setPreferredSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 42));
+        btn.setBorder(new EmptyBorder(0, 18, 0, 12));
+
+        btn.addActionListener(e -> {
+            setActive(btn);
+            cardLayout.show(contentPane, label);
         });
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(welcomeLabel, gbc);
+        return btn;
+    }
 
-        gbc.gridy = 1;
-        panel.add(subLabel, gbc);
+    private void setActive(JButton btn) {
+        if (activeBtn != null) {
+            activeBtn.setFont(AppTheme.FONT_SIDEBAR);
+            activeBtn.setForeground(AppTheme.SIDEBAR_TEXT);
+        }
+        activeBtn = btn;
+        btn.setFont(AppTheme.FONT_SIDEBAR_ACTIVE);
+        btn.setForeground(AppTheme.SIDEBAR_TEXT_ACTIVE);
+        btn.repaint();
+    }
 
-        gbc.gridy = 2;
-        panel.add(btnManageFarms, gbc);
+    private JSeparator createSidebarSeparator() {
+        JSeparator sep = new JSeparator();
+        sep.setForeground(new Color(0x2D6A4F));
+        sep.setMaximumSize(new Dimension(AppTheme.SIDEBAR_WIDTH, 1));
+        return sep;
+    }
 
-        add(panel);
+    // ── Content area (CardLayout) ─────────────────────────────
+
+    private JPanel buildContent() {
+        contentPane.setBackground(AppTheme.BG_MAIN);
+        contentPane.setOpaque(true);
+
+        contentPane.add(new DashboardView(),     PAGE_DASHBOARD);
+        contentPane.add(new FarmView(),          PAGE_FARM);
+        contentPane.add(new ProductionLotView(), PAGE_LOT);
+        contentPane.add(new AgriSupplyView(),    PAGE_SUPPLY);
+        contentPane.add(new HarvestRecordView(), PAGE_HARVEST);
+        contentPane.add(new CultivationLogView(),PAGE_CULTIVATION);
+        contentPane.add(new PestReportView(),    PAGE_PEST);
+        contentPane.add(new TraceabilityView(),  PAGE_TRACEABILITY);
+        contentPane.add(new ReportView(),        PAGE_REPORT);
+
+        return contentPane;
     }
 }

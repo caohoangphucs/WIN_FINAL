@@ -1,47 +1,7 @@
 package com.example.winfinal.entity.core;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
 
+import com.example.winfinal.entity.production.ProductionLot;
+import com.example.winfinal.entity.operation.WeatherLog;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -78,12 +38,15 @@ public class Farm {
     @Column(length = 20)
     private String phone;
 
+    // Enabled Cascade Delete: Deleting a farm will delete all its departments
     @OneToMany(mappedBy = "farm", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Department> departments = new ArrayList<>();
 
+    // Enabled Cascade Delete: Deleting a farm will delete all its production lots
     @OneToMany(mappedBy = "farm", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductionLot> productionLots = new ArrayList<>();
 
+    // Enabled Cascade Delete: Deleting a farm will delete all its weather logs
     @OneToMany(mappedBy = "farm", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WeatherLog> weatherLogs = new ArrayList<>();
 

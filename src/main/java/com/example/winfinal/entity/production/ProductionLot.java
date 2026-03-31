@@ -1,47 +1,11 @@
 package com.example.winfinal.entity.production;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
 
+import com.example.winfinal.entity.core.*;
+import com.example.winfinal.entity.lookup.LotStatus;
+import com.example.winfinal.entity.master.CropType;
+import com.example.winfinal.entity.master.Season;
+import com.example.winfinal.entity.operation.*;
+import com.example.winfinal.entity.output.HarvestRecord;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -101,6 +65,7 @@ public class ProductionLot {
     @JoinColumn(name = "manager_id")
     private Employee manager;
 
+    // Enabled Cascade Delete: Deleting a production lot will delete all associated logs and records
     @OneToMany(mappedBy = "lot", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CultivationLog> cultivationLogs = new ArrayList<>();
 

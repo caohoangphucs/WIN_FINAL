@@ -1,7 +1,7 @@
 package com.example.winfinal.view;
 
 import com.example.winfinal.dto.FarmDTO;
-import com.example.winfinal.service.FarmService;
+import com.example.winfinal.controller.FarmController;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -9,7 +9,7 @@ import java.awt.*;
 import java.util.List;
 
 public class FarmView extends JFrame {
-    private final FarmService farmService = new FarmService();
+    private final FarmController farmController = new FarmController();
     
     private JTable farmTable;
     private DefaultTableModel tableModel;
@@ -108,7 +108,7 @@ public class FarmView extends JFrame {
 
     private void refreshTable() {
         tableModel.setRowCount(0);
-        List<FarmDTO> farms = farmService.getAllFarms();
+        List<FarmDTO> farms = farmController.getAllFarms();
         for (FarmDTO f : farms) {
             tableModel.addRow(new Object[]{
                 f.getId(), f.getFarmCode(), f.getName(), f.getAddress(), 
@@ -120,7 +120,7 @@ public class FarmView extends JFrame {
     private void addFarm() {
         try {
             FarmDTO dto = getDtoFromForm();
-            farmService.createFarm(dto);
+            farmController.createFarm(dto);
             JOptionPane.showMessageDialog(this, "Farm added successfully!");
             refreshTable();
             clearForm();
@@ -137,7 +137,7 @@ public class FarmView extends JFrame {
             }
             FarmDTO dto = getDtoFromForm();
             dto.setId(Long.parseLong(txtId.getText()));
-            farmService.updateFarm(dto);
+            farmController.updateFarm(dto);
             JOptionPane.showMessageDialog(this, "Farm updated successfully!");
             refreshTable();
         } catch (Exception ex) {
@@ -153,7 +153,7 @@ public class FarmView extends JFrame {
             }
             int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                farmService.deleteFarm(Long.parseLong(txtId.getText()));
+                farmController.deleteFarm(Long.parseLong(txtId.getText()));
                 JOptionPane.showMessageDialog(this, "Farm deleted successfully!");
                 refreshTable();
                 clearForm();

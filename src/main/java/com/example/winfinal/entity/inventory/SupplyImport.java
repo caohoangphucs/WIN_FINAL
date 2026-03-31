@@ -1,47 +1,6 @@
 package com.example.winfinal.entity.inventory;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
 
+import com.example.winfinal.entity.core.Employee;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -72,4 +31,7 @@ public class SupplyImport {
     @Column(name = "import_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date importDate;
+
+    @OneToMany(mappedBy = "supplyImport", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<SupplyImportDetail> details = new java.util.ArrayList<>();
 }

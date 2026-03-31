@@ -1,52 +1,13 @@
 package com.example.winfinal.entity.core;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
-import com.example.winfinal.entity.core.*;
-import com.example.winfinal.entity.lookup.*;
-import com.example.winfinal.entity.master.*;
-import com.example.winfinal.entity.production.*;
-import com.example.winfinal.entity.inventory.*;
-import com.example.winfinal.entity.operation.*;
-import com.example.winfinal.entity.output.*;
 
+import com.example.winfinal.entity.lookup.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "employee")
@@ -89,4 +50,10 @@ public class Employee {
     @Column(name = "updated_at", insertable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.example.winfinal.entity.inventory.SupplyImport> supplyImports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.example.winfinal.entity.output.HarvestRecord> harvestRecords = new ArrayList<>();
 }

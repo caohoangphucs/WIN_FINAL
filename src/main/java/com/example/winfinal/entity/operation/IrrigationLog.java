@@ -29,4 +29,13 @@ public class IrrigationLog {
     @Column(name = "irrigated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date irrigatedAt;
+
+    @Column(name = "water_amount")
+    private Double waterAmount;
+
+    @Column(name = "source", length = 100)
+    private String source;
+
+    @Column(name = "duration_min")
+    private Integer durationMin;
 }

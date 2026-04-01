@@ -9,7 +9,6 @@
 DROP DATABASE IF EXISTS agri_chain;
 CREATE DATABASE agri_chain CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE agri_chain;
-SET NAMES 'utf8mb4';
 
 -- =====================================================
 -- [1. LOOKUP TABLES]
@@ -24,7 +23,7 @@ CREATE TABLE lot_status (
     code VARCHAR(30) PRIMARY KEY
 );
 INSERT INTO lot_status VALUES 
-('PLANTED'), ('GROWING'), ('FLOWERING'), ('HARVESTED'), ('IDLE');
+('PLANTED'), ('GROWING'), ('FLOWERING'), ('FRUITING'), ('HARVESTED'), ('IDLE');
 
 CREATE TABLE activity_type (
     code VARCHAR(30) PRIMARY KEY
@@ -167,6 +166,8 @@ CREATE TABLE supplier (
 CREATE TABLE agri_supply (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     supply_code VARCHAR(20) UNIQUE,
+    farm_id BIGINT,
+    FOREIGN KEY (farm_id) REFERENCES farm(id),
     name VARCHAR(100),
 
     category_id BIGINT,
@@ -240,6 +241,9 @@ CREATE TABLE irrigation_log (
     lot_id BIGINT,
     employee_id BIGINT,
     irrigated_at DATETIME,
+    water_amount DOUBLE,
+source VARCHAR(100),
+duration_min INT,
 
     FOREIGN KEY (lot_id) REFERENCES production_lot(id),
     FOREIGN KEY (employee_id) REFERENCES employee(id)
@@ -250,6 +254,10 @@ CREATE TABLE pest_report (
     lot_id BIGINT,
     employee_id BIGINT,
     severity_code VARCHAR(30),
+    pest_name  VARCHAR(100),
+treatment  VARCHAR(255),
+damage_pct DOUBLE,
+reported_at DATETIME,
 
     FOREIGN KEY (lot_id) REFERENCES production_lot(id),
     FOREIGN KEY (employee_id) REFERENCES employee(id),
@@ -276,9 +284,13 @@ CREATE TABLE weather_log (
 -- =====================================================
 
 CREATE TABLE customer (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id            BIGINT      AUTO_INCREMENT PRIMARY KEY,
     customer_code VARCHAR(20) UNIQUE,
-    name VARCHAR(100)
+    name          VARCHAR(100),
+    phone         VARCHAR(20),
+    email         VARCHAR(100),
+    type          VARCHAR(50),   -- WHOLESALER | RETAILER | PROCESSOR | EXPORTER
+    status        VARCHAR(20)    DEFAULT 'ACTIVE'
 );
 
 CREATE TABLE harvest_record (

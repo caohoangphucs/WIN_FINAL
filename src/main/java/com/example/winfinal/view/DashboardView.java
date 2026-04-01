@@ -92,10 +92,10 @@ public class DashboardView extends JPanel {
         c1.add(barChart, BorderLayout.CENTER);
         row.add(c1);
 
-        // [2.4] Tỉ lệ chất lượng A/B/C
+        // [2.4] Tỉ lệ chất lượng
         JPanel c2 = makeCard();
         c2.setLayout(new BorderLayout(0,6));
-        c2.add(cardTitle("Tỉ lệ xếp loại chất lượng A/B/C", null), BorderLayout.NORTH);
+        c2.add(cardTitle("Tỉ lệ xếp loại chất lượng", null), BorderLayout.NORTH);
         pieChart = new PieChartPanel(new String[]{}, new double[]{},
                 new Color[]{new Color(0x52B788),new Color(0xFFB833),new Color(0xE63946)});
         c2.add(pieChart, BorderLayout.CENTER);
@@ -226,19 +226,32 @@ public class DashboardView extends JPanel {
                 }
 
                 // Update pie chart [2.4]
-                if (qualityGrade != null && !qualityGrade.isEmpty()) {
-                    int n = qualityGrade.size();
-                    gradeLabels = new String[n];
-                    gradeValues = new double[n];
-                    long total  = 0;
-                    for (int i=0;i<n;i++) {
-                        gradeLabels[i] = qualityGrade.get(i)[0] == null ? "?" : qualityGrade.get(i)[0].toString();
+                if (qualityGrade != null) {
+                    Map<String, Long> map = new LinkedHashMap<>();
+                    map.put("Loại A", 0L);
+                    map.put("Loại B", 0L);
+                    map.put("Loại C", 0L);
+
+                    for (int i = 0; i < qualityGrade.size(); i++) {
+                        String g = qualityGrade.get(i)[0] == null ? "C" : qualityGrade.get(i)[0].toString().toUpperCase();
                         long cnt = qualityGrade.get(i)[1] == null ? 0 : ((Number)qualityGrade.get(i)[1]).longValue();
-                        gradeValues[i] = cnt;
-                        total += cnt;
+                        if (g.endsWith("A") || g.equals("A")) map.put("Loại A", map.get("Loại A") + cnt);
+                        else if (g.endsWith("B") || g.equals("B")) map.put("Loại B", map.get("Loại B") + cnt);
+                        else map.put("Loại C", map.get("Loại C") + cnt);
                     }
+
+                    gradeLabels = new String[]{"Loại A", "Loại B", "Loại C"};
+                    gradeValues = new double[3];
+                    long total = map.values().stream().mapToLong(Long::longValue).sum();
+
+                    gradeValues[0] = map.get("Loại A");
+                    gradeValues[1] = map.get("Loại B");
+                    gradeValues[2] = map.get("Loại C");
+
                     // convert to %
-                    if (total > 0) for (int i=0;i<n;i++) gradeValues[i] = gradeValues[i]/total*100;
+                    if (total > 0) {
+                        for (int i = 0; i < 3; i++) gradeValues[i] = gradeValues[i] / total * 100.0;
+                    }
                     pieChart.setData(gradeLabels, gradeValues);
                 }
 
@@ -357,7 +370,7 @@ public class DashboardView extends JPanel {
                 // label
                 g2.setColor(AppTheme.TEXT_SECONDARY);
                 g2.setFont(new Font("Segoe UI",Font.PLAIN,10));
-                String lbl=labels[i].length()>8?labels[i].substring(0,7)+"…":labels[i];
+                String lbl=labels[i].length()>14?labels[i].substring(0,13)+"…":labels[i];
                 g2.drawString(lbl,x+(barW-g2.getFontMetrics().stringWidth(lbl))/2,padT+H+16);
             }
             g2.dispose();
@@ -386,35 +399,34 @@ public class DashboardView extends JPanel {
             size=Math.max(size,40);
             int cx=(getWidth()-size)/2, cy=4;
             double total=Arrays.stream(values).sum();
-            if(total==0){g2.dispose();return;}
+            if(total==0){
+                g2.setColor(AppTheme.TEXT_MUTED);
+                g2.setFont(AppTheme.FONT_SMALL);
+                String msg = "Chưa có dữ liệu";
+                g2.drawString(msg, cx + size/2 - g2.getFontMetrics().stringWidth(msg)/2, cy + size/2);
+                g2.dispose();
+                return;
+            }
             double start=-90;
             for(int i=0;i<values.length;i++){
                 double sweep=values[i]/total*360;
-                g2.setColor(colors[i%colors.length]);
-                g2.fill(new Arc2D.Double(cx,cy,size,size,start,sweep,Arc2D.PIE));
-                double mid=Math.toRadians(start+sweep/2);
-                int lx=cx+size/2+(int)((size/2-size/3.5)*Math.cos(mid));
-                int ly=cy+size/2+(int)((size/2-size/3.5)*Math.sin(mid));
-                
-                String tag=labels[i];
-                String pct=String.format("%.0f%%",values[i]);
-                
-                g2.setColor(Color.WHITE);
-                g2.setFont(new Font("Segoe UI",Font.BOLD,11));
-                g2.drawString(tag,lx-g2.getFontMetrics().stringWidth(tag)/2,ly-4);
-                g2.drawString(pct,lx-g2.getFontMetrics().stringWidth(pct)/2,ly+8);
-
+                if (sweep > 0) {
+                    g2.setColor(colors[i%colors.length]);
+                    g2.fill(new Arc2D.Double(cx,cy,size,size,start,sweep,Arc2D.PIE));
+                }
                 start+=sweep;
             }
             // Legend
-            int legY=cy+size+12, legX=(getWidth() - (labels.length*100))/2; // Center legends approximately
+            int legY=cy+size+12;
+            int legWidth = labels.length * 90;
+            int legX = cx + size/2 - legWidth/2;
             if(legX<4) legX=4;
             g2.setFont(new Font("Segoe UI",Font.PLAIN,11));
             for(int i=0;i<labels.length;i++){
                 g2.setColor(colors[i%colors.length]); g2.fillOval(legX,legY-2,10,10);
                 g2.setColor(AppTheme.TEXT_SECONDARY);
                 g2.drawString(labels[i]+" "+String.format("%.0f",values[i])+"%",legX+14,legY+7);
-                legX+=96;
+                legX+=90;
             }
             g2.dispose();
         }
@@ -466,7 +478,7 @@ public class DashboardView extends JPanel {
                 g2.setColor(new Color(0x4895EF));g2.setStroke(new BasicStroke(2f));g2.drawOval(xs[i]-5,ys[i]-5,10,10);
                 g2.setFont(new Font("Segoe UI",Font.PLAIN,10));
                 g2.setColor(AppTheme.TEXT_SECONDARY);
-                String lbl=labels[i].length()>6?labels[i].substring(0,5)+"…":labels[i];
+                String lbl = labels[i]; // Show full season name, do not truncate
                 g2.drawString(lbl,xs[i]-g2.getFontMetrics().stringWidth(lbl)/2,padT+H+18);
             }
             g2.dispose();

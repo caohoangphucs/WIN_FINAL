@@ -66,23 +66,41 @@ public class ProductionLotView extends JPanel {
         JPanel wrap = new JPanel(new BorderLayout(0, 10));
         wrap.setOpaque(false);
 
-        // Filter card
-        JPanel filterCard = makeCard();
-        filterCard.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        // Filter card - use centralized UiUtils for clean UI
+        JPanel filterCard = UiUtils.createCard();
+        filterCard.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 0, 16);
+        gbc.weighty = 1.0;
 
-        cboFarm   = makeCombo("Trang trại", new String[]{"Trang trại A","Trang trại B","Trang trại C"});
-        cboStatus = makeCombo("Trạng thái", new String[]{"Tất cả trạng thái","PLANNING","GROWING","HARVESTING","DONE","CANCELLED"});
-        cboCrop   = makeCombo("Loại cây",   new String[]{"Tất cả loại cây","Rau","Lúa","Trái Cây","Hoa"});
-        cboSeason = makeCombo("Mùa vụ",     new String[]{"Tất cả mùa vụ","Xuân","Hạ","Thu","Đông"});
-        JButton btnFilter = makePrimaryBtn("Lọc");
+        cboFarm   = createStyledCombo(new String[]{"Tất cả trang trại", "Trang trại A", "Trang trại B", "Trang trại C"});
+        cboStatus = createStyledCombo(new String[]{"Tất cả trạng thái", "PLANNING", "GROWING", "HARVESTING", "DONE", "CANCELLED"});
+        cboCrop   = createStyledCombo(new String[]{"Tất cả loại cây", "Rau", "Lúa", "Trái Cây", "Hoa"});
+        cboSeason = createStyledCombo(new String[]{"Tất cả mùa vụ", "Xuân", "Hạ", "Thu", "Đông"});
 
-        filterCard.add(makeComboLabel("Trang trại:")); filterCard.add(cboFarm);
-        filterCard.add(makeComboLabel("Trạng thái:")); filterCard.add(cboStatus);
-        filterCard.add(makeComboLabel("Loại cây:"));  filterCard.add(cboCrop);
-        filterCard.add(makeComboLabel("Mùa vụ."));    filterCard.add(cboSeason);
-        filterCard.add(btnFilter);
-
+        JButton btnFilter = UiUtils.createPrimaryButton("Lọc");
+        btnFilter.setPreferredSize(new Dimension(100, AppTheme.BUTTON_HEIGHT));
         btnFilter.addActionListener(e -> refreshTable());
+
+        int col = 0;
+        gbc.gridy = 0; gbc.weightx = 1.0;
+        
+        gbc.gridx = col++; filterCard.add(createFilterGroup("Trang trại", cboFarm), gbc);
+        gbc.gridx = col++; filterCard.add(createFilterGroup("Trạng thái", cboStatus), gbc);
+        gbc.gridx = col++; filterCard.add(createFilterGroup("Loại cây", cboCrop), gbc);
+        gbc.gridx = col++; filterCard.add(createFilterGroup("Mùa vụ", cboSeason), gbc);
+
+        // Add filter button aligned to the bottom of the combobox
+        gbc.gridx = col++;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(0, 8, 0, 0);
+        gbc.anchor = GridBagConstraints.SOUTH;
+        JPanel btnWrap = new JPanel(new BorderLayout());
+        btnWrap.setOpaque(false);
+        btnWrap.setBorder(new EmptyBorder(22, 0, 0, 0)); // push down to align with combo boxes
+        btnWrap.add(btnFilter, BorderLayout.SOUTH);
+        filterCard.add(btnWrap, gbc);
 
         // Search row
         JPanel searchRow = new JPanel(new BorderLayout(8, 0));
@@ -91,11 +109,11 @@ public class ProductionLotView extends JPanel {
         txtSearch = UiUtils.createSearchField("Tìm theo mã lô...");
         txtSearch.setPreferredSize(new Dimension(240, 34));
 
-        JButton btnSearch = makePrimaryBtn("Tìm");
+        JButton btnSearch = UiUtils.createPrimaryButton("Tìm");
         btnSearch.addActionListener(e -> refreshTable());
         txtSearch.addActionListener(e -> refreshTable());
 
-        JButton btnAdd = makeOutlineBtn("+ Thêm lô");
+        JButton btnAdd = UiUtils.createSecondaryButton("+ Thêm lô");
         btnAdd.addActionListener(e -> openDialog(null));
 
         JPanel searchWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -106,12 +124,12 @@ public class ProductionLotView extends JPanel {
         searchRow.add(searchWrap, BorderLayout.EAST);
 
         // Table card
-        JPanel tableCard = makeCard();
+        JPanel tableCard = UiUtils.createCard();
         tableCard.setLayout(new BorderLayout());
         tableCard.add(buildTable(), BorderLayout.CENTER);
 
-        wrap.add(filterCard,  BorderLayout.NORTH);
-        JPanel mid = new JPanel(new BorderLayout(0,6));
+        wrap.add(filterCard, BorderLayout.NORTH);
+        JPanel mid = new JPanel(new BorderLayout(0, 6));
         mid.setOpaque(false);
         mid.add(searchRow, BorderLayout.NORTH);
         mid.add(tableCard, BorderLayout.CENTER);
@@ -119,6 +137,25 @@ public class ProductionLotView extends JPanel {
 
         refreshTable();
         return wrap;
+    }
+
+    private JPanel createFilterGroup(String labelText, JComboBox<String> combo) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setOpaque(false);
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lbl.setForeground(AppTheme.TEXT_SECONDARY);
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(combo, BorderLayout.CENTER);
+        return p;
+    }
+
+    private JComboBox<String> createStyledCombo(String[] items) {
+        JComboBox<String> cbo = new JComboBox<>(items);
+        cbo.setFont(AppTheme.FONT_BODY);
+        cbo.setBackground(Color.WHITE);
+        cbo.setPreferredSize(new Dimension(150, AppTheme.BUTTON_HEIGHT));
+        return cbo;
     }
 
     private JScrollPane buildTable() {
@@ -299,7 +336,7 @@ public class ProductionLotView extends JPanel {
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(Color.WHITE);
         JButton bCancel = UiUtils.createSecondaryButton("Hủy");
-        JButton bSave   = makePrimaryBtn("Lưu");
+        JButton bSave   = UiUtils.createPrimaryButton("Lưu");
         bCancel.addActionListener(e -> dlg.dispose());
         bSave.addActionListener(e -> {
             try {
@@ -450,72 +487,6 @@ public class ProductionLotView extends JPanel {
         @Override public Object getCellEditorValue() { return "view"; }
     }
 
-    // ── UI helpers ────────────────────────────────────────────
+    // ── Data helpers (Removed duplicate UI helpers) ────────────────────────────────────────────
 
-    private JComboBox<String> makeCombo(String title, String[] items) {
-        String[] opts = new String[items.length+1];
-        opts[0] = title;
-        System.arraycopy(items, 0, opts, 1, items.length);
-        JComboBox<String> c = new JComboBox<>(items);
-        c.setFont(AppTheme.FONT_BODY);
-        c.setPreferredSize(new Dimension(155, 30));
-        return c;
-    }
-
-    private JLabel makeComboLabel(String text) {
-        JLabel l = new JLabel(text);
-        l.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        l.setForeground(AppTheme.TEXT_SECONDARY);
-        return l;
-    }
-
-    private JButton makePrimaryBtn(String text) {
-        JButton b = new JButton(text) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isRollover() ? new Color(0x1D4ED8) : new Color(0x2563EB));
-                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),8,8));
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        b.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        b.setForeground(Color.WHITE);
-        b.setContentAreaFilled(false);
-        b.setBorderPainted(false);
-        b.setFocusPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setPreferredSize(new Dimension(80, 30));
-        return b;
-    }
-
-    private JButton makeOutlineBtn(String text) {
-        JButton b = new JButton(text);
-        b.setFont(AppTheme.FONT_BODY);
-        b.setForeground(new Color(0x2563EB));
-        b.setBackground(Color.WHITE);
-        b.setBorder(BorderFactory.createLineBorder(new Color(0x2563EB), 1, true));
-        b.setFocusPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setPreferredSize(new Dimension(100, 30));
-        return b;
-    }
-
-    private JPanel makeCard() {
-        JPanel p = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),10,10));
-                g2.setColor(AppTheme.BORDER_LIGHT);
-                g2.draw(new RoundRectangle2D.Double(0,0,getWidth()-1,getHeight()-1,10,10));
-                g2.dispose();
-            }
-        };
-        p.setOpaque(false);
-        p.setBorder(new EmptyBorder(10, 14, 10, 14));
-        return p;
-    }
 }

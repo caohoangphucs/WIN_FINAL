@@ -9,6 +9,7 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.geom.*;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -108,6 +109,9 @@ public class ReportView extends JPanel {
         String[] custCols={"#","Khách hàng","Số lượng (kg)","Số đơn hàng"};
         customerModel=new DefaultTableModel(custCols,0){@Override public boolean isCellEditable(int r,int c){return false;}};
         JTable tCust=buildTable(customerModel, true);
+        tCust.getColumnModel().getColumn(0).setMinWidth(50);
+        tCust.getColumnModel().getColumn(0).setMaxWidth(50);
+        tCust.getColumnModel().getColumn(0).setPreferredWidth(50);
         JScrollPane sCust=new JScrollPane(tCust);
         sCust.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT,1));
         sCust.getViewport().setBackground(Color.WHITE);
@@ -127,6 +131,9 @@ public class ReportView extends JPanel {
         String[] finCols={"Lô","Loại cây","Sản lượng (kg)"};
         financeModel=new DefaultTableModel(finCols,0){@Override public boolean isCellEditable(int r,int c){return false;}};
         JTable tFin=buildTable(financeModel, false);
+        tFin.getColumnModel().getColumn(0).setMinWidth(70);
+        tFin.getColumnModel().getColumn(0).setMaxWidth(70);
+        tFin.getColumnModel().getColumn(0).setPreferredWidth(70);
         JScrollPane sFin=new JScrollPane(tFin);
         sFin.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT,1));
         sFin.getViewport().setBackground(Color.WHITE);

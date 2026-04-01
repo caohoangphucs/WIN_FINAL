@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 /**
@@ -72,12 +74,59 @@ public class FarmView extends JPanel {
         table = new JTable(tableModel);
         UiUtils.styleTable(table);
 
+        // Row hover & click
+        table.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int col = table.columnAtPoint(e.getPoint());
+                if (col == 7) return; // action column handled by editor
+                int row = table.rowAtPoint(e.getPoint());
+                if (row < 0) return;
+                try {
+                    Long id   = Long.parseLong(tableModel.getValueAt(row, 0).toString());
+                    String nm = tableModel.getValueAt(row, 2).toString();
+                    showFarmSummary(id, nm);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(FarmView.this, "Lỗi: " + ex.getMessage());
+                }
+            }
+        });
+        // Hover highlight
+        table.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                table.setSelectionBackground(row >= 0 ? new Color(0xD8F3DC) : AppTheme.BG_CARD);
+            }
+        });
+
         table.getColumn("Thao tac").setCellRenderer(new ActionRenderer());
         table.getColumn("Thao tac").setCellEditor(new ActionEditor(table));
-        table.getColumn("Thao tac").setPreferredWidth(210);
-        table.getColumn("ID").setPreferredWidth(50);
-        table.getColumn("Ma trang trai").setPreferredWidth(100);
-        table.getColumn("Dien tich (ha)").setPreferredWidth(100);
+        table.getColumn("Thao tac").setMinWidth(200);
+        table.getColumn("Thao tac").setMaxWidth(220);
+        table.getColumn("Thao tac").setPreferredWidth(220);
+        table.getColumn("Thao tac").setResizable(false);
+
+        table.getColumn("ID").setMinWidth(45);
+        table.getColumn("ID").setMaxWidth(45);
+        table.getColumn("ID").setPreferredWidth(45);
+
+        table.getColumn("Ma trang trai").setMinWidth(110);
+        table.getColumn("Ma trang trai").setMaxWidth(110);
+        table.getColumn("Ma trang trai").setPreferredWidth(110);
+
+        table.getColumn("Dien tich (ha)").setMinWidth(110);
+        table.getColumn("Dien tich (ha)").setMaxWidth(110);
+        table.getColumn("Dien tich (ha)").setPreferredWidth(110);
+
+        table.getColumn("So dien thoai").setMinWidth(120);
+        table.getColumn("So dien thoai").setMaxWidth(120);
+        table.getColumn("So dien thoai").setPreferredWidth(120);
+        
+        table.getColumn("Ten trang trai").setMaxWidth(160);
+        table.getColumn("Dia chi").setMaxWidth(160);
+        table.getColumn("Chu so huu").setMaxWidth(160);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -200,15 +249,15 @@ public class FarmView extends JPanel {
 
     // ── Inner: Action column renderer ─────────────────────────
 
-    static class ActionRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
-        private final JButton btnReport = UiUtils.createPrimaryButton("Báo cáo");
+    public static class ActionRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
         private final JButton btnEdit   = UiUtils.createSecondaryButton("Sửa");
         private final JButton btnDelete = UiUtils.createDangerButton("Xóa");
 
-        ActionRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 4, 4));
+        public ActionRenderer() {
+            setLayout(new FlowLayout(FlowLayout.CENTER, 8, 4));
             setOpaque(true);
-            add(btnReport);
+            btnEdit.setPreferredSize(new Dimension(80, 28));
+            btnDelete.setPreferredSize(new Dimension(80, 28));
             add(btnEdit);
             add(btnDelete);
         }
@@ -222,8 +271,7 @@ public class FarmView extends JPanel {
     }
 
     class ActionEditor extends DefaultCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnReport = UiUtils.createPrimaryButton("Báo cáo");
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
         private final JButton btnEdit   = UiUtils.createSecondaryButton("Sửa");
         private final JButton btnDelete = UiUtils.createDangerButton("Xóa");
         private int currentRow;
@@ -232,20 +280,10 @@ public class FarmView extends JPanel {
             super(new JCheckBox());
             panel.setOpaque(true);
             panel.setBackground(AppTheme.BG_CARD);
-            panel.add(btnReport);
+            btnEdit.setPreferredSize(new Dimension(80, 28));
+            btnDelete.setPreferredSize(new Dimension(80, 28));
             panel.add(btnEdit);
             panel.add(btnDelete);
-
-            btnReport.addActionListener(e -> {
-                fireEditingStopped();
-                try {
-                    Long id = Long.parseLong(tableModel.getValueAt(currentRow, 0).toString());
-                    String name = tableModel.getValueAt(currentRow, 2).toString();
-                    showFarmSummary(id, name);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(FarmView.this, "Lỗi: " + ex.getMessage());
-                }
-            });
 
             btnEdit.addActionListener(e -> {
                 fireEditingStopped();

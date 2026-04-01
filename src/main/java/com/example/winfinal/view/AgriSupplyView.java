@@ -149,7 +149,22 @@ public class AgriSupplyView extends JPanel {
 
         // Status column
         masterTable.getColumnModel().getColumn(4).setCellRenderer(new StatusDotRenderer());
+        masterTable.getColumnModel().getColumn(4).setMinWidth(90);
+        masterTable.getColumnModel().getColumn(4).setMaxWidth(90);
         masterTable.getColumnModel().getColumn(4).setPreferredWidth(90);
+        
+        masterTable.getColumnModel().getColumn(1).setMinWidth(80);
+        masterTable.getColumnModel().getColumn(1).setMaxWidth(80);
+        masterTable.getColumnModel().getColumn(1).setPreferredWidth(80);
+        
+        masterTable.getColumnModel().getColumn(2).setMinWidth(60);
+        masterTable.getColumnModel().getColumn(2).setMaxWidth(60);
+        masterTable.getColumnModel().getColumn(2).setPreferredWidth(60);
+        
+        masterTable.getColumnModel().getColumn(3).setMinWidth(80);
+        masterTable.getColumnModel().getColumn(3).setMaxWidth(80);
+        masterTable.getColumnModel().getColumn(3).setPreferredWidth(80);
+        
         masterTable.getColumnModel().getColumn(0).setPreferredWidth(170);
 
         masterTable.getSelectionModel().addListSelectionListener(e -> {

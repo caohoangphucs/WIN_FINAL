@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 /**
@@ -73,8 +75,24 @@ public class PestReportView extends JPanel {
             return lbl;
         });
 
+        table.getColumn("ID").setMinWidth(50);
+        table.getColumn("ID").setMaxWidth(50);
         table.getColumn("ID").setPreferredWidth(50);
+        
+        table.getColumn("Lo (ID)").setMinWidth(80);
+        table.getColumn("Lo (ID)").setMaxWidth(80);
         table.getColumn("Lo (ID)").setPreferredWidth(80);
+
+        // Row click → show detail
+        table.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row < 0) return;
+                showPestDetail(row);
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -84,6 +102,18 @@ public class PestReportView extends JPanel {
         card.setLayout(new BorderLayout());
         card.add(scroll, BorderLayout.CENTER);
         return card;
+    }
+
+    private void showPestDetail(int row) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><b>Chi tiết báo cáo sâu bệnh</b><br><br>");
+        sb.append("ID: ").append(tableModel.getValueAt(row, 0)).append("<br>");
+        sb.append("Lô (ID): ").append(tableModel.getValueAt(row, 1)).append("<br>");
+        sb.append("Mức độ: ").append(tableModel.getValueAt(row, 2)).append("<br>");
+        sb.append("Nhân viên (ID): ").append(tableModel.getValueAt(row, 3)).append("<br>");
+        sb.append("Ghi chú: ").append(tableModel.getValueAt(row, 4)).append("</html>");
+        JOptionPane.showMessageDialog(this, sb.toString(),
+                "Chi tiết sâu bệnh", JOptionPane.PLAIN_MESSAGE);
     }
 
     private Color[] severityColor(String sev) {

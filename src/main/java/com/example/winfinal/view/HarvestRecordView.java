@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -82,8 +84,31 @@ public class HarvestRecordView extends JPanel {
 
         table.getColumn("Thao tac").setCellRenderer(new FarmView.ActionRenderer());
         table.getColumn("Thao tac").setCellEditor(new HarvestActionEditor(table));
-        table.getColumn("Thao tac").setPreferredWidth(130);
-        table.getColumn("ID").setPreferredWidth(50);
+        table.getColumn("Thao tac").setMinWidth(200);
+        table.getColumn("Thao tac").setMaxWidth(220);
+        table.getColumn("Thao tac").setPreferredWidth(220);
+        table.getColumn("Thao tac").setResizable(false);
+
+        table.getColumn("ID").setMinWidth(45);
+        table.getColumn("ID").setMaxWidth(45);
+        table.getColumn("ID").setPreferredWidth(45);
+        
+        table.getColumn("Lo ID").setMinWidth(110);
+        table.getColumn("Lo ID").setMaxWidth(110);
+        table.getColumn("Lo ID").setPreferredWidth(110);
+
+        // Row click → show detail
+        table.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int col = table.columnAtPoint(e.getPoint());
+                if (col == 7) return;
+                int row = table.rowAtPoint(e.getPoint());
+                if (row < 0) return;
+                showHarvestDetail(row);
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -93,6 +118,20 @@ public class HarvestRecordView extends JPanel {
         card.setLayout(new BorderLayout());
         card.add(scroll, BorderLayout.CENTER);
         return card;
+    }
+
+    private void showHarvestDetail(int row) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><b>Chi tiết bản ghi thu hoạch</b><br><br>");
+        sb.append("ID: ").append(tableModel.getValueAt(row, 0)).append("<br>");
+        sb.append("Lô ID: ").append(tableModel.getValueAt(row, 1)).append("<br>");
+        sb.append("Ngày thu hoạch: ").append(tableModel.getValueAt(row, 2)).append("<br>");
+        sb.append("Năng suất (kg): ").append(tableModel.getValueAt(row, 3)).append("<br>");
+        sb.append("Chất lượng: ").append(tableModel.getValueAt(row, 4)).append("<br>");
+        sb.append("Nhân viên ID: ").append(tableModel.getValueAt(row, 5)).append("<br>");
+        sb.append("Khách hàng ID: ").append(tableModel.getValueAt(row, 6)).append("</html>");
+        JOptionPane.showMessageDialog(this, sb.toString(),
+                "Chi tiết thu hoạch", JOptionPane.PLAIN_MESSAGE);
     }
 
     private Color[] gradeColor(String grade) {
@@ -196,15 +235,17 @@ public class HarvestRecordView extends JPanel {
     }
 
     class HarvestActionEditor extends DefaultCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
-        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sua");
-        private final JButton btnDelete = UiUtils.createDangerButton("Xoa");
+        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
+        private final JButton btnEdit   = UiUtils.createSecondaryButton("Sửa");
+        private final JButton btnDelete = UiUtils.createDangerButton("Xóa");
         private int currentRow;
 
         HarvestActionEditor(JTable t) {
             super(new JCheckBox());
             panel.setOpaque(true);
             panel.setBackground(AppTheme.BG_CARD);
+            btnEdit.setPreferredSize(new Dimension(80, 28));
+            btnDelete.setPreferredSize(new Dimension(80, 28));
             panel.add(btnEdit);
             panel.add(btnDelete);
 

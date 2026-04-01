@@ -11,7 +11,7 @@ import java.awt.geom.RoundRectangle2D;
  */
 public class MainView extends JFrame {
 
-    private static final String PAGE_DASHBOARD = "Dashboard";
+    private static final String PAGE_DASHBOARD = "Bảng điều khiển";
     private static final String PAGE_FARM = "Trang tr\u1EA1i";
     private static final String PAGE_LOT = "L\u00F4 s\u1EA3n xu\u1EA5t";
     private static final String PAGE_SUPPLY = "V\u1EADt t\u01B0";

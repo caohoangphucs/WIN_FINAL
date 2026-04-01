@@ -40,14 +40,14 @@ public class FarmView extends JPanel {
         p.setOpaque(false);
         p.setBorder(new EmptyBorder(0, 0, 8, 0));
 
-        JLabel title = UiUtils.createSectionTitle("Quan ly Trang Trai");
+        JLabel title = UiUtils.createSectionTitle("Quản lý trang trại");
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         right.setOpaque(false);
 
-        searchField = UiUtils.createSearchField("Tim theo ten, dia chi...");
-        JButton btnSearch = UiUtils.createSecondaryButton("Tim");
-        JButton btnAdd    = UiUtils.createPrimaryButton("+ Them trang trai");
+        searchField = UiUtils.createSearchField("Tìm theo tên, địa chỉ...");
+        JButton btnSearch = UiUtils.createSecondaryButton("Tìm");
+        JButton btnAdd    = UiUtils.createPrimaryButton("+ Thêm trang trại");
 
         btnSearch.addActionListener(e -> refreshTable(searchField.getText().trim()));
         searchField.addActionListener(e -> refreshTable(searchField.getText().trim()));
@@ -65,8 +65,8 @@ public class FarmView extends JPanel {
     // ── Table ─────────────────────────────────────────────────
 
     private JPanel buildTable() {
-        String[] cols = {"ID", "Ma trang trai", "Ten trang trai", "Dia chi",
-                         "Dien tich (ha)", "Chu so huu", "So dien thoai", "Thao tac"};
+        String[] cols = {"ID", "Mã trang trại", "Tên trang trại", "Địa chỉ",
+                         "Diện tích (ha)", "Chủ sở hữu", "Số điện thoại", "Thao tác"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
             @Override public Class<?> getColumnClass(int c) { return String.class; }
@@ -101,32 +101,32 @@ public class FarmView extends JPanel {
             }
         });
 
-        table.getColumn("Thao tac").setCellRenderer(new ActionRenderer());
-        table.getColumn("Thao tac").setCellEditor(new ActionEditor(table));
-        table.getColumn("Thao tac").setMinWidth(200);
-        table.getColumn("Thao tac").setMaxWidth(220);
-        table.getColumn("Thao tac").setPreferredWidth(220);
-        table.getColumn("Thao tac").setResizable(false);
+        table.getColumn("Thao tác").setCellRenderer(new ActionRenderer());
+        table.getColumn("Thao tác").setCellEditor(new ActionEditor(table));
+        table.getColumn("Thao tác").setMinWidth(200);
+        table.getColumn("Thao tác").setMaxWidth(220);
+        table.getColumn("Thao tác").setPreferredWidth(220);
+        table.getColumn("Thao tác").setResizable(false);
 
         table.getColumn("ID").setMinWidth(45);
         table.getColumn("ID").setMaxWidth(45);
         table.getColumn("ID").setPreferredWidth(45);
 
-        table.getColumn("Ma trang trai").setMinWidth(110);
-        table.getColumn("Ma trang trai").setMaxWidth(110);
-        table.getColumn("Ma trang trai").setPreferredWidth(110);
+        table.getColumn("Mã trang trại").setMinWidth(110);
+        table.getColumn("Mã trang trại").setMaxWidth(110);
+        table.getColumn("Mã trang trại").setPreferredWidth(110);
 
-        table.getColumn("Dien tich (ha)").setMinWidth(110);
-        table.getColumn("Dien tich (ha)").setMaxWidth(110);
-        table.getColumn("Dien tich (ha)").setPreferredWidth(110);
+        table.getColumn("Diện tích (ha)").setMinWidth(120);
+        table.getColumn("Diện tích (ha)").setMaxWidth(120);
+        table.getColumn("Diện tích (ha)").setPreferredWidth(120);
 
-        table.getColumn("So dien thoai").setMinWidth(120);
-        table.getColumn("So dien thoai").setMaxWidth(120);
-        table.getColumn("So dien thoai").setPreferredWidth(120);
+        table.getColumn("Số điện thoại").setMinWidth(120);
+        table.getColumn("Số điện thoại").setMaxWidth(120);
+        table.getColumn("Số điện thoại").setPreferredWidth(120);
         
-        table.getColumn("Ten trang trai").setMaxWidth(160);
-        table.getColumn("Dia chi").setMaxWidth(160);
-        table.getColumn("Chu so huu").setMaxWidth(160);
+        table.getColumn("Tên trang trại").setMaxWidth(160);
+        table.getColumn("Địa chỉ").setMaxWidth(160);
+        table.getColumn("Chủ sở hữu").setMaxWidth(160);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1, true));
@@ -157,7 +157,7 @@ public class FarmView extends JPanel {
                 }
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Loi tai du lieu: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu: " + ex.getMessage());
         }
     }
 
@@ -166,7 +166,7 @@ public class FarmView extends JPanel {
     void openDialog(FarmDTO existing) {
         boolean isEdit = (existing != null);
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "Sua trang trai" : "Them trang trai",
+                isEdit ? "Sửa trang trại" : "Thêm trang trại",
                 Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setSize(420, 400);
         dlg.setLocationRelativeTo(this);
@@ -176,12 +176,12 @@ public class FarmView extends JPanel {
         form.setBackground(AppTheme.BG_CARD);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtCode  = UiUtils.addFormField(form, "Ma trang trai *");
-        JTextField txtName  = UiUtils.addFormField(form, "Ten trang trai *");
-        JTextField txtAddr  = UiUtils.addFormField(form, "Dia chi");
-        JTextField txtArea  = UiUtils.addFormField(form, "Dien tich (ha)");
-        JTextField txtOwner = UiUtils.addFormField(form, "Chu so huu");
-        JTextField txtPhone = UiUtils.addFormField(form, "So dien thoai");
+        JTextField txtCode  = UiUtils.addFormField(form, "Mã trang trại *");
+        JTextField txtName  = UiUtils.addFormField(form, "Tên trang trại *");
+        JTextField txtAddr  = UiUtils.addFormField(form, "Địa chỉ");
+        JTextField txtArea  = UiUtils.addFormField(form, "Diện tích (ha)");
+        JTextField txtOwner = UiUtils.addFormField(form, "Chủ sở hữu");
+        JTextField txtPhone = UiUtils.addFormField(form, "Số điện thoại");
         form.add(new JLabel());
 
         if (isEdit) {
@@ -195,8 +195,8 @@ public class FarmView extends JPanel {
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
-        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
+        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Lưu");
 
         btnCancel.addActionListener(e -> dlg.dispose());
         btnSave.addActionListener(e -> {
@@ -216,12 +216,12 @@ public class FarmView extends JPanel {
                 dlg.dispose();
                 refreshTable(null);
                 JOptionPane.showMessageDialog(this,
-                        isEdit ? "Cap nhat thanh cong!" : "Them trang trai thanh cong!",
-                        "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+                        isEdit ? "Cập nhật thành công!" : "Thêm trang trại thành công!",
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
             } catch (NumberFormatException nfe) {
-                JOptionPane.showMessageDialog(dlg, "Dien tich phai la so thuc.");
+                JOptionPane.showMessageDialog(dlg, "Diện tích phải là số thực.");
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
             }
         });
 
@@ -235,14 +235,14 @@ public class FarmView extends JPanel {
 
     void deleteFarm(long id) {
         int r = JOptionPane.showConfirmDialog(this,
-                "Ban chac chan muon xoa trang trai nay?",
-                "Xac nhan xoa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                "Bạn chắc chắn muốn xóa trang trại này?",
+                "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (r == JOptionPane.YES_OPTION) {
             try {
                 farmController.deleteFarm(id);
                 refreshTable(null);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Loi xoa: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi xóa: " + ex.getMessage());
             }
         }
     }
@@ -301,7 +301,7 @@ public class FarmView extends JPanel {
                     dto.setPhone(tableModel.getValueAt(row, 6).toString());
                     openDialog(dto);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(FarmView.this, "Loi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(FarmView.this, "Lỗi: " + ex.getMessage());
                 }
             });
 
@@ -311,7 +311,7 @@ public class FarmView extends JPanel {
                     Long id = Long.parseLong(tableModel.getValueAt(currentRow, 0).toString());
                     deleteFarm(id);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(FarmView.this, "Loi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(FarmView.this, "Lỗi: " + ex.getMessage());
                 }
             });
         }

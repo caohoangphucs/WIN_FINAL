@@ -175,6 +175,7 @@ public class CultivationLogView extends JPanel {
             case "PESTICIDE" -> "Phun thuốc sâu";
             case "FUNGICIDE" -> "Phun thuốc bệnh";
             case "FOLIAR"    -> "Bón phân lá";
+            case "KHAC"      -> "Khác";
             default          -> code;
         };
     }
@@ -228,7 +229,7 @@ public class CultivationLogView extends JPanel {
     void openDialog(CultivationLogDTO existing) {
         boolean isEdit = existing != null;
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
-                isEdit ? "Sua nhat ky" : "Ghi hoat dong canh tac",
+                isEdit ? "Sửa nhật ký" : "Ghi hoạt động canh tác",
                 Dialog.ModalityType.APPLICATION_MODAL);
         dlg.setSize(440, 400);
         dlg.setLocationRelativeTo(this);
@@ -274,8 +275,8 @@ public class CultivationLogView extends JPanel {
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(AppTheme.BG_CARD);
-        JButton btnCancel = UiUtils.createSecondaryButton("Huy");
-        JButton btnSave   = UiUtils.createPrimaryButton("Luu");
+        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
+        JButton btnSave   = UiUtils.createPrimaryButton("Lưu");
 
         btnCancel.addActionListener(e -> dlg.dispose());
         btnSave.addActionListener(e -> {
@@ -297,7 +298,7 @@ public class CultivationLogView extends JPanel {
                 dlg.dispose();
                 refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Loi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
             }
         });
 
@@ -330,20 +331,20 @@ public class CultivationLogView extends JPanel {
                     dto.setId(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                     openDialog(dto);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(CultivationLogView.this, "Loi: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(CultivationLogView.this, "Lỗi: " + ex.getMessage());
                 }
             });
 
             btnDelete.addActionListener(e -> {
                 fireEditingStopped();
                 int cf = JOptionPane.showConfirmDialog(CultivationLogView.this,
-                        "Xoa nhat ky nay?", "Xac nhan", JOptionPane.YES_NO_OPTION);
+                        "Xóa nhật ký này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
                 if (cf == JOptionPane.YES_OPTION) {
                     try {
                         ctrl.deleteLog(Long.parseLong(tableModel.getValueAt(currentRow, 0).toString()));
                         refreshTable();
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(CultivationLogView.this, "Loi: " + ex.getMessage());
+                        JOptionPane.showMessageDialog(CultivationLogView.this, "Lỗi: " + ex.getMessage());
                     }
                 }
             });

@@ -33,6 +33,22 @@ public class ProductionLotView extends JPanel {
         @Override public String toString() { return name == null ? "" : name; }
     }
 
+    public static String translateStatus(String status) {
+        if (status == null) return "";
+        return switch (status) {
+            case "GROWING"    -> "Đang sinh trưởng";
+            case "PLANNING"   -> "Lên kế hoạch";
+            case "PLANTED"    -> "Đã gieo trồng";
+            case "FLOWERING"  -> "Ra hoa";
+            case "HARVESTING" -> "Đang thu hoạch";
+            case "HARVESTED"  -> "Đã thu hoạch";
+            case "DONE"       -> "Hoàn thành";
+            case "CANCELLED"  -> "Đã hủy";
+            case "IDLE"       -> "Tạm ngưng";
+            default -> status;
+        };
+    }
+
     private void loadFilters() {
         jakarta.persistence.EntityManager em = null;
         try {
@@ -49,7 +65,7 @@ public class ProductionLotView extends JPanel {
 
             cboStatus.removeAllItems(); cboStatus.addItem(new FilterItem((String)null, "Tất cả trạng thái"));
             List<String> statuses = em.createQuery("SELECT DISTINCT l.status.code FROM ProductionLot l WHERE l.status IS NOT NULL", String.class).getResultList();
-            for (String code : statuses) { FilterItem fi = new FilterItem(code, code); cboStatus.addItem(fi); if(selStatus!=null && fi.strId.equals(selStatus.strId)) cboStatus.setSelectedItem(fi); }
+            for (String code : statuses) { FilterItem fi = new FilterItem(code, translateStatus(code)); cboStatus.addItem(fi); if(selStatus!=null && fi.strId.equals(selStatus.strId)) cboStatus.setSelectedItem(fi); }
 
             cboCrop.removeAllItems(); cboCrop.addItem(new FilterItem((Long)null, "Tất cả loại cây"));
             List<Object[]> crops = em.createQuery("SELECT DISTINCT l.cropType.id, l.cropType.name FROM ProductionLot l WHERE l.cropType IS NOT NULL", Object[].class).getResultList();
@@ -85,7 +101,7 @@ public class ProductionLotView extends JPanel {
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setForeground(AppTheme.TEXT_PRIMARY);
 
-        JLabel sub = new JLabel("Farm & Production Grid");
+        JLabel sub = new JLabel("Lưới quản lý trang trại và lô sản xuất");
         sub.setFont(AppTheme.FONT_BODY);
         sub.setForeground(AppTheme.TEXT_SECONDARY);
 
@@ -372,16 +388,32 @@ public class ProductionLotView extends JPanel {
         JTextField txtLoc     = UiUtils.addFormField(form, "Vị trí");
         JTextField txtPlant   = UiUtils.addFormField(form, "Ngày trồng (dd/MM/yyyy)");
         JTextField txtHarvest = UiUtils.addFormField(form, "Thu hoạch dự kiến");
-        JTextField txtFarm    = UiUtils.addFormField(form, "Farm ID");
-        JTextField txtCrop    = UiUtils.addFormField(form, "Loại cây ID");
+        JTextField txtFarm    = UiUtils.addFormField(form, "ID Trang trại");
+        JTextField txtCrop    = UiUtils.addFormField(form, "ID Loại cây");
 
         JLabel lSt = new JLabel("Trạng thái");
         lSt.setFont(AppTheme.FONT_BODY); lSt.setForeground(AppTheme.TEXT_SECONDARY);
-        JComboBox<String> cboSt = new JComboBox<>(new String[]{"PLANNING","GROWING","HARVESTING","DONE","CANCELLED"});
+        JComboBox<FilterItem> cboSt = new JComboBox<>();
         cboSt.setFont(AppTheme.FONT_BODY);
+        cboSt.addItem(new FilterItem("PLANNING", "Lên kế hoạch"));
+        cboSt.addItem(new FilterItem("PLANTED", "Đã gieo trồng"));
+        cboSt.addItem(new FilterItem("GROWING", "Đang sinh trưởng"));
+        cboSt.addItem(new FilterItem("FLOWERING", "Ra hoa"));
+        cboSt.addItem(new FilterItem("HARVESTING", "Đang thu hoạch"));
+        cboSt.addItem(new FilterItem("HARVESTED", "Đã thu hoạch"));
+        cboSt.addItem(new FilterItem("DONE", "Hoàn thành"));
+        cboSt.addItem(new FilterItem("CANCELLED", "Đã hủy"));
+        cboSt.addItem(new FilterItem("IDLE", "Tạm ngưng"));
         form.add(lSt); form.add(cboSt);
 
-        if (isEdit && existing.getStatusCode()!=null) cboSt.setSelectedItem(existing.getStatusCode());
+        if (isEdit && existing.getStatusCode() != null) {
+            for (int i = 0; i < cboSt.getItemCount(); i++) {
+                if (cboSt.getItemAt(i).strId.equals(existing.getStatusCode())) {
+                    cboSt.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
         btnBar.setBackground(Color.WHITE);
@@ -394,7 +426,8 @@ public class ProductionLotView extends JPanel {
                 dto.setLotCode(txtCode.getText().trim());
                 dto.setAreaM2(txtArea.getText().trim().isEmpty() ? null : Double.parseDouble(txtArea.getText().trim()));
                 dto.setLocationDesc(txtLoc.getText().trim());
-                dto.setStatusCode((String) cboSt.getSelectedItem());
+                FilterItem curSt = (FilterItem) cboSt.getSelectedItem();
+                dto.setStatusCode(curSt != null ? curSt.strId : "PLANNING");
                 dto.setPlantDate(txtPlant.getText().trim().isEmpty() ? null : sdf.parse(txtPlant.getText().trim()));
                 dto.setExpectedHarvestDate(txtHarvest.getText().trim().isEmpty() ? null : sdf.parse(txtHarvest.getText().trim()));
                 dto.setFarmId(txtFarm.getText().trim().isEmpty() ? null : Long.parseLong(txtFarm.getText().trim()));
@@ -440,14 +473,7 @@ public class ProductionLotView extends JPanel {
                 boolean sel, boolean foc, int row, int col) {
             JLabel c = (JLabel) super.getTableCellRendererComponent(t, val, sel, foc, row, col);
             String status = val == null ? "" : val.toString();
-            String display = switch (status) {
-                case "GROWING"    -> "Đang Sinh Trưởng";
-                case "PLANNING"   -> "Đã Trồng";
-                case "HARVESTING" -> "Đang Thu Hoạch";
-                case "DONE"       -> "Đã Thu Hoạch";
-                case "CANCELLED"  -> "Sâu Bệnh";
-                default -> status;
-            };
+            String display = translateStatus(status);
             Color fg = switch (status) {
                 case "GROWING"    -> new Color(0x16A34A);
                 case "PLANNING"   -> new Color(0x2563EB);

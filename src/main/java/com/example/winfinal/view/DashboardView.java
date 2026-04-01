@@ -53,7 +53,7 @@ public class DashboardView extends JPanel {
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
         p.setBorder(new EmptyBorder(0,0,16,0));
-        JLabel title = new JLabel("Dashboard");
+        JLabel title = new JLabel("Bảng điều khiển");
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setForeground(AppTheme.TEXT_PRIMARY);
         JLabel date = new JLabel(new java.text.SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi","VN")).format(new Date()));

@@ -57,7 +57,7 @@ public class AgriSupplyView extends JPanel {
         bar.setPreferredSize(new Dimension(0,52));
         bar.setBorder(new EmptyBorder(0,18,0,18));
 
-        JLabel title = new JLabel("Inventory Management");
+        JLabel title = new JLabel("Quản lý kho vật tư");
         title.setFont(new Font("Segoe UI", Font.BOLD, 17));
         title.setForeground(Color.WHITE);
 
@@ -131,7 +131,7 @@ public class AgriSupplyView extends JPanel {
         JPanel card = makeCard();
         card.setLayout(new BorderLayout());
 
-        String[] cols = {"Mã vật tư  ·  Tên vật tư", "Tồn kho", "Đơn vị", "Min Stock", "Trạng thái"};
+        String[] cols = {"Mã vật tư  ·  Tên vật tư", "Tồn kho", "Đơn vị", "Tồn kho tối thiểu", "Trạng thái"};
         masterModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -480,7 +480,7 @@ public class AgriSupplyView extends JPanel {
 
     static class LineMiniChart extends JPanel {
         private final int[] values = {18,25,20,12,28,20,24,19};
-        private final String[] labels = {"Th10","Th11","Th2","Th3","Th1","Th2","Th3","Apr"};
+        private final String[] labels = {"Th10","Th11","Th2","Th3","Th1","Th2","Th3","Th4"};
 
         LineMiniChart() { setOpaque(false); setPreferredSize(new Dimension(0, 150)); }
 

@@ -24,7 +24,46 @@ public class ProductionLotView extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtSearch;
-    private JComboBox<String> cboFarm, cboStatus, cboCrop, cboSeason;
+    private JComboBox<FilterItem> cboFarm, cboStatus, cboCrop, cboSeason;
+
+    static class FilterItem {
+        Long numId;  String strId;  String name;
+        public FilterItem(Long numId, String name) { this.numId = numId; this.name = name; }
+        public FilterItem(String strId, String name) { this.strId = strId; this.name = name; }
+        @Override public String toString() { return name == null ? "" : name; }
+    }
+
+    private void loadFilters() {
+        jakarta.persistence.EntityManager em = null;
+        try {
+            em = com.example.winfinal.dao.BaseDAO.getEntityManagerFactory().createEntityManager();
+            
+            FilterItem selFarm = (FilterItem) cboFarm.getSelectedItem();
+            FilterItem selStatus = (FilterItem) cboStatus.getSelectedItem();
+            FilterItem selCrop = (FilterItem) cboCrop.getSelectedItem();
+            FilterItem selSeason = (FilterItem) cboSeason.getSelectedItem();
+
+            cboFarm.removeAllItems(); cboFarm.addItem(new FilterItem((Long)null, "Tất cả trang trại"));
+            List<Object[]> farms = em.createQuery("SELECT DISTINCT l.farm.id, l.farm.name FROM ProductionLot l WHERE l.farm IS NOT NULL", Object[].class).getResultList();
+            for (Object[] r : farms) { FilterItem fi = new FilterItem((Long)r[0], (String)r[1]); cboFarm.addItem(fi); if(selFarm!=null && fi.numId.equals(selFarm.numId)) cboFarm.setSelectedItem(fi); }
+
+            cboStatus.removeAllItems(); cboStatus.addItem(new FilterItem((String)null, "Tất cả trạng thái"));
+            List<String> statuses = em.createQuery("SELECT DISTINCT l.status.code FROM ProductionLot l WHERE l.status IS NOT NULL", String.class).getResultList();
+            for (String code : statuses) { FilterItem fi = new FilterItem(code, code); cboStatus.addItem(fi); if(selStatus!=null && fi.strId.equals(selStatus.strId)) cboStatus.setSelectedItem(fi); }
+
+            cboCrop.removeAllItems(); cboCrop.addItem(new FilterItem((Long)null, "Tất cả loại cây"));
+            List<Object[]> crops = em.createQuery("SELECT DISTINCT l.cropType.id, l.cropType.name FROM ProductionLot l WHERE l.cropType IS NOT NULL", Object[].class).getResultList();
+            for (Object[] r : crops) { FilterItem fi = new FilterItem((Long)r[0], (String)r[1]); cboCrop.addItem(fi); if(selCrop!=null && fi.numId.equals(selCrop.numId)) cboCrop.setSelectedItem(fi); }
+
+            cboSeason.removeAllItems(); cboSeason.addItem(new FilterItem((Long)null, "Tất cả mùa vụ"));
+            List<Object[]> seasons = em.createQuery("SELECT DISTINCT l.season.id, l.season.name FROM ProductionLot l WHERE l.season IS NOT NULL", Object[].class).getResultList();
+            for (Object[] r : seasons) { FilterItem fi = new FilterItem((Long)r[0], (String)r[1]); cboSeason.addItem(fi); if(selSeason!=null && fi.numId.equals(selSeason.numId)) cboSeason.setSelectedItem(fi); }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (em != null) em.close();
+        }
+    }
 
     public ProductionLotView() {
         setLayout(new BorderLayout(0, 12));
@@ -74,10 +113,11 @@ public class ProductionLotView extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 16);
         gbc.weighty = 1.0;
 
-        cboFarm   = createStyledCombo(new String[]{"Tất cả trang trại", "Trang trại A", "Trang trại B", "Trang trại C"});
-        cboStatus = createStyledCombo(new String[]{"Tất cả trạng thái", "PLANNING", "GROWING", "HARVESTING", "DONE", "CANCELLED"});
-        cboCrop   = createStyledCombo(new String[]{"Tất cả loại cây", "Rau", "Lúa", "Trái Cây", "Hoa"});
-        cboSeason = createStyledCombo(new String[]{"Tất cả mùa vụ", "Xuân", "Hạ", "Thu", "Đông"});
+        cboFarm   = createStyledCombo();
+        cboStatus = createStyledCombo();
+        cboCrop   = createStyledCombo();
+        cboSeason = createStyledCombo();
+        loadFilters();
 
         JButton btnFilter = UiUtils.createPrimaryButton("Lọc");
         btnFilter.setPreferredSize(new Dimension(100, AppTheme.BUTTON_HEIGHT));
@@ -139,7 +179,7 @@ public class ProductionLotView extends JPanel {
         return wrap;
     }
 
-    private JPanel createFilterGroup(String labelText, JComboBox<String> combo) {
+    private JPanel createFilterGroup(String labelText, JComboBox<FilterItem> combo) {
         JPanel p = new JPanel(new BorderLayout(0, 4));
         p.setOpaque(false);
         JLabel lbl = new JLabel(labelText);
@@ -150,8 +190,8 @@ public class ProductionLotView extends JPanel {
         return p;
     }
 
-    private JComboBox<String> createStyledCombo(String[] items) {
-        JComboBox<String> cbo = new JComboBox<>(items);
+    private JComboBox<FilterItem> createStyledCombo() {
+        JComboBox<FilterItem> cbo = new JComboBox<>();
         cbo.setFont(AppTheme.FONT_BODY);
         cbo.setBackground(Color.WHITE);
         cbo.setPreferredSize(new Dimension(150, AppTheme.BUTTON_HEIGHT));
@@ -282,11 +322,21 @@ public class ProductionLotView extends JPanel {
         tableModel.setRowCount(0);
         try {
             String kw = txtSearch.getText().trim().toLowerCase();
-            String st = (String) cboStatus.getSelectedItem();
-            if (st != null && st.startsWith("Tất cả")) st = null;
+            
+            FilterItem fFarm = (FilterItem) cboFarm.getSelectedItem();
+            Long farmId = fFarm != null ? fFarm.numId : null;
+
+            FilterItem fStatus = (FilterItem) cboStatus.getSelectedItem();
+            String st = fStatus != null ? fStatus.strId : null;
+
+            FilterItem fCrop = (FilterItem) cboCrop.getSelectedItem();
+            Long cropId = fCrop != null ? fCrop.numId : null;
+
+            FilterItem fSeason = (FilterItem) cboSeason.getSelectedItem();
+            Long seasonId = fSeason != null ? fSeason.numId : null;
 
             // Sử dụng DAO query [1.8] Tìm kiếm động thay vì lọc bộ nhớ danh sách đầy đủ
-            List<ProductionLotDTO> lots = ctrl.search(null, st, null, null);
+            List<ProductionLotDTO> lots = ctrl.search(farmId, st, cropId, seasonId);
 
             for (ProductionLotDTO l : lots) {
                 String code = l.getLotCode() == null ? "" : l.getLotCode();
@@ -350,9 +400,12 @@ public class ProductionLotView extends JPanel {
                 dto.setFarmId(txtFarm.getText().trim().isEmpty() ? null : Long.parseLong(txtFarm.getText().trim()));
                 dto.setCropTypeId(txtCrop.getText().trim().isEmpty() ? null : Long.parseLong(txtCrop.getText().trim()));
                 if (isEdit) ctrl.updateLot(dto); else ctrl.createLot(dto);
-                dlg.dispose(); refreshTable();
+                dlg.dispose();
+                loadFilters();
+                refreshTable();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(dlg, "Lỗi lưu lô sản xuất: " + ex.getMessage(),
+                        "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
         btnBar.add(bCancel); btnBar.add(bSave);
@@ -472,6 +525,7 @@ public class ProductionLotView extends JPanel {
                         ProductionLotDTO dto = ctrl.findByLotCode(lotCode);
                         if (dto != null && dto.getId() != null) {
                             ctrl.deleteLot(dto.getId());
+                            loadFilters();
                             refreshTable();
                         }
                     } catch (Exception ex) {

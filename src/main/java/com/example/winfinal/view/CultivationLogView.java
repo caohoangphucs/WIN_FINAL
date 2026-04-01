@@ -39,19 +39,51 @@ public class CultivationLogView extends JPanel {
         JPanel p = new JPanel(new BorderLayout(12, 8));
         p.setOpaque(false);
 
-        JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        JPanel titleRow = new JPanel(new BorderLayout());
         titleRow.setOpaque(false);
-        titleRow.add(UiUtils.createSectionTitle("Nhật Ký Canh Tác"));
+        titleRow.add(UiUtils.createSectionTitle("Nhật Ký Canh Tác"), BorderLayout.WEST);
 
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filterBar.setOpaque(false);
+
+        // Filter Activity Type
+        JLabel lblType = new JLabel("Lọc theo loại:");
+        lblType.setFont(AppTheme.FONT_BODY);
+        String[] types = {"Tất cả", "FERTILIZE", "PESTICIDE", "FUNGICIDE", "FOLIAR"};
+        JComboBox<String> cboFilter = new JComboBox<>(types);
+        cboFilter.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                String translated = "Tất cả".equals(value) ? "Tất cả" : translateActivity(String.valueOf(value));
+                super.getListCellRendererComponent(list, translated, index, isSelected, cellHasFocus);
+                return this;
+            }
+        });
+        cboFilter.addActionListener(e -> refreshTable((String) cboFilter.getSelectedItem()));
+
+        // Search Field
+        JTextField txtSearch = UiUtils.createSearchField("Tìm lô/vật tư...");
+        txtSearch.setPreferredSize(new Dimension(180, 32));
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                refreshTable((String) cboFilter.getSelectedItem(), txtSearch.getText());
+            }
+        });
 
         JButton btnAdd     = UiUtils.createPrimaryButton("+ Ghi hoạt động");
         JButton btnRefresh = UiUtils.createSecondaryButton("Làm mới");
 
         btnAdd.addActionListener(e -> openDialog(null));
-        btnRefresh.addActionListener(e -> refreshTable());
+        btnRefresh.addActionListener(e -> {
+            cboFilter.setSelectedIndex(0);
+            txtSearch.setText("");
+            refreshTable(null, null);
+        });
 
+        filterBar.add(lblType);
+        filterBar.add(cboFilter);
+        filterBar.add(txtSearch);
         filterBar.add(btnRefresh);
         filterBar.add(btnAdd);
 
@@ -68,9 +100,14 @@ public class CultivationLogView extends JPanel {
         };
         table = new JTable(tableModel);
         UiUtils.styleTable(table);
+        table.setAutoCreateRowSorter(true);
 
+        // Action column: renderer, editor, and disable sorting
         table.getColumn("Thao tác").setCellRenderer(new FarmView.ActionRenderer());
         table.getColumn("Thao tác").setCellEditor(new LogActionEditor(table));
+        if (table.getRowSorter() instanceof javax.swing.table.TableRowSorter<?> sorter) {
+            sorter.setSortable(7, false); // Col 7 is "Thao tác"
+        }
         table.getColumn("Thao tác").setMinWidth(200);
         table.getColumn("Thao tác").setMaxWidth(220);
         table.getColumn("Thao tác").setPreferredWidth(220);
@@ -143,10 +180,32 @@ public class CultivationLogView extends JPanel {
     }
 
     void refreshTable() {
+        refreshTable(null, null);
+    }
+
+    void refreshTable(String filterType) {
+        refreshTable(filterType, null);
+    }
+
+    void refreshTable(String filterType, String searchText) {
         tableModel.setRowCount(0);
         try {
             List<CultivationLogDTO> list = ctrl.getAllLogs();
+            String search = (searchText == null) ? "" : searchText.toLowerCase().trim();
+
             for (CultivationLogDTO l : list) {
+                // 1. Apply Type Filter
+                if (filterType != null && !"Tất cả".equals(filterType)) {
+                    if (!filterType.equalsIgnoreCase(l.getActivityTypeCode())) continue;
+                }
+
+                // 2. Apply Search Text Filter (Lot or Material)
+                if (!search.isEmpty()) {
+                    String lot = (l.getLotCode() != null ? l.getLotCode() : "").toLowerCase();
+                    String mat = (l.getSupplyName() != null ? l.getSupplyName() : "").toLowerCase();
+                    if (!lot.contains(search) && !mat.contains(search)) continue;
+                }
+
                 String dosageStr = (l.getDosageUsed() != null ? l.getDosageUsed() : "0") 
                                  + " " + (l.getSupplyUnit() != null ? l.getSupplyUnit() : "");
                 

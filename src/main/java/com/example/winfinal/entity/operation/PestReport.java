@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "pest_report")
@@ -29,4 +30,17 @@ public class PestReport {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "severity_code")
     private SeverityLevel severity;
+
+    @Column(name = "pest_name", length = 100)
+    private String pestName;
+
+    @Column(name = "treatment", length = 255)
+    private String treatment;
+
+    @Column(name = "damage_pct")
+    private Double damagePct;
+
+    @Column(name = "reported_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date reportedAt;
 }

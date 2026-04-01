@@ -9,12 +9,32 @@ public class PestReportDAO extends BaseDAO<PestReport> {
         super(PestReport.class);
     }
 
+    // [1.1] Lấy toàn bộ báo cáo sâu bệnh (với JOIN FETCH để tránh LazyInitializationException)
+    @Override
+    public List<PestReport> findAll() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT p FROM PestReport p " +
+                "JOIN FETCH p.lot " +
+                "JOIN FETCH p.employee " +
+                "JOIN FETCH p.severity " +
+                "ORDER BY p.id DESC", PestReport.class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     // [4.2] Tìm các lô đang có cảnh báo sâu bệnh nghiêm trọng
     public List<PestReport> findHighSeverityReports() {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
                 "SELECT p FROM PestReport p " +
+                "JOIN FETCH p.lot " +
+                "JOIN FETCH p.employee " +
+                "JOIN FETCH p.severity " +
                 "WHERE p.severity.code IN ('HIGH', 'CRITICAL') " +
                 "  AND p.lot.status.code != 'HARVESTED' " +
                 "ORDER BY p.lot.id", PestReport.class)
@@ -65,8 +85,12 @@ public class PestReportDAO extends BaseDAO<PestReport> {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT p FROM PestReport p WHERE p.lot.id = :lotId ORDER BY p.lot.id",
-                PestReport.class)
+                "SELECT p FROM PestReport p " +
+                "JOIN FETCH p.lot " +
+                "JOIN FETCH p.employee " +
+                "JOIN FETCH p.severity " +
+                "WHERE p.lot.id = :lotId " +
+                "ORDER BY p.lot.id", PestReport.class)
                 .setParameter("lotId", lotId)
                 .getResultList();
         } finally {

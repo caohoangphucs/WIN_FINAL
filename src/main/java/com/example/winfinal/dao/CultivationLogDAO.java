@@ -10,6 +10,23 @@ public class CultivationLogDAO extends BaseDAO<CultivationLog> {
         super(CultivationLog.class);
     }
 
+    @Override
+    public List<CultivationLog> findAll() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT c FROM CultivationLog c " +
+                "LEFT JOIN FETCH c.lot " +
+                "LEFT JOIN FETCH c.supply " +
+                "LEFT JOIN FETCH c.activityType " +
+                "LEFT JOIN FETCH c.employee " +
+                "ORDER BY c.appliedAt DESC", CultivationLog.class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     // [3.2] Tổng lượng vật tư đã tiêu thụ theo loại (phân bón/thuốc)
     public List<Object[]> getMaterialConsumptionByType() {
         EntityManager em = getEntityManager();

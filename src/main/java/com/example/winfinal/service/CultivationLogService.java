@@ -17,7 +17,18 @@ public class CultivationLogService extends BaseService<CultivationLog, Cultivati
         this.cultivationDAO = (CultivationLogDAO) dao;
     }
 
-    @Override protected CultivationLogDTO toDTO(CultivationLog e) { return mapper.toDTO(e); }
+    @Override
+    protected CultivationLogDTO toDTO(CultivationLog e) {
+        CultivationLogDTO d = mapper.toDTO(e);
+        if (e.getLot() != null)      d.setLotCode(e.getLot().getLotCode());
+        if (e.getSupply() != null) {
+            d.setSupplyName(e.getSupply().getName());
+            d.setSupplyUnit(e.getSupply().getUnit());
+        }
+        if (e.getEmployee() != null) d.setEmployeeFullName(e.getEmployee().getFullName());
+        return d;
+    }
+
     @Override protected CultivationLog toEntity(CultivationLogDTO d) { return mapper.toEntity(d); }
     @Override protected void updateEntityFromDTO(CultivationLogDTO d, CultivationLog e) { mapper.updateEntityFromDTO(d, e); }
     @Override protected Object getEntityId(CultivationLogDTO d) { return d.getId(); }

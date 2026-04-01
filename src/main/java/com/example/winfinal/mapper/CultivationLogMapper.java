@@ -16,8 +16,12 @@ public interface CultivationLogMapper {
     CultivationLogMapper INSTANCE = Mappers.getMapper(CultivationLogMapper.class);
 
     @Mapping(target = "lotId", source = "lot.id")
+    @Mapping(target = "lotCode", source = "lot.lotCode")
     @Mapping(target = "supplyId", source = "supply.id")
+    @Mapping(target = "supplyName", source = "supply.name")
+    @Mapping(target = "supplyUnit", source = "supply.unit")
     @Mapping(target = "employeeId", source = "employee.id")
+    @Mapping(target = "employeeFullName", source = "employee.fullName")
     @Mapping(target = "activityTypeCode", source = "activityType.code")
     CultivationLogDTO toDTO(CultivationLog entity);
 

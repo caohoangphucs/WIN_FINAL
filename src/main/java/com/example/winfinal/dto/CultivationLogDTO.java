@@ -11,8 +11,12 @@ import java.util.Date;
 public class CultivationLogDTO {
     private Long id;
     private Long lotId;
+    private String lotCode;
     private Long supplyId;
+    private String supplyName;
+    private String supplyUnit;
     private Long employeeId;
+    private String employeeFullName;
     private String activityTypeCode;
     private Date appliedAt;
     private Double dosageUsed;

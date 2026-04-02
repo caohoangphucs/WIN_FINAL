@@ -166,7 +166,6 @@ public class DashboardView extends JPanel {
 
             @Override
             protected Void doInBackground() {
-                String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new Date());
 
                 // [2.1] Năng suất trung bình theo loại cây
                 try { cropYield = harvestCtrl.getAvgYieldByCropType(); }
@@ -180,12 +179,16 @@ public class DashboardView extends JPanel {
                 try { seasonYield = harvestCtrl.getYieldBySeason(); }
                 catch (Exception e) { seasonYield = List.of(); }
 
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+
                 // [2.6] Lô sắp thu hoạch (14 ngày tới)
                 try {
                     Calendar c = Calendar.getInstance(); c.add(Calendar.DATE, 14);
                     var harvest = lotCtrl.getUpcomingHarvest(c.getTime());
-                    for (var l : harvest)
-                        alertRows.add(new Object[]{"LOT", l.getLotCode(), l.getLotCode(), "Sắp thu hoạch", today});
+                    for (var l : harvest) {
+                        String dStr = l.getExpectedHarvestDate() != null ? sdf.format(l.getExpectedHarvestDate()) : "--";
+                        alertRows.add(new Object[]{"LOT", l.getLotCode(), l.getLotCode(), "Sắp thu hoạch", dStr});
+                    }
                 } catch (Exception ignored) {}
 
                 // [3.1] Vật tư sắp hết kho
@@ -195,7 +198,8 @@ public class DashboardView extends JPanel {
                         double ratio = (s.getStockQty() != null && s.getMinStock() != null && s.getMinStock() > 0)
                                 ? s.getStockQty() / s.getMinStock() : 0;
                         String statusLabel = ratio == 0 ? "Tồn kho sắp hết" : "Tồn kho thấp";
-                        alertRows.add(new Object[]{"VT", s.getName(), s.getName(), statusLabel, today});
+                        // AgriSupply does not have a native date, using -- placeholder for current state
+                        alertRows.add(new Object[]{"VT", s.getName(), s.getName(), statusLabel, "--"});
                     }
                 } catch (Exception ignored) {}
 
@@ -204,7 +208,8 @@ public class DashboardView extends JPanel {
                     var pests = pestCtrl.getHighSeverityReports();
                     for (var p : pests) {
                         String lotCodeValue = p.getLotCode() != null ? p.getLotCode() : "--";
-                        alertRows.add(new Object[]{"SAU", "Lô #"+lotCodeValue, "", "Sâu bệnh nghiêm trọng", today});
+                        String dStr = p.getReportedAt() != null ? sdf.format(p.getReportedAt()) : "--";
+                        alertRows.add(new Object[]{"SAU", "Lô #"+lotCodeValue, "", "Sâu bệnh nghiêm trọng", dStr});
                     }
                 } catch (Exception ignored) {}
 

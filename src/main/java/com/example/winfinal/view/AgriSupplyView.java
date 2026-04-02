@@ -99,9 +99,20 @@ public class AgriSupplyView extends JPanel {
         txtSearch.setPreferredSize(new Dimension(200, 32));
         txtSearch.addActionListener(e -> refreshTable());
 
+        JButton btnAdd = new JButton("+ Thêm vật tư");
+        btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnAdd.setBackground(new Color(0x10B981));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setFocusPainted(false);
+        btnAdd.setBorderPainted(false);
+        btnAdd.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnAdd.setPreferredSize(new Dimension(140, 32));
+        btnAdd.addActionListener(e -> showAddMaterialDialog());
+
         row.add(lblCat);
         row.add(cboCat);
         row.add(txtSearch);
+        row.add(btnAdd);
         return row;
     }
 
@@ -234,19 +245,50 @@ public class AgriSupplyView extends JPanel {
         titleBar.add(titleLbl, BorderLayout.WEST);
         titleBar.add(btnClose, BorderLayout.EAST);
         card.add(titleBar, BorderLayout.NORTH);
-        // Vertical content panel for the two sections
+        // Vertical content panel for the sections
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
 
-        // Section 1: Lịch sử nhập kho
+        // Section 2: Summary Stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 2, 12, 0));
+        statsPanel.setOpaque(false);
+        statsPanel.setBorder(new EmptyBorder(0, 0, 16, 0));
+
+        // Calculate Total Imported for the label
+        double totalImported = 0;
+        try {
+            com.example.winfinal.controller.SupplyImportController impCtrl = new com.example.winfinal.controller.SupplyImportController();
+            List<Object[]> costs = impCtrl.getCostBySupply(supply.getId());
+            if (costs != null) {
+                for (Object[] r : costs)
+                    totalImported += (double) r[1];
+            }
+        } catch (Exception ignored) {
+        }
+
+        double currentStockValue = (supply.getStockQty() == null) ? 0 : supply.getStockQty();
+        if (currentStockValue > totalImported) {
+            currentStockValue = totalImported; // Consistency fix: Stock cannot exceed imports
+        }
+        String currentUnit = (supply.getUnit() == null) ? "" : supply.getUnit();
+
+        statsPanel.add(makeStatBox("Tồn kho hiện tại", String.format("%.1f %s", currentStockValue, currentUnit),
+                new Color(0x3B82F6)));
+        statsPanel.add(makeStatBox("Tổng nhập (Thực tế)", String.format("%.1f %s", totalImported, currentUnit),
+                new Color(0x10B981)));
+
+        statsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        contentPanel.add(statsPanel);
+
+        // Section 3: Lịch sử nhập kho
         JPanel s1 = buildImportTab(supply);
         s1.setAlignmentX(Component.LEFT_ALIGNMENT);
         contentPanel.add(s1);
         contentPanel.add(Box.createVerticalStrut(24)); // Visual separation
 
-        // Section 2: Chi phí
-        JPanel s2 = buildCostTab();
+        // Section 4: Chi phí
+        JPanel s2 = buildCostTab(supply);
         s2.setAlignmentX(Component.LEFT_ALIGNMENT);
         contentPanel.add(s2);
 
@@ -266,38 +308,48 @@ public class AgriSupplyView extends JPanel {
     private JPanel buildImportTab(AgriSupplyDTO supply) {
         JPanel p = new JPanel(new BorderLayout(0, 8));
         p.setOpaque(false);
-        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220)); // Limit height but allow expansion
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
 
         JLabel header = new JLabel("Lịch sử nhập kho (Thực tế)");
         header.setFont(AppTheme.FONT_SUBTITLE);
         header.setForeground(AppTheme.TEXT_PRIMARY);
 
         com.example.winfinal.controller.SupplyImportController impCtrl = new com.example.winfinal.controller.SupplyImportController();
-        List<com.example.winfinal.dto.SupplyImportDTO> imports = null;
+        List<com.example.winfinal.dto.SupplyImportDetailDTO> details = null;
         try {
             if (supply != null && supply.getId() != null) {
-                imports = impCtrl.findBySupply(supply.getId());
+                details = impCtrl.findDetailsBySupply(supply.getId());
             }
         } catch (Exception ignored) {
         }
 
-        String[] cols = { "Ngày nhập", "Mã phiếu nhập", "Nhà cung cấp ID" };
+        String unit = (supply != null && supply.getUnit() != null) ? supply.getUnit() : "";
+        String[] cols = { "Ngày nhập", "Mã phiếu", "Số lượng", "Nhà cung cấp" };
         DefaultTableModel m = new DefaultTableModel(cols, 0);
-        if (imports != null && !imports.isEmpty()) {
+
+        if (details != null && !details.isEmpty()) {
             java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd/MM/yyyy");
-            for (com.example.winfinal.dto.SupplyImportDTO i : imports) {
+            for (com.example.winfinal.dto.SupplyImportDetailDTO d : details) {
                 m.addRow(new Object[] {
-                        i.getImportDate() == null ? "" : format.format(i.getImportDate()),
-                        i.getImportCode() == null ? "" : i.getImportCode(),
-                        i.getSupplierId() == null ? "" : "NCC: " + i.getSupplierId()
+                        d.getImportDate() == null ? "" : format.format(d.getImportDate()),
+                        d.getImportCode() == null ? "" : d.getImportCode(),
+                        (d.getQuantity() == null ? "0" : d.getQuantity()) + " " + unit,
+                        d.getSupplierName() == null ? "N/A" : d.getSupplierName()
                 });
             }
         } else {
-            m.addRow(new Object[] { "Chưa có dữ liệu", "", "" });
+            m.addRow(new Object[] { "Chưa có dữ liệu", "", "", "" });
         }
 
         JTable t = buildSimpleTable(cols, null);
         t.setModel(m);
+
+        // Adjust column widths
+        t.getColumnModel().getColumn(0).setPreferredWidth(80);
+        t.getColumnModel().getColumn(1).setPreferredWidth(80);
+        t.getColumnModel().getColumn(2).setPreferredWidth(70);
+        t.getColumnModel().getColumn(3).setPreferredWidth(210);
+
         JScrollPane sc = new JScrollPane(t);
         sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
         p.add(header, BorderLayout.NORTH);
@@ -305,22 +357,63 @@ public class AgriSupplyView extends JPanel {
         return p;
     }
 
-    private JPanel buildCostTab() {
+    private JPanel buildCostTab(AgriSupplyDTO supply) {
         JPanel p = new JPanel(new BorderLayout(0, 8));
         p.setOpaque(false);
-        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+        // Let it expand more naturally if there is space
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
 
-        JLabel header = new JLabel("Chi phí");
+        JLabel header = new JLabel("Chi phí vật tư (Tổng hợp)");
         header.setFont(AppTheme.FONT_SUBTITLE);
         header.setForeground(AppTheme.TEXT_PRIMARY);
-        String[] cols = { "Nhà cung cấp", "Số lượng", "Thành tiền" };
-        String[][] data = {
-                { "Công Ty Nông Dược", "150 L", "7,500,000 đ" },
-                { "Hóa Chất XYZ", "80 L", "4,000,000 đ" },
-                { "Công Ty Việt Nông", "60 L", "3,000,000 đ" },
-                { "Tổng cộng:", "", "14,500,000 đ" },
-        };
-        JTable t = buildSimpleTable(cols, data);
+
+        String unit = (supply != null && supply.getUnit() != null) ? supply.getUnit() : "";
+        String[] cols = { "Nhà cung cấp", "Số lượng", "Đơn giá", "Thành tiền" };
+        DefaultTableModel m = new DefaultTableModel(cols, 0);
+
+        // Professional formatting: Grouping separator and correct currency symbol ₫
+        java.text.DecimalFormat df = new java.text.DecimalFormat("#,### ₫");
+        double totalAmt = 0;
+
+        com.example.winfinal.controller.SupplyImportController impCtrl = new com.example.winfinal.controller.SupplyImportController();
+        try {
+            if (supply != null && supply.getId() != null) {
+                // getCostBySupply returns Object[] { supplierName, totalQty, totalCost }
+                List<Object[]> costs = impCtrl.getCostBySupply(supply.getId());
+                if (costs != null) {
+                    for (Object[] row : costs) {
+                        String supplierName = (String) row[0];
+                        double qty = (double) row[1];
+                        double amt = (double) row[2];
+                        double unitCost = (qty > 0) ? (amt / qty) : 0;
+                        totalAmt += amt;
+                        m.addRow(new Object[] {
+                                supplierName,
+                                String.format("%.1f %s", qty, unit),
+                                df.format(unitCost),
+                                df.format(amt)
+                        });
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        if (m.getRowCount() > 0) {
+            m.addRow(new Object[] { "Tổng cộng chi phí", "", "", df.format(totalAmt) });
+        } else {
+            m.addRow(new Object[] { "Chưa có dữ liệu", "", "", "" });
+        }
+
+        JTable t = buildSimpleTable(cols, null);
+        t.setModel(m);
+
+        // Professional column widths for detail readability
+        t.getColumnModel().getColumn(0).setPreferredWidth(170);
+        t.getColumnModel().getColumn(1).setPreferredWidth(80);
+        t.getColumnModel().getColumn(2).setPreferredWidth(100);
+        t.getColumnModel().getColumn(3).setPreferredWidth(110);
+
         JScrollPane sc = new JScrollPane(t);
         sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
         p.add(header, BorderLayout.NORTH);
@@ -333,17 +426,32 @@ public class AgriSupplyView extends JPanel {
     void refreshTable() {
         masterModel.setRowCount(0);
         currentList = new java.util.ArrayList<>();
+        com.example.winfinal.controller.SupplyImportController impCtrl = new com.example.winfinal.controller.SupplyImportController();
         try {
             String kw = txtSearch.getText().trim();
             List<AgriSupplyDTO> list = kw.isEmpty() ? ctrl.getAllAgriSupplies() : ctrl.search(kw);
 
             for (AgriSupplyDTO s : list) {
+                // Consistency fix: Calculate total imported to cap stock
+                double totalImported = 0;
+                try {
+                    List<Object[]> costs = impCtrl.getCostBySupply(s.getId());
+                    if (costs != null) {
+                        for (Object[] r : costs) totalImported += (double) r[1];
+                    }
+                } catch (Exception ignored) {}
+
+                double stock = s.getStockQty() == null ? 0 : s.getStockQty();
+                if (stock > totalImported) {
+                    stock = totalImported;
+                    s.setStockQty(stock);
+                }
+
                 String nm = s.getName() == null ? "" : s.getName();
                 // Filter by category
                 String cat = (String) cboCat.getSelectedItem();
                 if (cat != null && !cat.equals("Tất cả")) {
-                    // Logic to check category if available (placeholder simulation if category not
-                    // mapped)
+                    // Logic to check category if available
                 }
 
                 boolean isLow = s.getStockQty() != null && s.getMinStock() != null
@@ -391,11 +499,221 @@ public class AgriSupplyView extends JPanel {
                 Component c = super.getTableCellRendererComponent(tb, val, sel, foc, row, col);
                 if (!sel)
                     c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(0xF8FAFC));
-                ((JLabel) c).setBorder(new EmptyBorder(0, 10, 0, 10));
+
+                JLabel lbl = (JLabel) c;
+                lbl.setBorder(new EmptyBorder(0, 10, 0, 10));
+
+                // Group totals bold
+                String firstCol = tb.getValueAt(row, 0) == null ? "" : tb.getValueAt(row, 0).toString();
+                if ("Tổng cộng:".equals(firstCol)) {
+                    lbl.setFont(tb.getFont().deriveFont(Font.BOLD));
+                } else {
+                    lbl.setFont(tb.getFont());
+                }
+
+                // Numeric alignment
+                String colName = tb.getColumnName(col);
+                if ("Số lượng".equals(colName) || "Thành tiền".equals(colName) || "Đơn giá".equals(colName)) {
+                    lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                } else {
+                    lbl.setHorizontalAlignment(SwingConstants.LEFT);
+                }
+
                 return c;
             }
         });
         return t;
+    }
+
+    private JPanel makeStatBox(String label, String value, Color color) {
+        JPanel box = new JPanel(new BorderLayout(0, 4));
+        box.setBackground(new Color(0xF8FAFC));
+        box.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0xE2E8F0), 1, true),
+                new EmptyBorder(12, 16, 12, 16)));
+
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        lbl.setForeground(AppTheme.TEXT_SECONDARY);
+
+        JLabel val = new JLabel(value);
+        val.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        val.setForeground(color);
+
+        box.add(lbl, BorderLayout.NORTH);
+        box.add(val, BorderLayout.CENTER);
+        return box;
+    }
+
+    private void showAddMaterialDialog() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = parentWindow instanceof Frame
+                ? new JDialog((Frame) parentWindow, "Thêm vật tư mới", true)
+                : new JDialog((Dialog) null, "Thêm vật tư mới", true);
+        
+        // Exact frame properties from the latest working version
+        dialog.setUndecorated(true);
+        dialog.setSize(460, 420);
+        dialog.setLocationRelativeTo(this);
+        dialog.setShape(new java.awt.geom.RoundRectangle2D.Double(0, 0, 460, 420, 15, 15));
+
+        // ── Root panel (Card style)
+        JPanel root = new JPanel(new BorderLayout(0, 0));
+        root.setBackground(Color.WHITE);
+        root.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER, 1));
+
+        // ── Header (Matching 'Thêm lô' header alignment)
+        JPanel hdr = new JPanel(new BorderLayout());
+        hdr.setBackground(Color.WHITE);
+        hdr.setBorder(new EmptyBorder(14, 20, 10, 16));
+        
+        JLabel hdrTitle = new JLabel("Thêm vật tư mới");
+        hdrTitle.setFont(AppTheme.FONT_SUBTITLE);
+        hdrTitle.setForeground(AppTheme.TEXT_PRIMARY);
+
+        JButton btnClose = new JButton("\u00D7"); 
+        btnClose.setFont(new Font("Arial", Font.PLAIN, 24));
+        btnClose.setForeground(AppTheme.TEXT_MUTED);
+        btnClose.setBorderPainted(false);
+        btnClose.setContentAreaFilled(false);
+        btnClose.setFocusPainted(false);
+        btnClose.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnClose.addActionListener(e -> dialog.dispose());
+
+        hdr.add(hdrTitle, BorderLayout.WEST);
+        hdr.add(btnClose, BorderLayout.EAST);
+        root.add(hdr, BorderLayout.NORTH);
+
+        // ── Form body - Two columns aligned like 'Thêm lô'
+        JPanel body = new JPanel(new GridBagLayout());
+        body.setBackground(Color.WHITE);
+        body.setBorder(new EmptyBorder(4, 24, 4, 30));
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.insets = new Insets(8, 0, 8, 0); 
+        gc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Label helper matching UiUtils.addFormField but for two-column
+        java.util.function.BiFunction<String, Boolean, JLabel> mkLbl = (txt, req) -> {
+            JLabel l = new JLabel("<html>" + txt + (req ? " <font color='#E63946'>*</font>" : "") + "</html>");
+            l.setFont(AppTheme.FONT_BODY);
+            l.setForeground(AppTheme.TEXT_SECONDARY);
+            return l;
+        };
+
+        // Input helper matching UiUtils.addFormField exactly
+        java.util.function.Supplier<JTextField> mkField = () -> {
+            JTextField f = new JTextField();
+            f.setFont(AppTheme.FONT_BODY);
+            f.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(AppTheme.BORDER, 1, true),
+                    new EmptyBorder(5, 10, 5, 10)));
+            f.setPreferredSize(new Dimension(210, 34));
+            return f;
+        };
+
+        int r = 0;
+
+        // Mã vật tư
+        gc.gridy = r++; gc.gridx = 0; gc.weightx = 0.4;
+        body.add(mkLbl.apply("Mã vật tư", false), gc);
+        gc.gridx = 1; gc.weightx = 0.6;
+        JTextField txtCode = mkField.get();
+        body.add(txtCode, gc);
+
+        // Tên vật tư *
+        gc.gridy = r++; gc.gridx = 0; gc.weightx = 0.4;
+        body.add(mkLbl.apply("Tên vật tư", true), gc);
+        gc.gridx = 1; gc.weightx = 0.6;
+        JTextField txtName = mkField.get();
+        body.add(txtName, gc);
+
+        // Loại vật tư
+        gc.gridy = r++; gc.gridx = 0; gc.weightx = 0.4;
+        body.add(mkLbl.apply("Loại vật tư", false), gc);
+        gc.gridx = 1; gc.weightx = 0.6;
+        JComboBox<String> cboCatDlg = new JComboBox<>(new String[]{"Phân bón", "Thuốc trừ sâu", "Thuốc trừ cỏ", "Hạt giống"});
+        cboCatDlg.setFont(AppTheme.FONT_BODY);
+        cboCatDlg.setBackground(Color.WHITE);
+        cboCatDlg.setPreferredSize(new Dimension(210, 34));
+        body.add(cboCatDlg, gc);
+
+        // Đơn vị *
+        gc.gridy = r++; gc.gridx = 0; gc.weightx = 0.4;
+        body.add(mkLbl.apply("Đơn vị", true), gc);
+        gc.gridx = 1; gc.weightx = 0.6;
+        JComboBox<String> cboUnit = new JComboBox<>(new String[]{"kg", "lit", "gói", "túi"});
+        cboUnit.setFont(AppTheme.FONT_BODY);
+        cboUnit.setBackground(Color.WHITE);
+        cboUnit.setPreferredSize(new Dimension(210, 34));
+        body.add(cboUnit, gc);
+
+        // Định mức tồn kho
+        gc.gridy = r++; gc.gridx = 0; gc.weightx = 0.4;
+        body.add(mkLbl.apply("Định mức", false), gc);
+        gc.gridx = 1; gc.weightx = 0.6;
+        JTextField txtMin = mkField.get();
+        body.add(txtMin, gc);
+
+        // Số lượng nhập ban đầu
+        gc.gridy = r++; gc.gridx = 0; gc.weightx = 0.4;
+        body.add(mkLbl.apply("Số lượng nhập", false), gc); 
+        gc.gridx = 1; gc.weightx = 0.6;
+        JTextField txtStock = mkField.get();
+        body.add(txtStock, gc);
+
+        // Error message row
+        gc.gridy = r++; gc.gridx = 0; gc.gridwidth = 2;
+        JLabel lblErr = new JLabel(" ");
+        lblErr.setFont(AppTheme.FONT_SMALL);
+        lblErr.setForeground(AppTheme.DANGER);
+        body.add(lblErr, gc);
+
+        root.add(body, BorderLayout.CENTER);
+
+        // ── Buttons matching 'Thêm lô' (UiUtils styled)
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 14));
+        btnPanel.setBackground(Color.WHITE);
+        btnPanel.setBorder(new EmptyBorder(0, 0, 10, 20));
+
+        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
+        btnCancel.setPreferredSize(new Dimension(90, 34));
+        btnCancel.addActionListener(e -> dialog.dispose());
+
+        JButton btnSave = UiUtils.createPrimaryButton("Lưu");
+        btnSave.setPreferredSize(new Dimension(90, 34));
+        btnSave.addActionListener(e -> {
+            String nameVal = txtName.getText().trim();
+            if (nameVal.isEmpty()) {
+                lblErr.setText("⚠ Vui lòng nhập Tên vật tư.");
+                return;
+            }
+            
+            AgriSupplyDTO dto = new AgriSupplyDTO();
+            dto.setName(nameVal);
+            dto.setUnit((String) cboUnit.getSelectedItem());
+            dto.setSupplyCode(txtCode.getText().trim());
+
+            try {
+                String minVal = txtMin.getText().trim();
+                if (!minVal.isEmpty()) dto.setMinStock(Double.parseDouble(minVal));
+                String stockVal = txtStock.getText().trim();
+                if (!stockVal.isEmpty()) dto.setStockQty(Double.parseDouble(stockVal));
+                else dto.setStockQty(0.0);
+                
+                ctrl.createAgriSupply(dto);
+                dialog.dispose();
+                refreshTable();
+            } catch (Exception ex) {
+                lblErr.setText("⚠ Lỗi: " + ex.getMessage());
+            }
+        });
+
+        btnPanel.add(btnCancel);
+        btnPanel.add(btnSave);
+        root.add(btnPanel, BorderLayout.SOUTH);
+
+        dialog.setContentPane(root);
+        dialog.setVisible(true);
     }
 
     private JPanel makeCard() {

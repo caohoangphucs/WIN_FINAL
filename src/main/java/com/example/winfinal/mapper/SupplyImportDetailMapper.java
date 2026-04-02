@@ -15,6 +15,9 @@ public interface SupplyImportDetailMapper {
 
     @Mapping(target = "supplyId", source = "supply.id")
     @Mapping(target = "importId", source = "supplyImport.id")
+    @Mapping(target = "importCode", source = "supplyImport.importCode")
+    @Mapping(target = "importDate", source = "supplyImport.importDate")
+    @Mapping(target = "supplierName", source = "supplyImport.supplier.name")
     SupplyImportDetailDTO toDTO(SupplyImportDetail entity);
 
     @Mapping(target = "supply", source = "supplyId")

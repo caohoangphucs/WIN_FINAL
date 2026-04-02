@@ -13,6 +13,7 @@ public class SupplyImportDTO {
     private Long id;
     private String importCode;
     private Long supplierId;
+    private String supplierName;
     private Long employeeId;
     private Date importDate;
     private List<SupplyImportDetailDTO> details;

@@ -39,4 +39,14 @@ public class SupplyImportController extends BaseController<SupplyImportDTO> {
     public Double getAvgUnitPrice(Long supplyId) {
         return importService.getAvgUnitPrice(supplyId);
     }
+
+    /** Chi phí nhập kho theo nhà cung cấp cho một vật tư */
+    public List<Object[]> getCostBySupply(Long supplyId) {
+        return importService.getCostBySupply(supplyId);
+    }
+
+    /** Lịch sử chi tiết từng lần nhập kho cho một vật tư */
+    public List<com.example.winfinal.dto.SupplyImportDetailDTO> findDetailsBySupply(Long supplyId) {
+        return importService.findDetailsBySupply(supplyId);
+    }
 }

@@ -11,6 +11,7 @@ public class SupplyImportDAO extends BaseDAO<SupplyImport> {
 
     // [3.3] Tổng chi phí nhập kho theo nhà cung cấp
     // Trả về: Object[] { supplierName, totalAmount }
+    @SuppressWarnings("unchecked")
     public List<Object[]> getTotalCostBySupplier() {
         EntityManager em = getEntityManager();
         try {

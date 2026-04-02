@@ -93,4 +93,16 @@ public class SupplyImportService extends BaseService<SupplyImport, SupplyImportD
     public Double getAvgUnitPrice(Long supplyId) {
         return detailDAO.getAvgUnitPrice(supplyId);
     }
+
+    // Chi phí nhập kho theo nhà cung cấp cho một vật tư { supplierName, totalQty, totalCost }
+    public List<Object[]> getCostBySupply(Long supplyId) {
+        return detailDAO.getCostBySupply(supplyId);
+    }
+
+    // Lịch sử chi tiết từng lần nhập kho của một vật tư
+    public List<com.example.winfinal.dto.SupplyImportDetailDTO> findDetailsBySupply(Long supplyId) {
+        return detailDAO.findBySupplyId(supplyId).stream()
+                .map(detailMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

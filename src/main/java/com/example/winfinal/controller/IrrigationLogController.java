@@ -1,33 +1,24 @@
 package com.example.winfinal.controller;
 
-import com.example.winfinal.entity.operation.IrrigationLog;
+import com.example.winfinal.dto.IrrigationLogDTO;
 import com.example.winfinal.service.IrrigationLogService;
 import java.util.List;
 
-public class IrrigationLogController {
-    private final IrrigationLogService service = new IrrigationLogService();
+public class IrrigationLogController extends BaseController<IrrigationLogDTO> {
+    private final IrrigationLogService irrigationService;
 
-    // ── CRUD cơ bản ──────────────────────────────────────────
-    public void createLog(IrrigationLog log) { service.save(log); }
-    public void updateLog(IrrigationLog log) { service.update(log); }
-    public void deleteLog(Long id) { service.delete(id); }
-    public List<IrrigationLog> getAllLogs() { return service.getAll(); }
-    public IrrigationLog getById(Long id) { return service.getById(id); }
-
-    // ── Thống kê & Giám sát ──────────────────────────────────
-    /** [4.4] Tổng lượng nước tưới theo tháng cho một lô — dùng trên biểu đồ */
-    public List<Object[]> getMonthlyWaterUsage(Long lotId, int year) {
-        return service.getMonthlyWaterUsage(lotId, year);
+    public IrrigationLogController() {
+        super(new IrrigationLogService());
+        this.irrigationService = (IrrigationLogService) service;
     }
 
-    /** Lấy danh sách tưới tiêu của một lô */
-    public List<IrrigationLog> findByLot(Long lotId) {
-        return service.findByLot(lotId);
-    }
+    // Aliases
+    public void createLog(IrrigationLogDTO dto) { create(dto); }
+    public void updateLog(IrrigationLogDTO dto) { update(dto); }
+    public void deleteLog(Long id) { delete(id); }
+    public List<IrrigationLogDTO> getAllLogs() { return getAll(); }
 
-    // ── Truy xuất nguồn gốc ──────────────────────────────────
-    /** [5.4] Nhật ký tưới tiêu theo mã lô — bước 4 của Traceability */
-    public List<Object[]> getTraceabilityLogs(String lotCode) {
-        return service.getTraceabilityLogs(lotCode);
-    }
+    public List<Object[]> getMonthlyWaterUsage(Long lotId, int year) { return irrigationService.getMonthlyWaterUsage(lotId, year); }
+    public List<Object[]> getTraceabilityLogs(String lotCode) { return irrigationService.getTraceabilityLogs(lotCode); }
+    public List<IrrigationLogDTO> findByLot(Long lotId) { return irrigationService.findByLot(lotId); }
 }

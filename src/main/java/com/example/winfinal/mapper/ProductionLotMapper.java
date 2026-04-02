@@ -18,17 +18,23 @@ public interface ProductionLotMapper {
 
     @Mapping(target = "statusCode", source = "status.code")
     @Mapping(target = "farmId", source = "farm.id")
+    @Mapping(target = "farmName", source = "farm.name")
     @Mapping(target = "cropTypeId", source = "cropType.id")
+    @Mapping(target = "cropTypeName", source = "cropType.name")
+    @Mapping(target = "cropTypeCode", source = "cropType.cropCode")
+    @Mapping(target = "seasonId", source = "season.id")
+    @Mapping(target = "seasonName", source = "season.name")
     @Mapping(target = "managerId", source = "manager.id")
+    @Mapping(target = "managerName", source = "manager.fullName")
     ProductionLotDTO toDTO(ProductionLot entity);
 
     @Mapping(target = "status", source = "statusCode")
     @Mapping(target = "farm", source = "farmId")
     @Mapping(target = "cropType", source = "cropTypeId")
     @Mapping(target = "manager", source = "managerId")
+    @Mapping(target = "season", source = "seasonId")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "actualHarvestDate", ignore = true)
-    @Mapping(target = "season", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     ProductionLot toEntity(ProductionLotDTO dto);
@@ -37,12 +43,19 @@ public interface ProductionLotMapper {
     @Mapping(target = "farm", source = "farmId")
     @Mapping(target = "cropType", source = "cropTypeId")
     @Mapping(target = "manager", source = "managerId")
+    @Mapping(target = "season", source = "seasonId")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "actualHarvestDate", ignore = true)
-    @Mapping(target = "season", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromDTO(ProductionLotDTO dto, @MappingTarget ProductionLot entity);
+
+    default Season mapSeason(Long id) {
+        if (id == null) return null;
+        Season s = new Season();
+        s.setId(id);
+        return s;
+    }
 
     default LotStatus mapStatus(String code) {
         if (code == null) return null;

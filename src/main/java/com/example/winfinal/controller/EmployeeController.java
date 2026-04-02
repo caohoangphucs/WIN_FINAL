@@ -35,4 +35,7 @@ public class EmployeeController extends BaseController<EmployeeDTO> {
     public Long countTodayLogs(Long employeeId) {
         return employeeService.countTodayLogs(employeeId);
     }
+
+    public List<Object[]> getRoleDistribution() { return employeeService.getRoleDistribution(); }
+    public List<Object[]> getHarvestPerformance() { return employeeService.getHarvestPerformance(); }
 }

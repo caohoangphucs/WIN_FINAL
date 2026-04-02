@@ -9,6 +9,20 @@ public class IrrigationLogDAO extends BaseDAO<IrrigationLog> {
         super(IrrigationLog.class);
     }
 
+    @Override
+    public List<IrrigationLog> findAll() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT i FROM IrrigationLog i " +
+                "LEFT JOIN FETCH i.lot LEFT JOIN FETCH i.employee " +
+                "ORDER BY i.irrigatedAt DESC", IrrigationLog.class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     // [4.4] Tổng lượng nước tưới theo tháng cho một lô
     // Trả về: Object[] { month, totalWaterAmount }
     public List<Object[]> getMonthlyWaterUsage(Long lotId, int year) {
@@ -50,7 +64,9 @@ public class IrrigationLogDAO extends BaseDAO<IrrigationLog> {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT i FROM IrrigationLog i WHERE i.lot.id = :lotId ORDER BY i.irrigatedAt DESC",
+                "SELECT i FROM IrrigationLog i " +
+                "LEFT JOIN FETCH i.lot LEFT JOIN FETCH i.employee " +
+                "WHERE i.lot.id = :lotId ORDER BY i.irrigatedAt DESC",
                 IrrigationLog.class)
                 .setParameter("lotId", lotId)
                 .getResultList();

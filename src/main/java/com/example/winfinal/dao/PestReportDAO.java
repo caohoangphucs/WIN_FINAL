@@ -97,4 +97,30 @@ public class PestReportDAO extends BaseDAO<PestReport> {
             em.close();
         }
     }
+    // [7.1] Thống kê tỷ lệ các mức độ (PieChart)
+    public List<Object[]> getSeverityDistribution() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT p.severity.code, COUNT(p.id) FROM PestReport p GROUP BY p.severity.code", Object[].class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    // [7.2] Diễn biến sâu bệnh theo tháng (LineChart)
+    public List<Object[]> getMonthlyTrend() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT YEAR(p.reportedAt), MONTH(p.reportedAt), COUNT(p.id) " +
+                "FROM PestReport p " +
+                "GROUP BY YEAR(p.reportedAt), MONTH(p.reportedAt) " +
+                "ORDER BY YEAR(p.reportedAt) ASC, MONTH(p.reportedAt) ASC", Object[].class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
 }

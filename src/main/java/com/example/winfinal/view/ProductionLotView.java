@@ -9,7 +9,6 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -275,61 +274,23 @@ public class ProductionLotView extends JPanel {
         return scroll;
     }
 
-    /** Show traceability + stats dialog when a row is clicked */
+    /** Navigate to the new Traceability Detail page */
     private void showLotDetail(int row) {
         String lotCode = tableModel.getValueAt(row, 0) == null ? ""
                 : tableModel.getValueAt(row, 0).toString();
 
-        com.example.winfinal.controller.CultivationLogController logCtrl =
-                new com.example.winfinal.controller.CultivationLogController();
-
-        // ── Traceability log ────────────────────────────────────
-        List<Object[]> logs = null;
-        try { logs = logCtrl.getTraceabilityLogs(lotCode); } catch (Exception ignored){}
-
-        String[] logCols = {"Thời gian", "Hoạt động", "Vật tư", "Liều lượng", "Người thực hiện"};
-        DefaultTableModel logModel = new DefaultTableModel(logCols, 0);
-        if (logs != null) {
-            for (Object[] r : logs) {
-                logModel.addRow(new Object[]{
-                    r[0] == null ? "" : r[0].toString(), r[1], r[2], r[3], r[4]
-                });
-            }
+        Window win = SwingUtilities.getWindowAncestor(this);
+        if (win instanceof MainView main) {
+            main.showPage(MainView.PAGE_TRACEABILITY);
+            // We need to find the instance of TraceabilityDetailView inside MainView's contentPane
+            // For simplicity, let's search for it if we don't have a direct reference.
+            // Navigate and search
+            // Actually, find the TraceabilityDetailView inside the contentPane card layout
+            // MainView has a contentPane field, but it's private.
+            // I'll make it public or find another way.
+            // Let's assume MainView can expose its pages.
+            main.getTraceabilityView().performSearch(lotCode);
         }
-        JTable logTbl = new JTable(logModel);
-        UiUtils.styleTable(logTbl);
-        logTbl.getColumnModel().getColumn(0).setPreferredWidth(140);
-        JScrollPane spLog = new JScrollPane(logTbl);
-        spLog.setPreferredSize(new Dimension(620, 200));
-        spLog.setBorder(BorderFactory.createTitledBorder("Nhật ký truy xuất nguồn gốc"));
-
-        // ── Activity stats ──────────────────────────────────────
-        List<Object[]> stats = null;
-        try {
-            ProductionLotDTO currentLot = ctrl.findByLotCode(lotCode);
-            if (currentLot != null && currentLot.getId() != null)
-                stats = logCtrl.getActivityStatsByLot(currentLot.getId());
-        } catch (Exception ignored){}
-
-        String[] statCols = {"Loại hoạt động", "Số lần thực hiện"};
-        DefaultTableModel statModel = new DefaultTableModel(statCols, 0);
-        if (stats != null) {
-            for (Object[] r : stats) statModel.addRow(new Object[]{ r[0], r[1] });
-        }
-        JTable statTbl = new JTable(statModel);
-        UiUtils.styleTable(statTbl);
-        JScrollPane spStat = new JScrollPane(statTbl);
-        spStat.setPreferredSize(new Dimension(620, 140));
-        spStat.setBorder(BorderFactory.createTitledBorder("Thống kê hoạt động canh tác"));
-
-        JPanel content = new JPanel();
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.add(spLog);
-        content.add(Box.createVerticalStrut(8));
-        content.add(spStat);
-
-        JOptionPane.showMessageDialog(this, content,
-                "Chi tiết lô sản xuất – " + lotCode, JOptionPane.PLAIN_MESSAGE);
     }
 
     // ── Data ──────────────────────────────────────────────────

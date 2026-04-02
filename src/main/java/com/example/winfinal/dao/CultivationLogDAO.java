@@ -63,7 +63,7 @@ public class CultivationLogDAO extends BaseDAO<CultivationLog> {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT c.activityType.name, c.supply.name, c.dosageUsed, c.appliedAt " +
+                "SELECT c.activityType.code, c.supply.name, c.dosageUsed, c.appliedAt " +
                 "FROM CultivationLog c " +
                 "WHERE c.lot.id = :lotId " +
                 "ORDER BY c.appliedAt DESC")
@@ -96,10 +96,10 @@ public class CultivationLogDAO extends BaseDAO<CultivationLog> {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT c.activityType.name, COUNT(c.id) " +
+                "SELECT c.activityType.code, COUNT(c.id) " +
                 "FROM CultivationLog c " +
                 "WHERE c.lot.id = :lotId " +
-                "GROUP BY c.activityType.name")
+                "GROUP BY c.activityType.code")
                 .setParameter("lotId", lotId)
                 .getResultList();
         } finally {
@@ -112,7 +112,7 @@ public class CultivationLogDAO extends BaseDAO<CultivationLog> {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT c.appliedAt, c.activityType.name, c.supply.name, c.dosageUsed, c.employee.fullName " +
+                "SELECT c.appliedAt, c.activityType.code, c.supply.name, c.dosageUsed, c.employee.fullName " +
                 "FROM CultivationLog c " +
                 "WHERE c.lot.lotCode = :lotCode " +
                 "ORDER BY c.appliedAt ASC")

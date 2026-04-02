@@ -113,7 +113,8 @@ public class DashboardView extends JPanel {
     }
 
     private JLabel cardTitle(String text, String unitSuffix) {
-        JLabel l = new JLabel(unitSuffix == null ? text : text);
+        String fullText = (unitSuffix == null || unitSuffix.isEmpty()) ? text : text + " (" + unitSuffix + ")";
+        JLabel l = new JLabel(fullText);
         l.setFont(AppTheme.FONT_SUBTITLE);
         l.setForeground(AppTheme.TEXT_PRIMARY);
         return l;
@@ -202,9 +203,8 @@ public class DashboardView extends JPanel {
                 try {
                     var pests = pestCtrl.getHighSeverityReports();
                     for (var p : pests) {
-                        String lotCode = "--";
-                        try { if (p.getLot() != null) lotCode = String.valueOf(p.getLot().getId()); } catch (Exception ignored2) {}
-                        alertRows.add(new Object[]{"SAU", "Lô #"+lotCode, "", "Sâu bệnh nghiêm trọng", today});
+                        String lotCodeValue = p.getLotCode() != null ? p.getLotCode() : "--";
+                        alertRows.add(new Object[]{"SAU", "Lô #"+lotCodeValue, "", "Sâu bệnh nghiêm trọng", today});
                     }
                 } catch (Exception ignored) {}
 
@@ -365,7 +365,7 @@ public class DashboardView extends JPanel {
                 // value
                 g2.setColor(AppTheme.TEXT_PRIMARY);
                 g2.setFont(new Font("Segoe UI",Font.BOLD,10));
-                String vs=String.format("%.0f",values[i]);
+                String vs=String.format("%.0f kg",values[i]);
                 g2.drawString(vs,x+(barW-g2.getFontMetrics().stringWidth(vs))/2,y-4);
                 // label
                 g2.setColor(AppTheme.TEXT_SECONDARY);

@@ -14,6 +14,7 @@ public interface SupplyImportMapper {
     SupplyImportMapper INSTANCE = Mappers.getMapper(SupplyImportMapper.class);
 
     @Mapping(target = "supplierId", source = "supplier.id")
+    @Mapping(target = "supplierName", source = "supplier.name")
     @Mapping(target = "employeeId", source = "employee.id")
     @Mapping(target = "details", ignore = true)
     SupplyImportDTO toDTO(SupplyImport entity);

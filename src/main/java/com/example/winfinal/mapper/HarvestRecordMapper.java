@@ -16,8 +16,11 @@ public interface HarvestRecordMapper {
     HarvestRecordMapper INSTANCE = Mappers.getMapper(HarvestRecordMapper.class);
 
     @Mapping(target = "lotId", source = "lot.id")
+    @Mapping(target = "lotCode", source = "lot.lotCode")
     @Mapping(target = "employeeId", source = "employee.id")
+    @Mapping(target = "employeeName", source = "employee.fullName")
     @Mapping(target = "customerId", source = "customer.id")
+    @Mapping(target = "customerName", source = "customer.name")
     @Mapping(target = "qualityGradeCode", source = "qualityGrade.code")
     HarvestRecordDTO toDTO(HarvestRecord entity);
 

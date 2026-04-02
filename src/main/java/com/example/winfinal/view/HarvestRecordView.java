@@ -64,8 +64,8 @@ public class HarvestRecordView extends JPanel {
     }
 
     private JPanel buildTable() {
-        String[] cols = {"ID", "ID Lô", "Ngày thu hoạch", "Năng suất (kg)",
-                         "Chất lượng", "ID Nhân viên", "ID Khách hàng", "Thao tác"};
+        String[] cols = {"ID", "Lô sản xuất", "Ngày thu hoạch", "Năng suất (kg)",
+                         "Chất lượng", "Nhân viên", "Khách hàng", "Thao tác"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 7; }
         };
@@ -95,9 +95,8 @@ public class HarvestRecordView extends JPanel {
         table.getColumn("ID").setMaxWidth(45);
         table.getColumn("ID").setPreferredWidth(45);
 
-        table.getColumn("ID Lô").setMinWidth(110);
-        table.getColumn("ID Lô").setMaxWidth(110);
-        table.getColumn("ID Lô").setPreferredWidth(110);
+        table.getColumn("Lô sản xuất").setMinWidth(130);
+        table.getColumn("Lô sản xuất").setPreferredWidth(130);
 
         // Row click → show detail
         table.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -126,12 +125,12 @@ public class HarvestRecordView extends JPanel {
         StringBuilder sb = new StringBuilder();
         sb.append("<html><b>Chi tiết bản ghi thu hoạch</b><br><br>");
         sb.append("ID: ").append(tableModel.getValueAt(row, 0)).append("<br>");
-        sb.append("Lô ID: ").append(tableModel.getValueAt(row, 1)).append("<br>");
+        sb.append("Lô: ").append(tableModel.getValueAt(row, 1)).append("<br>");
         sb.append("Ngày thu hoạch: ").append(tableModel.getValueAt(row, 2)).append("<br>");
         sb.append("Năng suất (kg): ").append(tableModel.getValueAt(row, 3)).append("<br>");
         sb.append("Chất lượng: ").append(tableModel.getValueAt(row, 4)).append("<br>");
-        sb.append("Nhân viên ID: ").append(tableModel.getValueAt(row, 5)).append("<br>");
-        sb.append("Khách hàng ID: ").append(tableModel.getValueAt(row, 6)).append("</html>");
+        sb.append("Nhân viên: ").append(tableModel.getValueAt(row, 5)).append("<br>");
+        sb.append("Khách hàng: ").append(tableModel.getValueAt(row, 6)).append("</html>");
         JOptionPane.showMessageDialog(this, sb.toString(),
                 "Chi tiết thu hoạch", JOptionPane.PLAIN_MESSAGE);
     }
@@ -174,10 +173,13 @@ public class HarvestRecordView extends JPanel {
                     : ctrl.findByLotCode(lotCode);
             for (HarvestRecordDTO h : list) {
                 tableModel.addRow(new Object[]{
-                    h.getId(), h.getLotId(),
+                    h.getId(), 
+                    h.getLotCode() != null ? h.getLotCode() : "ID: " + h.getLotId(),
                     h.getHarvestDate() == null ? "" : sdf.format(h.getHarvestDate()),
                     h.getYieldKg(), translateGrade(h.getQualityGradeCode()),
-                    h.getEmployeeId(), h.getCustomerId(), "edit|delete"
+                    h.getEmployeeName() != null ? h.getEmployeeName() : "ID: " + h.getEmployeeId(),
+                    h.getCustomerName() != null ? h.getCustomerName() : "ID: " + h.getCustomerId(), 
+                    "edit|delete"
                 });
             }
         } catch (Exception ex) {

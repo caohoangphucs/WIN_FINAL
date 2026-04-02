@@ -25,7 +25,11 @@ public class ProductionLotService extends BaseService<ProductionLot, ProductionL
     // [1.2] Tìm theo mã lô
     public ProductionLotDTO findByLotCode(String lotCode) {
         ProductionLot e = lotDAO.findByLotCode(lotCode);
-        return e != null ? toDTO(e) : null;
+        ProductionLotDTO dto = (e != null) ? toDTO(e) : null;
+        if (dto != null && e.getCropType() != null) {
+            dto.setCropTypeCode(e.getCropType().getCropCode());
+        }
+        return dto;
     }
 
     // [1.3] Lọc theo trạng thái
@@ -52,7 +56,11 @@ public class ProductionLotService extends BaseService<ProductionLot, ProductionL
     // [5.1] Thông tin đầy đủ phục vụ truy xuất nguồn gốc
     public ProductionLotDTO getFullTraceabilityInfo(String lotCode) {
         ProductionLot e = lotDAO.getFullTraceabilityInfo(lotCode);
-        return e != null ? toDTO(e) : null;
+        ProductionLotDTO dto = (e != null) ? toDTO(e) : null;
+        if (dto != null && e.getCropType() != null) {
+            dto.setCropTypeCode(e.getCropType().getCropCode());
+        }
+        return dto;
     }
 
     // [6.2] Top N lô năng suất cao nhất

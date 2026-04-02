@@ -8,15 +8,15 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class HarvestRecordDTO {
+public class PestReportDTO {
     private Long id;
     private Long lotId;
     private String lotCode;
     private Long employeeId;
     private String employeeName;
-    private Long customerId;
-    private String customerName;
-    private Date harvestDate;
-    private Double yieldKg;
-    private String qualityGradeCode;
+    private String severityCode;
+    private String pestName;
+    private String treatment;
+    private Double damagePct;
+    private Date reportedAt;
 }

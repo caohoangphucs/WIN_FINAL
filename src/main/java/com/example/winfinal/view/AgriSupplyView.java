@@ -281,7 +281,7 @@ public class AgriSupplyView extends JPanel {
         } catch (Exception ignored) {
         }
 
-        String[] cols = { "Ngày nhập", "Mã phiếu nhập", "Nhà cung cấp ID" };
+        String[] cols = { "Ngày nhập", "Mã phiếu nhập", "Nhà cung cấp" };
         DefaultTableModel m = new DefaultTableModel(cols, 0);
         if (imports != null && !imports.isEmpty()) {
             java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd/MM/yyyy");
@@ -289,7 +289,7 @@ public class AgriSupplyView extends JPanel {
                 m.addRow(new Object[] {
                         i.getImportDate() == null ? "" : format.format(i.getImportDate()),
                         i.getImportCode() == null ? "" : i.getImportCode(),
-                        i.getSupplierId() == null ? "" : "NCC: " + i.getSupplierId()
+                        i.getSupplierName() != null ? i.getSupplierName() : "ID: " + i.getSupplierId()
                 });
             }
         } else {

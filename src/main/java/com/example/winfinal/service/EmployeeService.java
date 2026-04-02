@@ -57,4 +57,7 @@ public class EmployeeService extends BaseService<Employee, EmployeeDTO> {
     public Long countTodayLogs(Long employeeId) {
         return employeeDAO.countTodayLogs(employeeId);
     }
+
+    public List<Object[]> getRoleDistribution() { return employeeDAO.getRoleDistribution(); }
+    public List<Object[]> getHarvestPerformance() { return employeeDAO.getHarvestPerformance(); }
 }

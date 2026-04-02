@@ -21,38 +21,18 @@ public class HarvestRecordService extends BaseService<HarvestRecord, HarvestReco
     @Override protected void updateEntityFromDTO(HarvestRecordDTO d, HarvestRecord e) { mapper.updateEntityFromDTO(d, e); }
     @Override protected Object getEntityId(HarvestRecordDTO d) { return d.getId(); }
 
-    // [2.1] Năng suất trung bình theo loại cây trồng
-    public List<Object[]> getAvgYieldByCropType() {
-        return harvestDAO.getAvgYieldByCropType();
-    }
+    public List<Object[]> getAvgYieldByCropType() { return harvestDAO.getAvgYieldByCropType(); }
+    public List<Object[]> getYieldBySeason() { return harvestDAO.getYieldBySeason(); }
+    public List<Object[]> getYieldPerM2ByLot() { return harvestDAO.getYieldPerM2ByLot(); }
+    public List<Object[]> getQualityGradeStats() { return harvestDAO.getQualityGradeStats(); }
+    public List<Object[]> getYieldByFarm() { return harvestDAO.getYieldByFarm(); }
+    public List<Object[]> getCustomerYieldStats() { return harvestDAO.getCustomerYieldStats(); }
 
-    // [2.2] Tổng sản lượng theo mùa vụ
-    public List<Object[]> getYieldBySeason() {
-        return harvestDAO.getYieldBySeason();
-    }
-
-    // [2.3] Hiệu suất m² theo lô
-    public List<Object[]> getYieldPerM2ByLot() {
-        return harvestDAO.getYieldPerM2ByLot();
-    }
-
-    // [2.4] Phân bố chất lượng nông sản
-    public List<Object[]> getQualityGradeStats() {
-        return harvestDAO.getQualityGradeStats();
-    }
-
-    // [2.5] Sản lượng theo trang trại
-    public List<Object[]> getYieldByFarm() {
-        return harvestDAO.getYieldByFarm();
-    }
-
-    // [5.5] Tra lịch sử thu hoạch theo mã lô (dùng trong Traceability)
     public List<HarvestRecordDTO> findByLotCode(String lotCode) {
         return harvestDAO.findByLotCode(lotCode).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // [6.4] Xếp hạng khách hàng theo sản lượng
-    public List<Object[]> getCustomerYieldStats() {
-        return harvestDAO.getCustomerYieldStats();
+    public List<HarvestRecordDTO> findByLot(Long lotId) {
+        return harvestDAO.findByLot(lotId).stream().map(this::toDTO).collect(Collectors.toList());
     }
 }

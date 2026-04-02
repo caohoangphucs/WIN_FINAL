@@ -8,7 +8,7 @@ import org.mockito.MockedConstruction;
 import java.util.Collections;
 import java.util.List;
 
-import com.example.winfinal.entity.operation.IrrigationLog;
+import com.example.winfinal.dto.IrrigationLogDTO;
 import com.example.winfinal.service.IrrigationLogService;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,16 +34,16 @@ class IrrigationLogControllerTest {
 
     @Test
     void testCreateLog() {
-        IrrigationLog log = new IrrigationLog();
-        controller.createLog(log);
-        verify(service).save(log);
+        IrrigationLogDTO dto = new IrrigationLogDTO();
+        controller.createLog(dto);
+        verify(service).create(dto);
     }
 
     @Test
     void testUpdateLog() {
-        IrrigationLog log = new IrrigationLog();
-        controller.updateLog(log);
-        verify(service).update(log);
+        IrrigationLogDTO dto = new IrrigationLogDTO();
+        controller.updateLog(dto);
+        verify(service).update(dto);
     }
 
     @Test
@@ -54,16 +54,16 @@ class IrrigationLogControllerTest {
 
     @Test
     void testGetAllLogs() {
-        when(service.getAll()).thenReturn(Collections.singletonList(new IrrigationLog()));
-        List<IrrigationLog> res = controller.getAllLogs();
+        when(service.getAll()).thenReturn(Collections.singletonList(new IrrigationLogDTO()));
+        List<IrrigationLogDTO> res = controller.getAllLogs();
         assertNotNull(res);
         verify(service).getAll();
     }
 
     @Test
     void testGetById() {
-        when(service.getById(1L)).thenReturn(new IrrigationLog());
-        IrrigationLog res = controller.getById(1L);
+        when(service.getById(1L)).thenReturn(new IrrigationLogDTO());
+        IrrigationLogDTO res = controller.getById(1L);
         assertNotNull(res);
         verify(service).getById(1L);
     }
@@ -86,7 +86,7 @@ class IrrigationLogControllerTest {
         verify(service).getTraceabilityLogs("code");
     }
 
-    // ── Nâng cao: Exception Handling & Edge Cases ────────────────
+    // ── Exception Handling & Edge Cases ────────────────
 
     @Test
     void testGetById_WhenServiceThrowsException() {
@@ -107,9 +107,9 @@ class IrrigationLogControllerTest {
 
     @Test
     void testCreate_WhenNullEntity_ThrowsException() {
-        doThrow(new IllegalArgumentException("Entity cannot be null")).when(service).save(null);
+        doThrow(new IllegalArgumentException("Entity cannot be null")).when(service).create(null);
         assertThrows(IllegalArgumentException.class, () -> controller.createLog(null));
-        verify(service).save(null);
+        verify(service).create(null);
     }
     
     @Test

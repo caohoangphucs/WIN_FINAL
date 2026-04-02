@@ -9,15 +9,31 @@ public class HarvestRecordDAO extends BaseDAO<HarvestRecord> {
         super(HarvestRecord.class);
     }
 
-    // [2.1] Năng suất trung bình theo loại cây trồng
+    @Override
+    public List<HarvestRecord> findAll() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT h FROM HarvestRecord h " +
+                "LEFT JOIN FETCH h.lot " +
+                "LEFT JOIN FETCH h.customer " +
+                "LEFT JOIN FETCH h.employee " +
+                "ORDER BY h.harvestDate DESC", HarvestRecord.class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    // [2.1] Năng suất trung bình theo Loại cây trồng (Group by Category)
     public List<Object[]> getAvgYieldByCropType() {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT l.cropType.name, AVG(h.yieldKg) " +
+                "SELECT l.cropType.category.name, AVG(h.yieldKg) " +
                 "FROM HarvestRecord h JOIN h.lot l " +
                 "WHERE h.yieldKg IS NOT NULL " +
-                "GROUP BY l.cropType.name " +
+                "GROUP BY l.cropType.category.name " +
                 "ORDER BY AVG(h.yieldKg) DESC")
                 .getResultList();
         } finally {
@@ -94,7 +110,11 @@ public class HarvestRecordDAO extends BaseDAO<HarvestRecord> {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                "SELECT h FROM HarvestRecord h WHERE h.lot.lotCode = :lotCode ORDER BY h.harvestDate ASC", 
+                "SELECT h FROM HarvestRecord h " +
+                "LEFT JOIN FETCH h.lot " +
+                "LEFT JOIN FETCH h.customer " +
+                "LEFT JOIN FETCH h.employee " +
+                "WHERE h.lot.lotCode = :lotCode ORDER BY h.harvestDate ASC", 
                 HarvestRecord.class)
                 .setParameter("lotCode", lotCode)
                 .getResultList();
@@ -112,6 +132,23 @@ public class HarvestRecordDAO extends BaseDAO<HarvestRecord> {
                 "FROM HarvestRecord h WHERE h.customer IS NOT NULL " +
                 "GROUP BY h.customer.id, h.customer.name " +
                 "ORDER BY SUM(h.yieldKg) DESC")
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<HarvestRecord> findByLot(Long lotId) {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT h FROM HarvestRecord h " +
+                "LEFT JOIN FETCH h.lot " +
+                "LEFT JOIN FETCH h.customer " +
+                "LEFT JOIN FETCH h.employee " +
+                "WHERE h.lot.id = :lotId ORDER BY h.harvestDate ASC", 
+                HarvestRecord.class)
+                .setParameter("lotId", lotId)
                 .getResultList();
         } finally {
             em.close();

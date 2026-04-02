@@ -12,13 +12,12 @@ public class HarvestRecordController extends BaseController<HarvestRecordDTO> {
         this.harvestService = (HarvestRecordService) service;
     }
 
-    // ── CRUD cơ bản ──────────────────────────────────────────
+    // ── Aliases for old method names
     public void createHarvestRecord(HarvestRecordDTO dto) { create(dto); }
     public void updateHarvestRecord(HarvestRecordDTO dto) { update(dto); }
     public void deleteHarvestRecord(Long id) { delete(id); }
     public List<HarvestRecordDTO> getAllHarvestRecords() { return getAll(); }
 
-    // ── Thống kê Dashboard ────────────────────────────────────
     public List<Object[]> getAvgYieldByCropType() { return harvestService.getAvgYieldByCropType(); }
     public List<Object[]> getYieldBySeason()       { return harvestService.getYieldBySeason(); }
     public List<Object[]> getYieldPerM2ByLot()     { return harvestService.getYieldPerM2ByLot(); }
@@ -26,8 +25,6 @@ public class HarvestRecordController extends BaseController<HarvestRecordDTO> {
     public List<Object[]> getYieldByFarm()         { return harvestService.getYieldByFarm(); }
     public List<Object[]> getCustomerYieldStats()  { return harvestService.getCustomerYieldStats(); }
 
-    // ── Truy xuất nguồn gốc ──────────────────────────────────
-    public List<HarvestRecordDTO> findByLotCode(String lotCode) {
-        return harvestService.findByLotCode(lotCode);
-    }
+    public List<HarvestRecordDTO> findByLotCode(String lotCode) { return harvestService.findByLotCode(lotCode); }
+    public List<HarvestRecordDTO> findByLot(Long lotId) { return harvestService.findByLot(lotId); }
 }

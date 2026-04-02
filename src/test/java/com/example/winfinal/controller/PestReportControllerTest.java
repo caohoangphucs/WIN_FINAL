@@ -8,7 +8,7 @@ import org.mockito.MockedConstruction;
 import java.util.Collections;
 import java.util.List;
 
-import com.example.winfinal.entity.operation.PestReport;
+import com.example.winfinal.dto.PestReportDTO;
 import com.example.winfinal.service.PestReportService;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,16 +34,16 @@ class PestReportControllerTest {
 
     @Test
     void testCreateReport() {
-        PestReport report = new PestReport();
-        controller.createReport(report);
-        verify(service).save(report);
+        PestReportDTO dto = new PestReportDTO();
+        controller.createReport(dto);
+        verify(service).create(dto);
     }
 
     @Test
     void testUpdateReport() {
-        PestReport report = new PestReport();
-        controller.updateReport(report);
-        verify(service).update(report);
+        PestReportDTO dto = new PestReportDTO();
+        controller.updateReport(dto);
+        verify(service).update(dto);
     }
 
     @Test
@@ -54,16 +54,16 @@ class PestReportControllerTest {
 
     @Test
     void testGetAllReports() {
-        when(service.getAll()).thenReturn(Collections.singletonList(new PestReport()));
-        List<PestReport> res = controller.getAllReports();
+        when(service.getAll()).thenReturn(Collections.singletonList(new PestReportDTO()));
+        List<PestReportDTO> res = controller.getAllReports();
         assertNotNull(res);
         verify(service).getAll();
     }
 
     @Test
     void testGetById() {
-        when(service.getById(1L)).thenReturn(new PestReport());
-        PestReport res = controller.getById(1L);
+        when(service.getById(1L)).thenReturn(new PestReportDTO());
+        PestReportDTO res = controller.getById(1L);
         assertNotNull(res);
         verify(service).getById(1L);
     }
@@ -92,7 +92,7 @@ class PestReportControllerTest {
         verify(service).getTraceabilityLogs("code");
     }
 
-    // ── Nâng cao: Exception Handling & Edge Cases ────────────────
+    // ── Exception Handling & Edge Cases ────────────────
 
     @Test
     void testGetById_WhenServiceThrowsException() {
@@ -113,9 +113,9 @@ class PestReportControllerTest {
 
     @Test
     void testCreate_WhenNullEntity_ThrowsException() {
-        doThrow(new IllegalArgumentException("Entity cannot be null")).when(service).save(null);
+        doThrow(new IllegalArgumentException("Entity cannot be null")).when(service).create(null);
         assertThrows(IllegalArgumentException.class, () -> controller.createReport(null));
-        verify(service).save(null);
+        verify(service).create(null);
     }
     
     @Test

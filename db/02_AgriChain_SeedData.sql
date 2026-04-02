@@ -425,12 +425,20 @@ INSERT INTO customer (customer_code, name, phone, email, type, status) VALUES
 INSERT INTO harvest_record (lot_id, employee_id, customer_id, harvest_date, yield_kg, quality_grade_code) VALUES
 -- LOT-L3: Lúa IR50404 — thu hoạch 10/2024
 (8,  6, 4, '2024-10-28', 42000.0, 'GRADE_A'),
--- LOT-R2: Rau cải Đà Lạt 2 — đợt đầu 1/2025
+-- LOT-R2: Rau cải Đà Lạt 2
 (10, 9, 6, '2025-01-05', 1200.0,  'GRADE_A'),
--- LOT-R2: Rau cải Đà Lạt 2 — thu hoạch chính 1/2025
 (10, 9, 5, '2025-01-28', 2850.0,  'GRADE_A'),
--- LOT-L2: Lúa OM5451 — thu hoạch 2/2025
-(7,  6, 4, '2025-02-08', 38500.0, 'GRADE_B');
+-- LOT-L2: Lúa OM5451
+(7,  6, 4, '2025-02-08', 38500.0, 'GRADE_B'),
+-- Thêm dữ liệu giả lập cho các nhân sự khác (Mới cập nhật)
+(1,  3, 1, '2025-03-10', 15200.0, 'GRADE_A'), -- Lê Văn Cường
+(2,  4, 2, '2025-03-12', 18600.0, 'GRADE_B'), -- Phạm Thị Dung
+(3,  7, 3, '2025-03-15', 9800.0,  'GRADE_A'), -- Đặng Văn Giang
+(4,  8, 4, '2025-03-18', 25400.0, 'GRADE_A'), -- Bùi Thị Hoa
+(5,  10, 5, '2025-03-20', 32000.0, 'GRADE_C'), -- Đinh Thị Kim
+(6,  2, 6, '2025-03-22', 11500.0, 'GRADE_B'), -- Trần Thị Bình
+(9,  3, 1, '2025-03-25', 13200.0, 'GRADE_A'), -- Cường (lô khác)
+(11, 4, 3, '2025-03-26', 17800.0, 'GRADE_B'); -- Dung (lô khác)
 -- LOT-S1, LOT-S2, LOT-S3: chưa thu hoạch (dự kiến 3/2025)
 -- LOT-C1, LOT-C2: cà phê đang chín (dự kiến 6/2025)
 -- LOT-B1: bắp đang phát triển (dự kiến 5/2025)

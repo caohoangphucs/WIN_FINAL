@@ -1,35 +1,42 @@
 package com.example.winfinal.service;
 
 import com.example.winfinal.dao.PestReportDAO;
+import com.example.winfinal.dto.PestReportDTO;
 import com.example.winfinal.entity.operation.PestReport;
+import com.example.winfinal.mapper.PestReportMapper;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class PestReportService {
-    private final PestReportDAO dao = new PestReportDAO();
+public class PestReportService extends BaseService<PestReport, PestReportDTO> {
+    private static final PestReportMapper mapper = PestReportMapper.INSTANCE;
+    private final PestReportDAO pestDAO;
 
-    public void save(PestReport report) { dao.save(report); }
-    public void update(PestReport report) { dao.update(report); }
-    public void delete(Long id) { dao.delete(id); }
-    public List<PestReport> getAll() { return dao.findAll(); }
-    public PestReport getById(Long id) { return (PestReport) dao.findById(id); }
-
-    // [4.2] Cảnh báo sâu bệnh nghiêm trọng
-    public List<PestReport> getHighSeverityReports() {
-        return dao.findHighSeverityReports();
+    public PestReportService() {
+        super(new PestReportDAO());
+        this.pestDAO = (PestReportDAO) dao;
     }
 
-    // [5.3] Nhật ký sâu bệnh theo mã lô (Tra cứu nguồn gốc)
+    @Override protected PestReportDTO toDTO(PestReport e) { return mapper.toDTO(e); }
+    @Override protected PestReport toEntity(PestReportDTO d) { return mapper.toEntity(d); }
+    @Override protected void updateEntityFromDTO(PestReportDTO d, PestReport e) { /* Update logic */ }
+    @Override protected Object getEntityId(PestReportDTO d) { return d.getId(); }
+
+    public List<PestReportDTO> getHighSeverityReports() {
+        return pestDAO.findHighSeverityReports().stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     public List<Object[]> getTraceabilityLogs(String lotCode) {
-        return dao.getTraceabilityLogs(lotCode);
+        return pestDAO.getTraceabilityLogs(lotCode);
     }
 
-    // [6.3] Thống kê sâu bệnh theo mức độ trong mùa vụ
     public List<Object[]> getSeverityStatsBySeason(Long seasonId) {
-        return dao.getSeverityStatsBySeason(seasonId);
+        return pestDAO.getSeverityStatsBySeason(seasonId);
     }
 
-    // Lấy tất cả báo cáo theo lô
-    public List<PestReport> findByLot(Long lotId) {
-        return dao.findByLot(lotId);
+    public List<PestReportDTO> findByLot(Long lotId) {
+        return pestDAO.findByLot(lotId).stream().map(this::toDTO).collect(Collectors.toList());
     }
+
+    public List<Object[]> getSeverityDistribution() { return pestDAO.getSeverityDistribution(); }
+    public List<Object[]> getMonthlyTrend() { return pestDAO.getMonthlyTrend(); }
 }

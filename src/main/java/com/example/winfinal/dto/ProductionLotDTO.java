@@ -17,6 +17,12 @@ public class ProductionLotDTO {
     private Date plantDate;
     private Date expectedHarvestDate;
     private Long farmId;
+    private String farmName;
     private Long cropTypeId;
+    private String cropTypeName;
+    private String cropTypeCode;
+    private Long seasonId;
+    private String seasonName;
     private Long managerId;
+    private String managerName;
 }

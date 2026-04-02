@@ -19,9 +19,12 @@ public class MainView extends JFrame {
     private static final String PAGE_CULTIVATION = "Canh t\u00E1c";
     private static final String PAGE_PEST = "S\u00E2u b\u1EC7nh";
     private static final String PAGE_REPORT = "B\u00E1o c\u00E1o";
+    public static final String PAGE_TRACEABILITY = "Truy xuất nguồn gốc";
+    private static final String PAGE_EMPLOYEE = "Nhân viên";
 
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel contentPane = new JPanel(cardLayout);
+    private TraceabilityDetailView traceView;
 
     private JButton activeBtn = null;
 
@@ -80,6 +83,8 @@ public class MainView extends JFrame {
                 PAGE_CULTIVATION,
                 PAGE_PEST,
                 PAGE_REPORT,
+                PAGE_TRACEABILITY,
+                PAGE_EMPLOYEE,
         };
 
         for (String label : navItems) {
@@ -217,7 +222,18 @@ public class MainView extends JFrame {
         contentPane.add(new CultivationLogView(), PAGE_CULTIVATION);
         contentPane.add(new PestReportView(), PAGE_PEST);
         contentPane.add(new ReportView(), PAGE_REPORT);
+        contentPane.add(new EmployeeView(), PAGE_EMPLOYEE);
+        traceView = new TraceabilityDetailView();
+        contentPane.add(traceView, PAGE_TRACEABILITY);
 
         return contentPane;
+    }
+
+    public void showPage(String pageName) {
+        cardLayout.show(contentPane, pageName);
+    }
+
+    public TraceabilityDetailView getTraceabilityView() {
+        return traceView;
     }
 }

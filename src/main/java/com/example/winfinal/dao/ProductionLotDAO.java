@@ -17,7 +17,12 @@ public class ProductionLotDAO extends BaseDAO<ProductionLot> {
     public List<ProductionLot> findAll() {
         EntityManager em = getEntityManager();
         try {
-            return em.createQuery("SELECT l FROM ProductionLot l ORDER BY l.plantDate DESC", ProductionLot.class).getResultList();
+            return em.createQuery(
+                "SELECT l FROM ProductionLot l " +
+                "LEFT JOIN FETCH l.farm LEFT JOIN FETCH l.cropType " +
+                "LEFT JOIN FETCH l.season LEFT JOIN FETCH l.manager " +
+                "ORDER BY l.plantDate DESC", ProductionLot.class)
+                .getResultList();
         } finally {
             em.close();
         }
@@ -27,9 +32,13 @@ public class ProductionLotDAO extends BaseDAO<ProductionLot> {
     public ProductionLot findByLotCode(String lotCode) {
         EntityManager em = getEntityManager();
         try {
-            return em.createQuery("SELECT l FROM ProductionLot l WHERE l.lotCode = :lotCode", ProductionLot.class)
-                    .setParameter("lotCode", lotCode)
-                    .getSingleResult();
+            return em.createQuery(
+                "SELECT l FROM ProductionLot l " +
+                "LEFT JOIN FETCH l.farm LEFT JOIN FETCH l.cropType " +
+                "LEFT JOIN FETCH l.season LEFT JOIN FETCH l.manager " +
+                "WHERE l.lotCode = :lotCode", ProductionLot.class)
+                .setParameter("lotCode", lotCode)
+                .getSingleResult();
         } catch (NoResultException e) {
             return null;
         } finally {
@@ -41,9 +50,13 @@ public class ProductionLotDAO extends BaseDAO<ProductionLot> {
     public List<ProductionLot> findByStatus(String statusCode) {
         EntityManager em = getEntityManager();
         try {
-            return em.createQuery("SELECT l FROM ProductionLot l WHERE l.status.code = :statusCode ORDER BY l.lotCode", ProductionLot.class)
-                    .setParameter("statusCode", statusCode)
-                    .getResultList();
+            return em.createQuery(
+                "SELECT l FROM ProductionLot l " +
+                "LEFT JOIN FETCH l.farm LEFT JOIN FETCH l.cropType " +
+                "LEFT JOIN FETCH l.season LEFT JOIN FETCH l.manager " +
+                "WHERE l.status.code = :statusCode ORDER BY l.lotCode", ProductionLot.class)
+                .setParameter("statusCode", statusCode)
+                .getResultList();
         } finally {
             em.close();
         }
@@ -53,9 +66,13 @@ public class ProductionLotDAO extends BaseDAO<ProductionLot> {
     public List<ProductionLot> findByFarm(Long farmId) {
         EntityManager em = getEntityManager();
         try {
-            return em.createQuery("SELECT l FROM ProductionLot l WHERE l.farm.id = :farmId ORDER BY l.plantDate DESC", ProductionLot.class)
-                    .setParameter("farmId", farmId)
-                    .getResultList();
+            return em.createQuery(
+                "SELECT l FROM ProductionLot l " +
+                "LEFT JOIN FETCH l.farm LEFT JOIN FETCH l.cropType " +
+                "LEFT JOIN FETCH l.season LEFT JOIN FETCH l.manager " +
+                "WHERE l.farm.id = :farmId ORDER BY l.plantDate DESC", ProductionLot.class)
+                .setParameter("farmId", farmId)
+                .getResultList();
         } finally {
             em.close();
         }
@@ -67,6 +84,8 @@ public class ProductionLotDAO extends BaseDAO<ProductionLot> {
         try {
             return em.createQuery(
                 "SELECT l FROM ProductionLot l " +
+                "LEFT JOIN FETCH l.farm LEFT JOIN FETCH l.cropType " +
+                "LEFT JOIN FETCH l.season LEFT JOIN FETCH l.manager " +
                 "WHERE (:farmId IS NULL OR l.farm.id = :farmId) " +
                 "  AND (:statusCode IS NULL OR l.status.code = :statusCode) " +
                 "  AND (:cropTypeId IS NULL OR l.cropType.id = :cropTypeId) " +
@@ -88,6 +107,8 @@ public class ProductionLotDAO extends BaseDAO<ProductionLot> {
         try {
             return em.createQuery(
                 "SELECT l FROM ProductionLot l " +
+                "LEFT JOIN FETCH l.farm LEFT JOIN FETCH l.cropType " +
+                "LEFT JOIN FETCH l.season LEFT JOIN FETCH l.manager " +
                 "WHERE l.expectedHarvestDate BETWEEN CURRENT_DATE AND :nextDate " +
                 "  AND l.status.code NOT IN ('HARVESTED', 'IDLE') " +
                 "ORDER BY l.expectedHarvestDate ASC", ProductionLot.class)

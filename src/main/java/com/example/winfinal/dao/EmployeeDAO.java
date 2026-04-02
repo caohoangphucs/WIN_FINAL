@@ -70,4 +70,32 @@ public class EmployeeDAO extends BaseDAO<Employee> {
             em.close();
         }
     }
+    // [8.1] Thống kê tỷ lệ chức vụ (PieChart)
+    public List<Object[]> getRoleDistribution() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT e.role.code, COUNT(e.id) FROM Employee e GROUP BY e.role.code", Object[].class)
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    // [8.2] Xếp hạng nhân viên theo khối lượng thu hoạch (Năng suất)
+    public List<Object[]> getHarvestPerformance() {
+        EntityManager em = getEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT e.fullName, SUM(h.yieldKg) " +
+                "FROM HarvestRecord h " +
+                "JOIN h.employee e " +
+                "GROUP BY e.id, e.fullName " +
+                "ORDER BY SUM(h.yieldKg) DESC", Object[].class)
+                .setMaxResults(10) // Top 10
+                .getResultList();
+        } finally {
+            em.close();
+        }
+    }
 }

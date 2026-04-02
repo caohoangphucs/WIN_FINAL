@@ -84,6 +84,10 @@ public final class UiUtils {
         return styledButton(text, AppTheme.PRIMARY, Color.WHITE);
     }
 
+    public static JButton createSuccessButton(String text) {
+        return styledButton(text, new Color(0x10B981), Color.WHITE);
+    }
+
     public static JButton createDangerButton(String text) {
         return styledButton(text, AppTheme.DANGER, Color.WHITE);
     }

@@ -253,18 +253,8 @@ public class AgriSupplyView extends JPanel {
         JLabel titleLbl = new JLabel("Chi tiết vật tư - " + (name.length() > 40 ? name.substring(0, 40) + "…" : name));
         titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
         titleLbl.setForeground(AppTheme.TEXT_PRIMARY);
-        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         rightActions.setOpaque(false);
-
-        JButton btnUpdateSmall = new JButton("Cập nhật tồn kho");
-        btnUpdateSmall.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnUpdateSmall.setForeground(new Color(0x3B82F6));
-        btnUpdateSmall.setContentAreaFilled(false);
-        btnUpdateSmall.setBorder(BorderFactory.createLineBorder(new Color(0x3B82F6), 1));
-        btnUpdateSmall.setFocusPainted(false);
-        btnUpdateSmall.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnUpdateSmall.setPreferredSize(new Dimension(120, 26));
-        btnUpdateSmall.addActionListener(e -> showUpdateStockDialog());
 
         JButton btnClose = new JButton("×");
         btnClose.setFont(new Font("Segoe UI", Font.BOLD, 20));
@@ -279,7 +269,6 @@ public class AgriSupplyView extends JPanel {
             detailPanel.repaint();
         });
 
-        rightActions.add(btnUpdateSmall);
         rightActions.add(btnClose);
 
         titleBar.add(titleLbl, BorderLayout.WEST);

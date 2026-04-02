@@ -108,6 +108,17 @@ public class AgriSupplyView extends JPanel {
 
         JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         rightActions.setOpaque(false);
+        JButton btnUpdateStock = new JButton("Cập nhật tồn kho");
+        btnUpdateStock.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnUpdateStock.setForeground(Color.WHITE);
+        btnUpdateStock.setBackground(new Color(0x3B82F6)); // Modern blue
+        btnUpdateStock.setBorderPainted(false);
+        btnUpdateStock.setFocusPainted(false);
+        btnUpdateStock.setOpaque(true);
+        btnUpdateStock.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnUpdateStock.setPreferredSize(new Dimension(150, 32));
+        btnUpdateStock.addActionListener(e -> showUpdateStockDialog());
+
         JButton btnAdd = new JButton("+ Thêm vật tư");
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnAdd.setForeground(Color.WHITE);
@@ -118,6 +129,9 @@ public class AgriSupplyView extends JPanel {
         btnAdd.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnAdd.setPreferredSize(new Dimension(130, 32));
         btnAdd.addActionListener(e -> showAddDialog());
+        
+        rightActions.add(btnUpdateStock);
+        rightActions.add(Box.createHorizontalStrut(10));
         rightActions.add(btnAdd);
 
         row.add(leftFilters, BorderLayout.WEST);
@@ -239,8 +253,21 @@ public class AgriSupplyView extends JPanel {
         JLabel titleLbl = new JLabel("Chi tiết vật tư - " + (name.length() > 40 ? name.substring(0, 40) + "…" : name));
         titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
         titleLbl.setForeground(AppTheme.TEXT_PRIMARY);
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightActions.setOpaque(false);
+
+        JButton btnUpdateSmall = new JButton("Cập nhật tồn kho");
+        btnUpdateSmall.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnUpdateSmall.setForeground(new Color(0x3B82F6));
+        btnUpdateSmall.setContentAreaFilled(false);
+        btnUpdateSmall.setBorder(BorderFactory.createLineBorder(new Color(0x3B82F6), 1));
+        btnUpdateSmall.setFocusPainted(false);
+        btnUpdateSmall.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnUpdateSmall.setPreferredSize(new Dimension(120, 26));
+        btnUpdateSmall.addActionListener(e -> showUpdateStockDialog());
+
         JButton btnClose = new JButton("×");
-        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 20));
         btnClose.setForeground(AppTheme.TEXT_SECONDARY);
         btnClose.setBorderPainted(false);
         btnClose.setContentAreaFilled(false);
@@ -251,8 +278,12 @@ public class AgriSupplyView extends JPanel {
             detailPanel.revalidate();
             detailPanel.repaint();
         });
+
+        rightActions.add(btnUpdateSmall);
+        rightActions.add(btnClose);
+
         titleBar.add(titleLbl, BorderLayout.WEST);
-        titleBar.add(btnClose, BorderLayout.EAST);
+        titleBar.add(rightActions, BorderLayout.EAST);
         card.add(titleBar, BorderLayout.NORTH);
         // Vertical content panel for the two sections
         JPanel contentPanel = new JPanel();
@@ -606,6 +637,107 @@ public class AgriSupplyView extends JPanel {
             }
         });
         
+        bot.add(btnCancel);
+        bot.add(btnSave);
+        d.add(bot, BorderLayout.SOUTH);
+        d.setVisible(true);
+    }
+
+    private void showUpdateStockDialog() {
+        if (selectedSupply == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một vật tư từ danh sách để cập nhật tồn kho!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Cập nhật tồn kho", true);
+        d.setSize(420, 320);
+        d.setLocationRelativeTo(this);
+        d.setLayout(new BorderLayout());
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(25, 25, 10, 25));
+        form.setBackground(Color.WHITE);
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(8, 5, 8, 5);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.weightx = 1.0;
+
+        JTextField txtCode = new JTextField(selectedSupply.getSupplyCode());
+        txtCode.setEditable(false);
+        txtCode.setBackground(new Color(0xF3F4F6));
+        
+        JTextField txtName = new JTextField(selectedSupply.getName());
+        txtName.setEditable(false);
+        txtName.setBackground(new Color(0xF3F4F6));
+        
+        JTextField txtCurrentStock = new JTextField(selectedSupply.getStockQty() != null ? selectedSupply.getStockQty().toString() : "0.0");
+        txtCurrentStock.setEditable(false);
+        txtCurrentStock.setBackground(new Color(0xF3F4F6));
+        
+        JTextField txtNewStock = new JTextField();
+        txtNewStock.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        addGridRow(form, g, "Mã vật tư:", txtCode, 0);
+        addGridRow(form, g, "Tên vật tư:", txtName, 1);
+        addGridRow(form, g, "Tồn kho hiện tại:", txtCurrentStock, 2);
+        addGridRow(form, g, "Số lượng tồn mới:", txtNewStock, 3);
+
+        d.add(form, BorderLayout.CENTER);
+
+        JPanel bot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        bot.setBackground(Color.WHITE);
+        bot.setBorder(new EmptyBorder(10, 25, 25, 25));
+
+        JButton btnCancel = new JButton("Hủy");
+        btnCancel.setPreferredSize(new Dimension(80, 32));
+        btnCancel.addActionListener(e -> d.dispose());
+        
+        JButton btnSave = new JButton("Cập nhật");
+        btnSave.setPreferredSize(new Dimension(100, 32));
+        btnSave.setForeground(Color.WHITE);
+        btnSave.setBackground(AppTheme.SUCCESS);
+        btnSave.setBorderPainted(false);
+        btnSave.setFocusPainted(false);
+        btnSave.setOpaque(true);
+        btnSave.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        btnSave.addActionListener(e -> {
+            try {
+                String val = txtNewStock.getText().trim();
+                if (val.isEmpty()) {
+                    throw new Exception("Vui lòng nhập số lượng tồn kho mới.");
+                }
+                
+                double newQty;
+                try {
+                    newQty = Double.parseDouble(val);
+                } catch (NumberFormatException nfe) {
+                    throw new Exception("Số lượng tồn kho phải là một con số hợp lệ.");
+                }
+                
+                if (newQty < 0) {
+                    throw new Exception("Số lượng tồn kho không được nhỏ hơn 0.");
+                }
+
+                selectedSupply.setStockQty(newQty);
+                ctrl.updateAgriSupply(selectedSupply);
+
+                d.dispose();
+                int selectedRow = masterTable.getSelectedRow();
+                refreshTable();
+                
+                // Restore selection and refresh detail if possible
+                if (selectedRow >= 0 && selectedRow < masterTable.getRowCount()) {
+                    masterTable.setRowSelectionInterval(selectedRow, selectedRow);
+                    showDetail(selectedRow);
+                }
+                
+                JOptionPane.showMessageDialog(this, "Cập nhật tồn kho cho vật tư '" + selectedSupply.getName() + "' thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(d, ex.getMessage(), "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         bot.add(btnCancel);
         bot.add(btnSave);
         d.add(bot, BorderLayout.SOUTH);

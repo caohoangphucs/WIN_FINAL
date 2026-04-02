@@ -19,12 +19,16 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import com.example.winfinal.controller.DepartmentController;
+import com.example.winfinal.dto.DepartmentDTO;
+
 /**
  * Modern HR Management View with CRUD and Analytics.
  */
 public class EmployeeView extends JPanel {
 
     private final EmployeeController ctrl = new EmployeeController();
+    private final DepartmentController deptCtrl = new DepartmentController();
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -259,17 +263,33 @@ public class EmployeeView extends JPanel {
 
         JTextField fEmail = new JTextField(isEdit ? dto.getEmail() : "");
         JTextField fPhone = new JTextField(isEdit ? dto.getPhone() : "");
-        JTextField fDept  = new JTextField(isEdit ? (dto.getDepartmentId() != null ? String.valueOf(dto.getDepartmentId()) : "") : "1");
+        
+        JComboBox<String> fDept = new JComboBox<>();
+        try {
+            for (DepartmentDTO dept : deptCtrl.getAllDepartments()) {
+                fDept.addItem(dept.getId() + " - " + dept.getName());
+            }
+        } catch (Exception ignored) {}
+        
+        if (isEdit && dto.getDepartmentId() != null) {
+            String deptPrefix = dto.getDepartmentId() + " -";
+            for (int i = 0; i < fDept.getItemCount(); i++) {
+                if (fDept.getItemAt(i).startsWith(deptPrefix)) {
+                    fDept.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
 
         fCode.setEnabled(!isEdit);
 
         int r = 0;
-        addLabel(d, "Mã nhân viên:", g, r++); d.add(fCode, g);
-        addLabel(d, "Họ tên:", g, r++);      d.add(fName, g);
-        addLabel(d, "Vai trò:", g, r++);     d.add(fRole, g);
-        addLabel(d, "Email:", g, r++);       d.add(fEmail, g);
-        addLabel(d, "Số điện thoại:", g, r++); d.add(fPhone, g);
-        addLabel(d, "ID Phòng ban:", g, r++);  d.add(fDept, g);
+        addGridRow(d, g, "Mã nhân viên:", fCode, r++);
+        addGridRow(d, g, "Họ tên:", fName, r++);
+        addGridRow(d, g, "Vai trò:", fRole, r++);
+        addGridRow(d, g, "Email:", fEmail, r++);
+        addGridRow(d, g, "Số điện thoại:", fPhone, r++);
+        addGridRow(d, g, "Phòng ban:", fDept, r++);
 
         JButton btnSave = UiUtils.createPrimaryButton("Lưu");
         btnSave.addActionListener(e -> {
@@ -280,7 +300,11 @@ public class EmployeeView extends JPanel {
                 n.setRoleCode((String) fRole.getSelectedItem());
                 n.setEmail(fEmail.getText());
                 n.setPhone(fPhone.getText());
-                n.setDepartmentId(Long.parseLong(fDept.getText()));
+                
+                if (fDept.getSelectedItem() != null) {
+                    String selectedDept = fDept.getSelectedItem().toString();
+                    n.setDepartmentId(Long.parseLong(selectedDept.split(" - ")[0]));
+                }
 
                 if (isEdit) ctrl.updateEmployee(n);
                 else ctrl.createEmployee(n);
@@ -297,12 +321,20 @@ public class EmployeeView extends JPanel {
         d.setVisible(true);
     }
 
-    private void addLabel(JDialog d, String text, GridBagConstraints g, int r) {
-        g.gridx = 0; g.gridy = r; g.gridwidth = 2;
-        JLabel l = new JLabel(text);
-        l.setFont(AppTheme.FONT_SUBTITLE);
-        d.add(l, g);
-        g.gridy = r; 
+    private void addGridRow(JDialog d, GridBagConstraints g, String label, JComponent field, int row) {
+        g.gridy = row;
+        g.gridx = 0; g.weightx = 0.3; g.gridwidth = 1;
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(AppTheme.FONT_BODY);
+        d.add(lbl, g);
+        
+        g.gridx = 1; g.weightx = 0.7; g.gridwidth = 1;
+        if(field instanceof JTextField) {
+            field.setFont(AppTheme.FONT_BODY);
+            ((JTextField)field).putClientProperty("JComponent.roundRect", true);
+            field.setPreferredSize(new Dimension(field.getPreferredSize().width, 32));
+        }
+        d.add(field, g);
     }
 
     private JPanel buildActionButtons(int row) {

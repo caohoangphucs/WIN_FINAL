@@ -103,7 +103,7 @@ public class TraceabilityDetailView extends JPanel {
         contentPanel.removeAll();
 
         // 1. Thông tin chung
-        contentPanel.add(createSectionHeader("👤 Thông Tin Chung"));
+        contentPanel.add(createSectionHeader("Thông Tin Chung"));
         
         JPanel infoWrapper = new JPanel(new BorderLayout(25, 0));
         infoWrapper.setOpaque(false);
@@ -157,7 +157,7 @@ public class TraceabilityDetailView extends JPanel {
         contentPanel.add(Box.createVerticalStrut(20));
 
         // 2. Quá trình chăm sóc (Cultivation Log)
-        contentPanel.add(createSectionHeader("🚜 Quá Trình Chăm Sóc"));
+        contentPanel.add(createSectionHeader("Quá Trình Chăm Sóc"));
         String[] careCols = {"Ngày", "Hoạt động", "Loại vật tư", "Người thực hiện"};
         careModel = new DefaultTableModel(careCols, 0);
         
@@ -177,7 +177,7 @@ public class TraceabilityDetailView extends JPanel {
         contentPanel.add(Box.createVerticalStrut(20));
 
         // 3. Sức khỏe cây trồng (Pest Report)
-        contentPanel.add(createSectionHeader("🌱 Sức Khỏe Cây Trồng"));
+        contentPanel.add(createSectionHeader("Sức Khỏe Cây Trồng"));
         String[] healthCols = {"Ngày", "Vấn đề", "Cách xử lý"};
         healthModel = new DefaultTableModel(healthCols, 0);
         
@@ -192,7 +192,7 @@ public class TraceabilityDetailView extends JPanel {
         contentPanel.add(Box.createVerticalStrut(20));
 
         // 4. Tưới tiêu
-        contentPanel.add(createSectionHeader("🚿 Tưới Tiêu"));
+        contentPanel.add(createSectionHeader("Tưới Tiêu"));
         JPanel irrCard = UiUtils.createCard();
         irrCard.setLayout(new BorderLayout());
         
@@ -212,7 +212,7 @@ public class TraceabilityDetailView extends JPanel {
         contentPanel.add(Box.createVerticalStrut(20));
 
         // 5. Đầu ra
-        contentPanel.add(createSectionHeader("🧺 Đầu Ra"));
+        contentPanel.add(createSectionHeader("Đầu Ra"));
         
         List<HarvestRecordDTO> harvests = harvestCtrl.findByLot(lot.getId());
         if (harvests != null && !harvests.isEmpty()) {

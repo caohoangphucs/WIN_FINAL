@@ -104,13 +104,7 @@ public class ReportView extends JPanel {
         h2.setOpaque(false);
         JLabel t2=new JLabel("Báo cáo khách hàng");
         t2.setFont(AppTheme.FONT_SUBTITLE); t2.setForeground(AppTheme.TEXT_PRIMARY);
-        JButton btnDetail=new JButton("Xem chi tiết");
-        btnDetail.setFont(AppTheme.FONT_SMALL);
-        btnDetail.setForeground(new Color(0x2D6A4F));
-        btnDetail.setBorder(BorderFactory.createLineBorder(new Color(0x2D6A4F),1,true));
-        btnDetail.setContentAreaFilled(false); btnDetail.setFocusPainted(false);
-        btnDetail.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        h2.add(t2,BorderLayout.WEST); h2.add(btnDetail,BorderLayout.EAST);
+        h2.add(t2,BorderLayout.WEST);
         String[] custCols={"#","Khách hàng","Số lượng (kg)","Số đơn hàng"};
         customerModel=new DefaultTableModel(custCols,0){@Override public boolean isCellEditable(int r,int c){return false;}};
         JTable tCust=buildTable(customerModel, true);

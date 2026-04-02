@@ -7,7 +7,6 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 import java.util.List;
 
@@ -219,7 +218,6 @@ public class AgriSupplyView extends JPanel {
         detailPanel.removeAll();
 
         String name    = supply.getName() == null ? "N/A" : supply.getName();
-        String stock   = (supply.getStockQty() == null ? "N/A" : supply.getStockQty().toString()) + " " + (supply.getUnit() == null ? "" : supply.getUnit());
 
         JPanel card = makeCard();
         card.setLayout(new BorderLayout(0, 0));

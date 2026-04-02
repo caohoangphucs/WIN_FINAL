@@ -77,6 +77,8 @@ public class HarvestRecordView extends JPanel {
             String grade = val == null ? "" : val.toString();
             Color[] clrs = gradeColor(grade);
             JLabel lbl = UiUtils.createBadge(grade, clrs[0], clrs[1]);
+            lbl.setFont(new Font("Segoe UI", Font.BOLD, 13)); // Improved typography
+            lbl.setBorder(new EmptyBorder(4, 12, 4, 12));    // Richer padding
             lbl.setOpaque(true);
             lbl.setBackground(sel ? AppTheme.BG_TABLE_HEADER : AppTheme.BG_CARD);
             return lbl;
@@ -134,13 +136,34 @@ public class HarvestRecordView extends JPanel {
                 "Chi tiết thu hoạch", JOptionPane.PLAIN_MESSAGE);
     }
 
-    private Color[] gradeColor(String grade) {
-        return switch (grade.toUpperCase()) {
-            case "A" -> new Color[]{new Color(0xDCFCE7), new Color(0x166534)};
-            case "B" -> new Color[]{new Color(0xEFF6FF), new Color(0x1E40AF)};
-            case "C" -> new Color[]{new Color(0xFEF9C3), new Color(0x854D0E)};
-            default  -> new Color[]{new Color(0xF3F4F6), AppTheme.TEXT_SECONDARY};
+    private String translateGrade(String code) {
+        if (code == null || code.isEmpty()) return "N/A";
+        return switch (code.toUpperCase()) {
+            case "GRADE_A", "A" -> "Loại A";
+            case "GRADE_B", "B" -> "Loại B";
+            case "GRADE_C", "C" -> "Loại C";
+            case "GRADE_D", "D" -> "Loại D";
+            default -> code;
         };
+    }
+
+    private String getRawGrade(String label) {
+        if (label == null) return "GRADE_A";
+        return switch (label) {
+            case "Loại A" -> "GRADE_A";
+            case "Loại B" -> "GRADE_B";
+            case "Loại C" -> "GRADE_C";
+            case "Loại D" -> "GRADE_D";
+            default -> "GRADE_A";
+        };
+    }
+
+    private Color[] gradeColor(String grade) {
+        String g = grade == null ? "" : grade.toUpperCase();
+        if (g.contains("A")) return new Color[]{new Color(0xDCFCE7), new Color(0x166534)};
+        if (g.contains("B")) return new Color[]{new Color(0xEFF6FF), new Color(0x1E40AF)};
+        if (g.contains("C")) return new Color[]{new Color(0xFEF9C3), new Color(0x854D0E)};
+        return new Color[]{new Color(0xF3F4F6), AppTheme.TEXT_SECONDARY};
     }
 
     void refreshTable(String lotCode) {
@@ -153,7 +176,7 @@ public class HarvestRecordView extends JPanel {
                 tableModel.addRow(new Object[]{
                     h.getId(), h.getLotId(),
                     h.getHarvestDate() == null ? "" : sdf.format(h.getHarvestDate()),
-                    h.getYieldKg(), h.getQualityGradeCode(),
+                    h.getYieldKg(), translateGrade(h.getQualityGradeCode()),
                     h.getEmployeeId(), h.getCustomerId(), "edit|delete"
                 });
             }
@@ -184,7 +207,8 @@ public class HarvestRecordView extends JPanel {
         JLabel lblGrade = new JLabel("Chất lượng");
         lblGrade.setFont(AppTheme.FONT_BODY);
         lblGrade.setForeground(AppTheme.TEXT_SECONDARY);
-        JComboBox<String> cboGrade = new JComboBox<>(new String[]{"A", "B", "C", "D"});
+        String[] grades = {"Loại A", "Loại B", "Loại C", "Loại D"};
+        JComboBox<String> cboGrade = new JComboBox<>(grades);
         cboGrade.setFont(AppTheme.FONT_BODY);
         form.add(lblGrade);
         form.add(cboGrade);
@@ -195,7 +219,9 @@ public class HarvestRecordView extends JPanel {
             txtYield.setText(existing.getYieldKg() == null ? "" : existing.getYieldKg().toString());
             txtEmp.setText(existing.getEmployeeId() == null ? "" : existing.getEmployeeId().toString());
             txtCust.setText(existing.getCustomerId() == null ? "" : existing.getCustomerId().toString());
-            if (existing.getQualityGradeCode() != null) cboGrade.setSelectedItem(existing.getQualityGradeCode());
+            if (existing.getQualityGradeCode() != null) {
+                cboGrade.setSelectedItem(translateGrade(existing.getQualityGradeCode()));
+            }
         }
 
         JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 14));
@@ -211,7 +237,7 @@ public class HarvestRecordView extends JPanel {
                 dto.setHarvestDate(sdf.parse(txtDate.getText().trim()));
                 dto.setYieldKg(txtYield.getText().trim().isEmpty() ? null
                         : Double.parseDouble(txtYield.getText().trim()));
-                dto.setQualityGradeCode((String) cboGrade.getSelectedItem());
+                dto.setQualityGradeCode(getRawGrade((String) cboGrade.getSelectedItem()));
                 dto.setEmployeeId(txtEmp.getText().trim().isEmpty() ? null
                         : Long.parseLong(txtEmp.getText().trim()));
                 dto.setCustomerId(txtCust.getText().trim().isEmpty() ? null

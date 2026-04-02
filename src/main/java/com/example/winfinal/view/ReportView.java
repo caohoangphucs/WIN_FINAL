@@ -14,12 +14,11 @@ import java.util.List;
 
 /**
  * Report – tận dụng TẤT CẢ queries từ DAO:
- * [2.5] YieldByFarm          → Grouped bar chart (card 1)
+ * [Consumption] Tiêu thụ vật tư hàng tháng → Line chart (card 1)
  * [6.4] CustomerYieldStats   → Customer ranking table (card 2)
  * [6.6] CostEstimateByLot    → Finance table (card 3)
  * [3.3] TotalCostBySupplier  → Cost chart (card 3 bottom)
  * [6.2] TopYieldingLots      → Top lots table
- * [6.5] MonthlyRainStats     → Weather chart (card 4)
  */
 public class ReportView extends JPanel {
 
@@ -29,7 +28,6 @@ public class ReportView extends JPanel {
     private final WeatherLogController    weatherCtrl = new WeatherLogController();
 
     private DefaultTableModel customerModel, financeModel;
-    private BarChartLive farmYieldChart;
     private WeatherLiveChart weatherChart;
 
     public ReportView() {
@@ -86,14 +84,17 @@ public class ReportView extends JPanel {
         grid.setBackground(AppTheme.BG_MAIN);
         grid.setBorder(new EmptyBorder(0,0,0,0));
 
-        // Card 1 – [2.5] Sản lượng theo trang trại
+        // Card 1 – Tiêu thụ vật tư hàng tháng (migrated from Materials)
         JPanel c1=makeCard();
         c1.setLayout(new BorderLayout(0,8));
-        JLabel t1=new JLabel("Báo cáo Hiệu Quả  (Sản lượng theo trang trại)");
+        JPanel h1=new JPanel(new BorderLayout(0,2)); h1.setOpaque(false);
+        JLabel t1=new JLabel("Báo cáo Tiêu thụ Vật tư");
         t1.setFont(AppTheme.FONT_SUBTITLE); t1.setForeground(AppTheme.TEXT_PRIMARY);
-        farmYieldChart=new BarChartLive();
-        c1.add(t1,BorderLayout.NORTH);
-        c1.add(farmYieldChart,BorderLayout.CENTER);
+        JLabel sub1=new JLabel("Mức độ tiêu thụ vật tư hàng tháng");
+        sub1.setFont(AppTheme.FONT_SMALL); sub1.setForeground(AppTheme.TEXT_SECONDARY);
+        h1.add(t1,BorderLayout.NORTH); h1.add(sub1,BorderLayout.CENTER);
+        c1.add(h1,BorderLayout.NORTH);
+        c1.add(new ConsumptionLineChart(),BorderLayout.CENTER);
         grid.add(c1);
 
         // Card 2 – [6.4] Khách hàng
@@ -169,12 +170,10 @@ public class ReportView extends JPanel {
 
     private void loadData() {
         new SwingWorker<Void,Void>(){
-            List<Object[]> yieldByFarm, custStats, topLots, costBySupplier, costByLot;
+            List<Object[]> custStats, topLots, costBySupplier, costByLot;
 
             @Override
             protected Void doInBackground(){
-                // [2.5] Sản lượng theo trang trại
-                try{ yieldByFarm=harvestCtrl.getYieldByFarm(); }catch(Exception e){yieldByFarm=List.of();}
                 // [6.4] Thống kê khách hàng
                 try{ custStats=harvestCtrl.getCustomerYieldStats(); }catch(Exception e){custStats=List.of();}
                 // [6.2] Top lô sản lượng cao
@@ -188,18 +187,6 @@ public class ReportView extends JPanel {
 
             @Override
             protected void done(){
-                // [2.5] → Bar chart (farm yield)
-                if(yieldByFarm!=null && !yieldByFarm.isEmpty()){
-                    int n=yieldByFarm.size();
-                    String[] lbl=new String[n]; double[] val=new double[n];
-                    for(int i=0;i<n;i++){
-                        lbl[i]=yieldByFarm.get(i)[0]==null?"N/A":yieldByFarm.get(i)[0].toString();
-                        val[i]=yieldByFarm.get(i)[1]==null?0:((Number)yieldByFarm.get(i)[1]).doubleValue();
-                    }
-                    farmYieldChart.setData(lbl,val);
-                } else {
-                    farmYieldChart.setData(new String[]{"Chưa có dữ liệu"}, new double[]{0});
-                }
 
                 // [6.4] → Customer table
                 customerModel.setRowCount(0);
@@ -329,51 +316,73 @@ public class ReportView extends JPanel {
     // Chart panels (live-updatable)
     // ══════════════════════════════════════════════════════════
 
-    /** Grouped/horizontal bar chart for farm yield */
-    static class BarChartLive extends JPanel {
-        private String[] labels={}; private double[] values={};
-        private final Color[] COLORS={
-            new Color(0x2D6A4F),new Color(0xE88C2A),new Color(0x4895EF),
-            new Color(0x9B72CF),new Color(0x52B788),new Color(0xE63946)};
-        BarChartLive(){setOpaque(false);}
-        void setData(String[] l,double[] v){labels=l;values=v;repaint();}
+    /** Line chart for monthly material consumption (migrated from AgriSupplyView) */
+    static class ConsumptionLineChart extends JPanel {
+        private final int[] values = {18,25,20,12,28,20,24,19};
+        private final String[] labels = {"Th10","Th11","Th12","Th1","Th2","Th3","Th4","Th5"};
 
-        @Override protected void paintComponent(Graphics g){
+        ConsumptionLineChart() { setOpaque(false); }
+
+        @Override protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if(labels==null||labels.length==0){return;}
-            Graphics2D g2=(Graphics2D)g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
-            int padL=46,padR=8,padT=20,padB=34;
+            Graphics2D g2 = (Graphics2D)g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int padL=34,padR=10,padT=16,padB=28;
             int W=getWidth()-padL-padR, H=getHeight()-padT-padB;
-            int n=labels.length;
-            double maxV=Arrays.stream(values).max().orElse(1);
-            int barGap=10, barW=Math.max(8,W/n-barGap);
+            int maxV=30, n=values.length;
+            if (n<2){g2.dispose();return;}
 
-            // Y grid
+            // Grid lines
             g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-            for(int i=0;i<=4;i++){
-                int y=padT+H*i/4; g2.setColor(new Color(0xEEEEEE)); g2.drawLine(padL,y,padL+W,y);
-                g2.setColor(AppTheme.TEXT_SECONDARY);
-                String lbl=String.format("%.0f",maxV*(4-i)/4);
-                g2.drawString(lbl,2,y+4);
+            g2.setColor(new Color(0xF3F4F6));
+            for (int i=0;i<=5;i++) { int y=padT+H*i/5; g2.drawLine(padL,y,padL+W,y); }
+            g2.setColor(AppTheme.TEXT_MUTED);
+            for (int i=0;i<=5;i++) {
+                int v=(5-i)*maxV/5; int y=padT+H*i/5;
+                g2.drawString(String.valueOf(v),2,y+4);
             }
-            g2.setColor(AppTheme.TEXT_SECONDARY);
-            g2.drawString("Sản lượng",padL,padT-4);
 
-            for(int i=0;i<n;i++){
-                int bH=(int)(values[i]/maxV*H);
-                int x=padL+i*(barW+barGap), y=padT+H-bH;
-                g2.setColor(COLORS[i%COLORS.length]);
-                g2.fill(new RoundRectangle2D.Double(x,y,barW,bH,5,5));
-                // label
-                g2.setColor(AppTheme.TEXT_PRIMARY); g2.setFont(new Font("Segoe UI",Font.BOLD,10));
-                String vs=String.format("%.0f",values[i]);
-                g2.drawString(vs,x+(barW-g2.getFontMetrics().stringWidth(vs))/2,y-3);
-                // x label
-                g2.setColor(AppTheme.TEXT_SECONDARY); g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-                String lbl=labels[i].length()>10?labels[i].substring(0,9)+"…":labels[i];
-                g2.drawString(lbl,x+(barW-g2.getFontMetrics().stringWidth(lbl))/2,padT+H+16);
+            // Compute point positions
+            int[] xs=new int[n], ys=new int[n];
+            for (int i=0;i<n;i++) {
+                xs[i]=padL+i*W/(n-1);
+                ys[i]=padT+H-(int)((double)values[i]/maxV*H);
             }
+
+            // Filled area
+            int[] fx=new int[n+2], fy=new int[n+2];
+            System.arraycopy(xs,0,fx,0,n); System.arraycopy(ys,0,fy,0,n);
+            fx[n]=xs[n-1]; fy[n]=padT+H; fx[n+1]=xs[0]; fy[n+1]=padT+H;
+            Composite orig=g2.getComposite();
+            g2.setColor(new Color(0x2D6A4F));
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,0.12f));
+            g2.fillPolygon(fx,fy,n+2);
+            g2.setComposite(orig);
+
+            // Line
+            g2.setColor(new Color(0x2D6A4F));
+            g2.setStroke(new BasicStroke(2.2f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
+            for (int i=0;i<n-1;i++) g2.drawLine(xs[i],ys[i],xs[i+1],ys[i+1]);
+
+            // Dots & labels
+            for (int i=0;i<n;i++) {
+                g2.setColor(Color.WHITE); g2.fillOval(xs[i]-4,ys[i]-4,8,8);
+                g2.setColor(new Color(0x2D6A4F)); g2.drawOval(xs[i]-4,ys[i]-4,8,8);
+                // value label above dot
+                g2.setFont(new Font("Segoe UI",Font.BOLD,9));
+                g2.setColor(AppTheme.TEXT_PRIMARY);
+                String vs=String.valueOf(values[i]);
+                g2.drawString(vs,xs[i]-g2.getFontMetrics().stringWidth(vs)/2,ys[i]-6);
+                // month label below
+                g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
+                g2.setColor(AppTheme.TEXT_MUTED);
+                g2.drawString(labels[i],xs[i]-g2.getFontMetrics().stringWidth(labels[i])/2,padT+H+16);
+            }
+
+            // Y-axis label
+            g2.setColor(AppTheme.TEXT_SECONDARY);
+            g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
+            g2.drawString("Lít",2,padT-2);
             g2.dispose();
         }
     }

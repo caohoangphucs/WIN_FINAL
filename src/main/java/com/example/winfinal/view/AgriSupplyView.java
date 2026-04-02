@@ -25,8 +25,7 @@ public class AgriSupplyView extends JPanel {
 
     // Right panel content areas
     private JPanel detailPanel;
-    private JPanel tabImport, tabConsumption, tabCost;
-    private JButton tabBtnImport, tabBtnConsume, tabBtnCost;
+    private JButton tabBtnImport, tabBtnCost;
     private CardLayout tabLayout;
     private JPanel tabContent;
 
@@ -257,9 +256,8 @@ public class AgriSupplyView extends JPanel {
         tabRow.setBorder(new EmptyBorder(4, 4, 4, 4));
         
         tabBtnImport  = makeTabBtn("Lịch sử nhập", true);
-        tabBtnConsume = makeTabBtn("Tiêu thụ", false);
         tabBtnCost    = makeTabBtn("Chi phí", false);
-        tabRow.add(tabBtnImport); tabRow.add(tabBtnConsume); tabRow.add(tabBtnCost);
+        tabRow.add(tabBtnImport); tabRow.add(tabBtnCost);
 
         // Container margin
         JPanel tabOuter = new JPanel(new BorderLayout());
@@ -275,11 +273,9 @@ public class AgriSupplyView extends JPanel {
         tabContent = new JPanel(tabLayout);
         tabContent.setOpaque(false);
         tabContent.add(buildImportTab(supply), "import");
-        tabContent.add(buildConsumeTab(),    "consume");
         tabContent.add(buildCostTab(),       "cost");
 
         tabBtnImport.addActionListener(e -> { tabLayout.show(tabContent,"import");  activateTab(tabBtnImport); });
-        tabBtnConsume.addActionListener(e ->{ tabLayout.show(tabContent,"consume"); activateTab(tabBtnConsume); });
         tabBtnCost.addActionListener(e ->   { tabLayout.show(tabContent,"cost");    activateTab(tabBtnCost); });
 
         center.add(tabContent, BorderLayout.CENTER);
@@ -329,16 +325,6 @@ public class AgriSupplyView extends JPanel {
         return p;
     }
 
-    private JPanel buildConsumeTab() {
-        JPanel p = new JPanel(new BorderLayout(0,6));
-        p.setOpaque(false);
-        JLabel header = new JLabel("Mức độ tiêu thụ hàng tháng");
-        header.setFont(AppTheme.FONT_SUBTITLE);
-        header.setForeground(AppTheme.TEXT_SECONDARY);
-        p.add(header, BorderLayout.NORTH);
-        p.add(new LineMiniChart(), BorderLayout.CENTER);
-        return p;
-    }
 
     private JPanel buildCostTab() {
         JPanel p = new JPanel(new BorderLayout(0,6));
@@ -431,7 +417,7 @@ public class AgriSupplyView extends JPanel {
     }
 
     private void activateTab(JButton active) {
-        for (JButton b : new JButton[]{tabBtnImport, tabBtnConsume, tabBtnCost}) {
+        for (JButton b : new JButton[]{tabBtnImport, tabBtnCost}) {
             boolean isActive = (b == active);
             b.setBackground(isActive ? AppTheme.PRIMARY : new Color(0xF1F5F9));
             b.setForeground(isActive ? Color.WHITE : AppTheme.TEXT_SECONDARY);
@@ -519,67 +505,6 @@ public class AgriSupplyView extends JPanel {
                 p.add(dot);
             }
             return p;
-        }
-    }
-
-    // ── Line mini chart ───────────────────────────────────────
-
-    static class LineMiniChart extends JPanel {
-        private final int[] values = {18,25,20,12,28,20,24,19};
-        private final String[] labels = {"Th10","Th11","Th2","Th3","Th1","Th2","Th3","Th4"};
-
-        LineMiniChart() { setOpaque(false); setPreferredSize(new Dimension(0, 150)); }
-
-        @Override protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D)g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int padL=30,padR=10,padT=14,padB=26;
-            int W=getWidth()-padL-padR, H=getHeight()-padT-padB;
-            int maxV=30, n=values.length;
-            if (n<2){g2.dispose();return;}
-
-            // Grid
-            g2.setColor(new Color(0xF3F4F6));
-            for (int i=0;i<=5;i++) { int y=padT+H*i/5; g2.drawLine(padL,y,padL+W,y); }
-            g2.setColor(AppTheme.TEXT_MUTED);
-            g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-            for (int i=0;i<=5;i++) { int v=(5-i)*maxV/5; int y=padT+H*i/5; g2.drawString(String.valueOf(v),2,y+4); }
-
-            int[]xs=new int[n], ys=new int[n];
-            for (int i=0;i<n;i++) {
-                xs[i]=padL+i*W/(n-1);
-                ys[i]=padT+H-(int)((double)values[i]/maxV*H);
-            }
-            // area
-            int[] fx=new int[n+2], fy=new int[n+2];
-            System.arraycopy(xs,0,fx,0,n); System.arraycopy(ys,0,fy,0,n);
-            fx[n]=xs[n-1];fy[n]=padT+H; fx[n+1]=xs[0];fy[n+1]=padT+H;
-            g2.setColor(new Color(0xE63946));
-            Composite orig = g2.getComposite();
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.15f));
-            g2.fillPolygon(fx,fy,n+2);
-            g2.setComposite(orig);
-
-            // line
-            g2.setColor(new Color(0xE63946));
-            g2.setStroke(new BasicStroke(2f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
-            for (int i=0;i<n-1;i++) g2.drawLine(xs[i],ys[i],xs[i+1],ys[i+1]);
-
-            // dots
-            for (int i=0;i<n;i++) {
-                g2.setColor(Color.WHITE); g2.fillOval(xs[i]-4,ys[i]-4,8,8);
-                g2.setColor(new Color(0xE63946)); g2.drawOval(xs[i]-4,ys[i]-4,8,8);
-                g2.setColor(AppTheme.TEXT_MUTED);
-                g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-                g2.drawString(labels[i], xs[i]-g2.getFontMetrics().stringWidth(labels[i])/2, padT+H+16);
-            }
-
-            // Y label
-            g2.setColor(AppTheme.TEXT_SECONDARY);
-            g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-            g2.drawString("Lít",2,padT-2);
-            g2.dispose();
         }
     }
 }

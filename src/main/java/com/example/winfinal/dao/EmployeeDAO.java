@@ -82,7 +82,7 @@ public class EmployeeDAO extends BaseDAO<Employee> {
         }
     }
 
-    // [8.2] Xếp hạng nhân viên theo khối lượng thu hoạch (Năng suất)
+    // [8.2] Xếp hạng nhân viên theo khối lượng thu hoạch (Năng suất - chỉ WORKER)
     public List<Object[]> getHarvestPerformance() {
         EntityManager em = getEntityManager();
         try {
@@ -90,9 +90,10 @@ public class EmployeeDAO extends BaseDAO<Employee> {
                 "SELECT e.fullName, SUM(h.yieldKg) " +
                 "FROM HarvestRecord h " +
                 "JOIN h.employee e " +
+                "WHERE e.role.code = 'WORKER' " +
                 "GROUP BY e.id, e.fullName " +
                 "ORDER BY SUM(h.yieldKg) DESC", Object[].class)
-                .setMaxResults(10) // Top 10
+                .setMaxResults(10) // Top 10 WORKER
                 .getResultList();
         } finally {
             em.close();

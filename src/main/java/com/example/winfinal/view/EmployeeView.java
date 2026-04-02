@@ -99,7 +99,7 @@ public class EmployeeView extends JPanel {
 
         // Bar: Harvest performance
         DefaultCategoryDataset barDataset = new DefaultCategoryDataset();
-        JFreeChart barChart = ChartFactory.createBarChart("Top 10 Năng suất Thu hoạch (kg)", "Nhân viên", "Tổng sản lượng", barDataset);
+        JFreeChart barChart = ChartFactory.createBarChart("Top 10 Năng suất Thu hoạch (Công nhân)", "Nhân viên", "Tổng sản lượng (kg)", barDataset);
         styleBarChart(barChart);
         barPanel = new ChartPanel(barChart);
         barPanel.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT));

@@ -29,37 +29,41 @@ public class TraceabilityView extends JPanel {
     public TraceabilityView() {
         setLayout(new BorderLayout(0, 0));
         setBackground(AppTheme.BG_MAIN);
+        setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        add(buildBanner(),  BorderLayout.NORTH);
+        add(buildHeader(),  BorderLayout.NORTH);
         add(buildMain(),    BorderLayout.CENTER);
     }
 
     // ── Blue banner ───────────────────────────────────────────
 
-    private JPanel buildBanner() {
-        JPanel banner = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 16)) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(new Color(0x1B4F9B));
-                g2.fillRect(0,0,getWidth(),getHeight());
-                g2.dispose();
-            }
-        };
-        banner.setOpaque(false);
-        banner.setPreferredSize(new Dimension(0, 70));
+    private JPanel buildHeader() {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setOpaque(false);
+        bar.setBorder(new EmptyBorder(0,0,16,0));
 
-        JLabel title = new JLabel("TRUY XUẤT NGUỒN GỐC");
+        JLabel title = new JLabel("Truy xuất nguồn gốc");
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        title.setForeground(Color.WHITE);
+        title.setForeground(AppTheme.TEXT_PRIMARY);
 
-        banner.add(title);
-        return banner;
+        JLabel sub = new JLabel("Theo dõi lịch sử và thông tin chi tiết lô sản xuất");
+        sub.setFont(AppTheme.FONT_BODY);
+        sub.setForeground(AppTheme.TEXT_SECONDARY);
+
+        JPanel left = new JPanel();
+        left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+        left.setOpaque(false);
+        left.add(title);
+        left.add(sub);
+
+        bar.add(left, BorderLayout.WEST);
+        return bar;
     }
 
     private JPanel buildMain() {
         JPanel main = new JPanel(new BorderLayout(0, 14));
         main.setBackground(AppTheme.BG_MAIN);
-        main.setBorder(new EmptyBorder(18, 24, 18, 24));
+        main.setBorder(new EmptyBorder(0,0,0,0));
 
         // Search row
         JPanel searchRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));

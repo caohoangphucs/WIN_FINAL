@@ -35,6 +35,7 @@ public class ReportView extends JPanel {
     public ReportView() {
         setLayout(new BorderLayout(0,0));
         setBackground(AppTheme.BG_MAIN);
+        setBorder(new EmptyBorder(20, 20, 20, 20));
         buildUi();
         loadData();
     }
@@ -48,30 +49,33 @@ public class ReportView extends JPanel {
     // ── Top bar ───────────────────────────────────────────────
 
     private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout()){
-            @Override protected void paintComponent(Graphics g){
-                g.setColor(new Color(0x2D6A4F));
-                g.fillRect(0,0,getWidth(),getHeight());
-            }
-        };
+        JPanel bar = new JPanel(new BorderLayout());
         bar.setOpaque(false);
-        bar.setPreferredSize(new Dimension(0,50));
-        bar.setBorder(new EmptyBorder(0,18,0,18));
-        JLabel title=new JLabel("Báo cáo & Phân tích");
-        title.setFont(new Font("Segoe UI",Font.BOLD,17));
-        title.setForeground(Color.WHITE);
-        JButton btnRefresh=new JButton("Làm mới");
-        btnRefresh.setFont(AppTheme.FONT_BODY);
-        btnRefresh.setForeground(Color.WHITE);
-        btnRefresh.setBackground(new Color(0x40916C));
-        btnRefresh.setBorderPainted(false);
-        btnRefresh.setFocusPainted(false);
-        btnRefresh.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnRefresh.addActionListener(e->loadData());
-        JPanel right=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,12));
-        right.setOpaque(false); right.add(btnRefresh);
-        bar.add(title,BorderLayout.WEST);
-        bar.add(right,BorderLayout.EAST);
+        bar.setBorder(new EmptyBorder(0,0,16,0));
+
+        JLabel title = new JLabel("Báo cáo & Phân tích");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(AppTheme.TEXT_PRIMARY);
+
+        JLabel sub = new JLabel("Tổng hợp dữ liệu và thống kê hoạt động");
+        sub.setFont(AppTheme.FONT_BODY);
+        sub.setForeground(AppTheme.TEXT_SECONDARY);
+
+        JPanel left = new JPanel();
+        left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+        left.setOpaque(false);
+        left.add(title);
+        left.add(sub);
+
+        JButton btnRefresh = UiUtils.createSecondaryButton("Làm mới");
+        btnRefresh.addActionListener(e -> loadData());
+        
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        right.setOpaque(false);
+        right.add(btnRefresh);
+
+        bar.add(left, BorderLayout.WEST);
+        bar.add(right, BorderLayout.EAST);
         return bar;
     }
 
@@ -80,7 +84,7 @@ public class ReportView extends JPanel {
     private JPanel buildGrid() {
         JPanel grid=new JPanel(new GridLayout(2,2,12,12));
         grid.setBackground(AppTheme.BG_MAIN);
-        grid.setBorder(new EmptyBorder(14,14,14,14));
+        grid.setBorder(new EmptyBorder(0,0,0,0));
 
         // Card 1 – [2.5] Sản lượng theo trang trại
         JPanel c1=makeCard();

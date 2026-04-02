@@ -37,6 +37,7 @@ public class AgriSupplyView extends JPanel {
     public AgriSupplyView() {
         setLayout(new BorderLayout(0,0));
         setBackground(AppTheme.BG_MAIN);
+        setBorder(new EmptyBorder(20, 20, 20, 20));
 
         add(buildTopBar(),   BorderLayout.NORTH);
         add(buildBody(),     BorderLayout.CENTER);
@@ -47,30 +48,34 @@ public class AgriSupplyView extends JPanel {
     // ── Top header bar (dark navy) ────────────────────────────
 
     private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
-                g.setColor(new Color(0x1B355E));
-                g.fillRect(0,0,getWidth(),getHeight());
-            }
-        };
+        JPanel bar = new JPanel(new BorderLayout());
         bar.setOpaque(false);
-        bar.setPreferredSize(new Dimension(0,52));
-        bar.setBorder(new EmptyBorder(0,18,0,18));
+        bar.setBorder(new EmptyBorder(0,0,16,0));
 
         JLabel title = new JLabel("Quản lý kho vật tư");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(AppTheme.TEXT_PRIMARY);
+        
+        JLabel sub = new JLabel("Tổng quan và chi tiết xuất nhập");
+        sub.setFont(AppTheme.FONT_BODY);
+        sub.setForeground(AppTheme.TEXT_SECONDARY);
 
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 14));
+        JPanel left = new JPanel();
+        left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+        left.setOpaque(false);
+        left.add(title);
+        left.add(sub);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 0));
         right.setOpaque(false);
-        for (String ico : new String[]{"?", "Bell", "Set", "="}) {
+        for (String ico : new String[]{"❔", "🔔", "⚙", "≡"}) {
             JLabel ic = new JLabel(ico);
-            ic.setForeground(new Color(0xBFD3E6));
+            ic.setForeground(AppTheme.TEXT_SECONDARY);
             ic.setFont(AppTheme.FONT_BODY);
             right.add(ic);
         }
 
-        bar.add(title, BorderLayout.WEST);
+        bar.add(left, BorderLayout.WEST);
         bar.add(right, BorderLayout.EAST);
         return bar;
     }
@@ -80,7 +85,7 @@ public class AgriSupplyView extends JPanel {
     private JPanel buildBody() {
         JPanel body = new JPanel(new BorderLayout(0,0));
         body.setBackground(AppTheme.BG_MAIN);
-        body.setBorder(new EmptyBorder(12,14,12,14));
+        body.setBorder(new EmptyBorder(0,0,0,0));
 
         body.add(buildFilterRow(),  BorderLayout.NORTH);
         body.add(buildSplitPanel(), BorderLayout.CENTER);

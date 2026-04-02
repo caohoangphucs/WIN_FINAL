@@ -61,17 +61,7 @@ public class AgriSupplyView extends JPanel {
         left.add(title);
         left.add(sub);
 
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 0));
-        right.setOpaque(false);
-        for (String ico : new String[] { "❔", "🔔", "⚙", "≡" }) {
-            JLabel ic = new JLabel(ico);
-            ic.setForeground(AppTheme.TEXT_SECONDARY);
-            ic.setFont(AppTheme.FONT_BODY);
-            right.add(ic);
-        }
-
         bar.add(left, BorderLayout.WEST);
-        bar.add(right, BorderLayout.EAST);
         return bar;
     }
 

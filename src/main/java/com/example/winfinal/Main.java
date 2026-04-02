@@ -1,6 +1,7 @@
 package com.example.winfinal;
 
 import com.example.winfinal.dao.BaseDAO;
+import com.example.winfinal.view.LoginView;
 import com.example.winfinal.view.MainView;
 import com.formdev.flatlaf.FlatLightLaf;
 import jakarta.persistence.EntityManager;
@@ -35,8 +36,11 @@ public class Main {
         BaseDAO.setEntityManagerFactory(emf);
 
         SwingUtilities.invokeLater(() -> {
-            MainView mainView = new MainView();
-            mainView.setVisible(true);
+            LoginView loginView = new LoginView(() -> {
+                MainView mainView = new MainView();
+                mainView.setVisible(true);
+            });
+            loginView.setVisible(true);
         });
     }
 

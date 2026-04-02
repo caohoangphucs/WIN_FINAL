@@ -2,8 +2,10 @@ package com.example.winfinal.view;
 
 import com.example.winfinal.controller.PestReportController;
 import com.example.winfinal.controller.ProductionLotController;
+import com.example.winfinal.controller.EmployeeController;
 import com.example.winfinal.dto.PestReportDTO;
 import com.example.winfinal.dto.ProductionLotDTO;
+import com.example.winfinal.dto.EmployeeDTO;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -28,6 +30,7 @@ public class PestReportView extends JPanel {
 
     private final PestReportController ctrl = new PestReportController();
     private final ProductionLotController lotCtrl = new ProductionLotController();
+    private final EmployeeController empCtrl = new EmployeeController();
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -69,7 +72,7 @@ public class PestReportView extends JPanel {
         filterBar.add(cbLot);
 
         filterBar.add(new JLabel("Mức độ:"));
-        cbSeverity = new JComboBox<>(new String[]{"Tất cả", "CRITICAL", "HIGH", "MEDIUM", "LOW"});
+        cbSeverity = new JComboBox<>(new String[]{"Tất cả", "Nghiêm trọng", "Cao", "Trung bình", "Thấp"});
         cbSeverity.setPreferredSize(new Dimension(110, 30));
         filterBar.add(cbSeverity);
 
@@ -137,10 +140,10 @@ public class PestReportView extends JPanel {
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
-        plot.setSectionPaint("CRITICAL", new Color(0xE11D48));
-        plot.setSectionPaint("HIGH",     new Color(0xD97706));
-        plot.setSectionPaint("MEDIUM",   new Color(0x2563EB));
-        plot.setSectionPaint("LOW",      new Color(0x16A34A));
+        plot.setSectionPaint("Nghiêm trọng", new Color(0xE11D48));
+        plot.setSectionPaint("Cao",     new Color(0xD97706));
+        plot.setSectionPaint("Trung bình",   new Color(0x2563EB));
+        plot.setSectionPaint("Thấp",      new Color(0x16A34A));
     }
 
     private void styleLineChart(JFreeChart chart) {
@@ -173,7 +176,7 @@ public class PestReportView extends JPanel {
                     
                     if (col == 3) { // Severity badges
                         String sev = String.valueOf(val);
-                        c.setText(sev);
+                        c.setText(translateSeverity(sev));
                         c.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         c.setForeground(severityColor(sev)[1]);
                         c.setBackground(severityColor(sev)[0]);
@@ -226,7 +229,7 @@ public class PestReportView extends JPanel {
                 try {
                     List<PestReportDTO> list = get();
                     String selLot = (String) cbLot.getSelectedItem();
-                    String selSev = (String) cbSeverity.getSelectedItem();
+                    String selSev = getSeverityCode((String) cbSeverity.getSelectedItem());
 
                     for (var p : list) {
                         if (!"Tất cả lô".equals(selLot) && !selLot.equals(p.getLotCode())) continue;
@@ -265,7 +268,8 @@ public class PestReportView extends JPanel {
                     pieDataset.clear();
                     List<Object[]> pieData = (List<Object[]>) res.get("pie");
                     for (Object[] r : pieData) {
-                        pieDataset.setValue(String.valueOf(r[0]), (Number) r[1]);
+                        String transMode = translateSeverity(String.valueOf(r[0]));
+                        pieDataset.setValue(transMode, (Number) r[1]);
                     }
 
                     // Update Line
@@ -284,7 +288,7 @@ public class PestReportView extends JPanel {
 
     private void showAddDialog() {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm Báo cáo Sâu bệnh", true);
-        d.setSize(450, 450);
+        d.setSize(450, 500);
         d.setLocationRelativeTo(this);
         d.setLayout(new BorderLayout());
         
@@ -309,16 +313,23 @@ public class PestReportView extends JPanel {
         JTextField txtDamage = new JTextField();
         
         // Severity
-        JComboBox<String> cbFormSev = new JComboBox<>(new String[]{"CRITICAL", "HIGH", "MEDIUM", "LOW"});
+        JComboBox<String> cbFormSev = new JComboBox<>(new String[]{"Nghiêm trọng", "Cao", "Trung bình", "Thấp"});
         
         // Treatment
         JTextField txtTreatment = new JTextField();
+        
+        // Employee (Reporter)
+        JComboBox<String> cbFormEmp = new JComboBox<>();
+        try {
+            for (EmployeeDTO e : empCtrl.getAllEmployees()) cbFormEmp.addItem(e.getId() + " - " + e.getFullName());
+        } catch (Exception ignored) {}
 
         addGridRow(form, g, "Lô SX:", cbFormLot, 0);
         addGridRow(form, g, "Tên sâu bệnh:", txtName, 1);
         addGridRow(form, g, "Mức độ thiệt hại (%):", txtDamage, 2);
-        addGridRow(form, g, "Nghiêm trọng:", cbFormSev, 3);
+        addGridRow(form, g, "Mức độ:", cbFormSev, 3);
         addGridRow(form, g, "Biện pháp xử lý:", txtTreatment, 4);
+        addGridRow(form, g, "Người báo cáo:", cbFormEmp, 5);
 
         d.add(form, BorderLayout.CENTER);
 
@@ -338,9 +349,12 @@ public class PestReportView extends JPanel {
                 }
                 p.setPestName(txtName.getText().trim());
                 p.setDamagePct(Double.parseDouble(txtDamage.getText().trim()));
-                p.setSeverityCode(cbFormSev.getSelectedItem().toString());
+                p.setSeverityCode(getSeverityCode(cbFormSev.getSelectedItem().toString()));
                 p.setTreatment(txtTreatment.getText().trim());
-                p.setEmployeeId(2L); // Default or mocked currently configured employee
+                if (cbFormEmp.getSelectedItem() != null) {
+                    String selEmp = cbFormEmp.getSelectedItem().toString();
+                    p.setEmployeeId(Long.parseLong(selEmp.split(" - ")[0]));
+                }
 
                 ctrl.createReport(p);
                 d.dispose();
@@ -366,10 +380,31 @@ public class PestReportView extends JPanel {
         g.gridx = 1; g.weightx = 0.7;
         if(field instanceof JTextField) {
             field.setFont(AppTheme.FONT_BODY);
-            field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AppTheme.BORDER, 1, true),
-                new EmptyBorder(5, 10, 5, 10)));
+            field.putClientProperty("JComponent.roundRect", true);
+            field.setPreferredSize(new Dimension(field.getPreferredSize().width, 32));
         }
         form.add(field, g);
+    }
+
+    private String translateSeverity(String code) {
+        if (code == null) return "";
+        return switch (code.toUpperCase()) {
+            case "CRITICAL" -> "Nghiêm trọng";
+            case "HIGH"     -> "Cao";
+            case "MEDIUM"   -> "Trung bình";
+            case "LOW"      -> "Thấp";
+            default         -> code;
+        };
+    }
+
+    private String getSeverityCode(String translated) {
+        if (translated == null) return "";
+        return switch (translated) {
+            case "Nghiêm trọng" -> "CRITICAL";
+            case "Cao"          -> "HIGH";
+            case "Trung bình"   -> "MEDIUM";
+            case "Thấp"         -> "LOW";
+            default             -> translated;
+        };
     }
 }

@@ -621,9 +621,8 @@ public class AgriSupplyView extends JPanel {
         g.gridx = 1; g.weightx = 0.7;
         if(field instanceof JTextField) {
             field.setFont(AppTheme.FONT_BODY);
-            field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AppTheme.BORDER, 1, true),
-                new EmptyBorder(5, 10, 5, 10)));
+            field.putClientProperty("JComponent.roundRect", true);
+            field.setPreferredSize(new Dimension(field.getPreferredSize().width, 32));
         }
         form.add(field, g);
     }

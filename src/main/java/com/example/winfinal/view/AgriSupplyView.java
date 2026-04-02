@@ -315,12 +315,6 @@ public class AgriSupplyView extends JPanel {
         JPanel s1 = buildImportTab(supply);
         s1.setAlignmentX(Component.LEFT_ALIGNMENT);
         contentPanel.add(s1);
-        contentPanel.add(Box.createVerticalStrut(24)); // Visual separation
-
-        // Section 2: Chi phí
-        JPanel s2 = buildCostTab();
-        s2.setAlignmentX(Component.LEFT_ALIGNMENT);
-        contentPanel.add(s2);
 
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
@@ -370,29 +364,6 @@ public class AgriSupplyView extends JPanel {
 
         JTable t = buildSimpleTable(cols, null);
         t.setModel(m);
-        JScrollPane sc = new JScrollPane(t);
-        sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
-        p.add(header, BorderLayout.NORTH);
-        p.add(sc, BorderLayout.CENTER);
-        return p;
-    }
-
-    private JPanel buildCostTab() {
-        JPanel p = new JPanel(new BorderLayout(0, 8));
-        p.setOpaque(false);
-        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
-
-        JLabel header = new JLabel("Chi phí");
-        header.setFont(AppTheme.FONT_SUBTITLE);
-        header.setForeground(AppTheme.TEXT_PRIMARY);
-        String[] cols = { "Nhà cung cấp", "Số lượng", "Thành tiền" };
-        String[][] data = {
-                { "Công Ty Nông Dược", "150 L", "7,500,000 đ" },
-                { "Hóa Chất XYZ", "80 L", "4,000,000 đ" },
-                { "Công Ty Việt Nông", "60 L", "3,000,000 đ" },
-                { "Tổng cộng:", "", "14,500,000 đ" },
-        };
-        JTable t = buildSimpleTable(cols, data);
         JScrollPane sc = new JScrollPane(t);
         sc.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
         p.add(header, BorderLayout.NORTH);

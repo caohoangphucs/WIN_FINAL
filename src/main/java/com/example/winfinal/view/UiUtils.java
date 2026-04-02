@@ -195,11 +195,16 @@ public final class UiUtils {
 
     // ── Form field row ────────────────────────────────────────
 
-    public static JTextField addFormField(JPanel panel, String labelText) {
+    public static JLabel addFormLabel(JPanel panel, String labelText) {
         JLabel label = new JLabel(labelText);
         label.setFont(AppTheme.FONT_BODY);
         label.setForeground(AppTheme.TEXT_SECONDARY);
         panel.add(label);
+        return label;
+    }
+
+    public static JTextField addFormField(JPanel panel, String labelText) {
+        addFormLabel(panel, labelText);
 
         JTextField field = new JTextField();
         field.setFont(AppTheme.FONT_BODY);

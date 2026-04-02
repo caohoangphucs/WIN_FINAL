@@ -16,7 +16,16 @@ public class PestReportService extends BaseService<PestReport, PestReportDTO> {
         this.pestDAO = (PestReportDAO) dao;
     }
 
-    @Override protected PestReportDTO toDTO(PestReport e) { return mapper.toDTO(e); }
+    @Override 
+    protected PestReportDTO toDTO(PestReport e) { 
+        PestReportDTO d = mapper.toDTO(e); 
+        if (d != null && e != null) {
+            if (e.getLot() != null) d.setLotCode(e.getLot().getLotCode());
+            if (e.getEmployee() != null) d.setEmployeeName(e.getEmployee().getFullName());
+            if (e.getSeverity() != null) d.setSeverityCode(e.getSeverity().getCode());
+        }
+        return d;
+    }
     @Override protected PestReport toEntity(PestReportDTO d) { return mapper.toEntity(d); }
     @Override protected void updateEntityFromDTO(PestReportDTO d, PestReport e) { /* Update logic */ }
     @Override protected Object getEntityId(PestReportDTO d) { return d.getId(); }

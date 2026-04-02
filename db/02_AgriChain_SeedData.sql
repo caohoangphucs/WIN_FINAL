@@ -438,11 +438,22 @@ INSERT INTO harvest_record (lot_id, employee_id, customer_id, harvest_date, yiel
 (5,  10, 5, '2025-03-20', 32000.0, 'GRADE_C'), -- Đinh Thị Kim
 (6,  2, 6, '2025-03-22', 11500.0, 'GRADE_B'), -- Trần Thị Bình
 (9,  3, 1, '2025-03-25', 13200.0, 'GRADE_A'), -- Cường (lô khác)
-(11, 4, 3, '2025-03-26', 17800.0, 'GRADE_B'); -- Dung (lô khác)
--- LOT-S1, LOT-S2, LOT-S3: chưa thu hoạch (dự kiến 3/2025)
+(11, 4, 3, '2025-03-26', 17800.0, 'GRADE_B'), -- Dung (lô khác)
+
+-- Thêm dữ liệu minh họa: Thu hoạch nhiều đợt cho cùng một lô Cà chua Cherry (LOT-S3, lot_id = 3)
+(3,  7, 2, '2025-03-18', 250.0,  'GRADE_A'), -- Thu hoạch Đợt 2
+(3,  7, 2, '2025-03-22', 300.0,  'GRADE_B'), -- Thu hoạch Đợt 3
+(3,  7, 5, '2025-03-25', 410.0,  'GRADE_A'), -- Thu hoạch Đợt 4
+
+-- Thêm dữ liệu minh họa: Dưa lưới Taki thu hoạch nhiều đợt (LOT-S2, lot_id = 2)
+(2,  4, 2, '2025-03-16', 5000.0, 'GRADE_A'), 
+(2,  4, 1, '2025-03-20', 4200.0, 'GRADE_B'); 
+
+-- Cập nhật ghi chú
+-- LOT-S1: chưa thu hoạch (dự kiến 3/2025)
 -- LOT-C1, LOT-C2: cà phê đang chín (dự kiến 6/2025)
--- LOT-B1: bắp đang phát triển (dự kiến 5/2025)
--- LOT-R1: rau đang growing (dự kiến 3/3/2025)
+-- LOT-B1: bắp đang thu (đã có 1 bản ghi ở trên)
+-- LOT-R1: rau đang thu
 
 -- ══════════════════════════════════════════
 -- VERIFICATION

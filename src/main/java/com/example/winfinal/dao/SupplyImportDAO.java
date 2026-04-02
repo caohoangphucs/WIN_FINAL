@@ -31,6 +31,7 @@ public class SupplyImportDAO extends BaseDAO<SupplyImport> {
         try {
             return em.createQuery(
                 "SELECT si FROM SupplyImport si " +
+                "JOIN FETCH si.supplier " +
                 "JOIN si.details d " +
                 "WHERE d.supply.id = :supplyId " +
                 "ORDER BY si.importDate DESC", SupplyImport.class)

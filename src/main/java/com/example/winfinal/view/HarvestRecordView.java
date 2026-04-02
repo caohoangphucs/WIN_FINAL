@@ -192,7 +192,7 @@ public class HarvestRecordView extends JPanel {
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
                 isEdit ? "Sửa bản ghi thu hoạch" : "Ghi thu hoạch mới",
                 Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(420, 360);
+        dlg.setSize(480, 420); // Slightly larger for combos
         dlg.setLocationRelativeTo(this);
         dlg.setLayout(new BorderLayout());
 
@@ -200,27 +200,81 @@ public class HarvestRecordView extends JPanel {
         form.setBackground(AppTheme.BG_CARD);
         form.setBorder(new EmptyBorder(24, 24, 16, 24));
 
-        JTextField txtLot   = UiUtils.addFormField(form, "ID Lô *");
-        JTextField txtDate  = UiUtils.addFormField(form, "Ngày thu hoạch (dd/MM/yyyy) *");
-        JTextField txtYield = UiUtils.addFormField(form, "Năng suất (kg)");
-        JTextField txtEmp   = UiUtils.addFormField(form, "ID Nhân viên");
-        JTextField txtCust  = UiUtils.addFormField(form, "ID Khách hàng");
+        // 1. Lot Selection
+        UiUtils.addFormLabel(form, "Lô sản xuất *");
+        java.util.List<com.example.winfinal.dto.ProductionLotDTO> allLots = new com.example.winfinal.controller.ProductionLotController().getAllLots();
+        JComboBox<com.example.winfinal.dto.ProductionLotDTO> cboLot = new JComboBox<>(allLots.toArray(new com.example.winfinal.dto.ProductionLotDTO[0]));
+        cboLot.setFont(AppTheme.FONT_BODY);
+        cboLot.setRenderer((javax.swing.JList<? extends com.example.winfinal.dto.ProductionLotDTO> list, com.example.winfinal.dto.ProductionLotDTO value, int index, boolean isSelected, boolean cellHasFocus) -> {
+            JLabel lbl = new JLabel();
+            if (value != null) lbl.setText(value.getLotCode() + " - " + value.getCropTypeName());
+            lbl.setFont(AppTheme.FONT_BODY);
+            lbl.setOpaque(true);
+            lbl.setBackground(isSelected ? AppTheme.BG_TABLE_HEADER : AppTheme.BG_CARD);
+            return lbl;
+        });
+        form.add(cboLot);
 
-        JLabel lblGrade = new JLabel("Chất lượng");
-        lblGrade.setFont(AppTheme.FONT_BODY);
-        lblGrade.setForeground(AppTheme.TEXT_SECONDARY);
+        // 2. Date Text Field
+        JTextField txtDate = UiUtils.addFormField(form, "Ngày thu hoạch (dd/MM/yyyy) *");
+
+        // 3. Yield Text Field
+        JTextField txtYield = UiUtils.addFormField(form, "Năng suất (kg)");
+
+        // 4. Employee Selection
+        UiUtils.addFormLabel(form, "Nhân viên *");
+        java.util.List<com.example.winfinal.dto.EmployeeDTO> allEmps = new com.example.winfinal.controller.EmployeeController().getAllEmployees();
+        JComboBox<com.example.winfinal.dto.EmployeeDTO> cboEmp = new JComboBox<>(allEmps.toArray(new com.example.winfinal.dto.EmployeeDTO[0]));
+        cboEmp.setFont(AppTheme.FONT_BODY);
+        cboEmp.setRenderer((javax.swing.JList<? extends com.example.winfinal.dto.EmployeeDTO> list, com.example.winfinal.dto.EmployeeDTO value, int index, boolean isSelected, boolean cellHasFocus) -> {
+            JLabel lbl = new JLabel();
+            if (value != null) lbl.setText(value.getEmpCode() + " - " + value.getFullName());
+            lbl.setFont(AppTheme.FONT_BODY);
+            lbl.setOpaque(true);
+            lbl.setBackground(isSelected ? AppTheme.BG_TABLE_HEADER : AppTheme.BG_CARD);
+            return lbl;
+        });
+        form.add(cboEmp);
+
+        // 5. Customer Selection
+        UiUtils.addFormLabel(form, "Khách hàng");
+        java.util.List<com.example.winfinal.dto.CustomerDTO> allCusts = new com.example.winfinal.controller.CustomerController().getAllCustomers();
+        JComboBox<com.example.winfinal.dto.CustomerDTO> cboCust = new JComboBox<>(allCusts.toArray(new com.example.winfinal.dto.CustomerDTO[0]));
+        cboCust.setFont(AppTheme.FONT_BODY);
+        cboCust.setRenderer((javax.swing.JList<? extends com.example.winfinal.dto.CustomerDTO> list, com.example.winfinal.dto.CustomerDTO value, int index, boolean isSelected, boolean cellHasFocus) -> {
+            JLabel lbl = new JLabel();
+            if (value != null) lbl.setText(value.getCustomerCode() + " - " + value.getName());
+            lbl.setFont(AppTheme.FONT_BODY);
+            lbl.setOpaque(true);
+            lbl.setBackground(isSelected ? AppTheme.BG_TABLE_HEADER : AppTheme.BG_CARD);
+            return lbl;
+        });
+        form.add(cboCust);
+
+        // 6. Quality Grade Selection
+        UiUtils.addFormLabel(form, "Chất lượng");
         String[] grades = {"Loại A", "Loại B", "Loại C", "Loại D"};
         JComboBox<String> cboGrade = new JComboBox<>(grades);
         cboGrade.setFont(AppTheme.FONT_BODY);
-        form.add(lblGrade);
         form.add(cboGrade);
 
+        // Populate if editing
         if (isEdit) {
-            txtLot.setText(existing.getLotId() == null ? "" : existing.getLotId().toString());
+            // Find and select items in combos based on IDs
+            for (int i = 0; i < cboLot.getItemCount(); i++) {
+                com.example.winfinal.dto.ProductionLotDTO lot = (com.example.winfinal.dto.ProductionLotDTO) cboLot.getItemAt(i);
+                if (lot.getId().equals(existing.getLotId())) { cboLot.setSelectedIndex(i); break; }
+            }
             txtDate.setText(existing.getHarvestDate() == null ? "" : sdf.format(existing.getHarvestDate()));
             txtYield.setText(existing.getYieldKg() == null ? "" : existing.getYieldKg().toString());
-            txtEmp.setText(existing.getEmployeeId() == null ? "" : existing.getEmployeeId().toString());
-            txtCust.setText(existing.getCustomerId() == null ? "" : existing.getCustomerId().toString());
+            for (int i = 0; i < cboEmp.getItemCount(); i++) {
+                com.example.winfinal.dto.EmployeeDTO emp = (com.example.winfinal.dto.EmployeeDTO) cboEmp.getItemAt(i);
+                if (emp.getId().equals(existing.getEmployeeId())) { cboEmp.setSelectedIndex(i); break; }
+            }
+            for (int i = 0; i < cboCust.getItemCount(); i++) {
+                com.example.winfinal.dto.CustomerDTO cust = (com.example.winfinal.dto.CustomerDTO) cboCust.getItemAt(i);
+                if (cust.getId().equals(existing.getCustomerId())) { cboCust.setSelectedIndex(i); break; }
+            }
             if (existing.getQualityGradeCode() != null) {
                 cboGrade.setSelectedItem(translateGrade(existing.getQualityGradeCode()));
             }
@@ -235,15 +289,21 @@ public class HarvestRecordView extends JPanel {
         btnSave.addActionListener(e -> {
             try {
                 HarvestRecordDTO dto = isEdit ? existing : new HarvestRecordDTO();
-                dto.setLotId(Long.parseLong(txtLot.getText().trim()));
+                
+                com.example.winfinal.dto.ProductionLotDTO selLot = (com.example.winfinal.dto.ProductionLotDTO) cboLot.getSelectedItem();
+                if (selLot == null) throw new Exception("Vui lòng chọn lô sản xuất");
+                dto.setLotId(selLot.getId());
+                
                 dto.setHarvestDate(sdf.parse(txtDate.getText().trim()));
                 dto.setYieldKg(txtYield.getText().trim().isEmpty() ? null
                         : Double.parseDouble(txtYield.getText().trim()));
                 dto.setQualityGradeCode(getRawGrade((String) cboGrade.getSelectedItem()));
-                dto.setEmployeeId(txtEmp.getText().trim().isEmpty() ? null
-                        : Long.parseLong(txtEmp.getText().trim()));
-                dto.setCustomerId(txtCust.getText().trim().isEmpty() ? null
-                        : Long.parseLong(txtCust.getText().trim()));
+                
+                com.example.winfinal.dto.EmployeeDTO selEmp = (com.example.winfinal.dto.EmployeeDTO) cboEmp.getSelectedItem();
+                if (selEmp != null) dto.setEmployeeId(selEmp.getId());
+                
+                com.example.winfinal.dto.CustomerDTO selCust = (com.example.winfinal.dto.CustomerDTO) cboCust.getSelectedItem();
+                if (selCust != null) dto.setCustomerId(selCust.getId());
 
                 if (isEdit) ctrl.updateHarvestRecord(dto);
                 else        ctrl.createHarvestRecord(dto);

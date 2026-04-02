@@ -213,25 +213,27 @@ public class TraceabilityDetailView extends JPanel {
 
         // 5. Đầu ra
         contentPanel.add(createSectionHeader("🧺 Đầu Ra"));
-        JPanel outCard = UiUtils.createCard();
-        outCard.setLayout(new GridLayout(3, 1, 0, 8));
         
         List<HarvestRecordDTO> harvests = harvestCtrl.findByLot(lot.getId());
         if (harvests != null && !harvests.isEmpty()) {
-            HarvestRecordDTO h = harvests.get(0); // Show principal harvest
-            lblHarvestDate = createInfoLabel("Ngày thu hoạch: ", sdf.format(h.getHarvestDate()));
-            lblYield = createInfoLabel("Sản lượng: ", h.getYieldKg() + " kg");
-            lblCustomer = createInfoLabel("Khách hàng: ", h.getCustomerName() != null ? h.getCustomerName() : "Khách hàng sỉ");
+            String[] harvestCols = {"Ngày", "Sản lượng (kg)", "Khách hàng", "Chất lượng"};
+            DefaultTableModel harvestModel = new DefaultTableModel(harvestCols, 0);
+            for (HarvestRecordDTO h : harvests) {
+                String date = h.getHarvestDate() != null ? sdf.format(h.getHarvestDate()) : "---";
+                String yieldStr = h.getYieldKg() != null ? h.getYieldKg().toString() : "---";
+                String cust = h.getCustomerName() != null ? h.getCustomerName() : "Khách hàng sỉ";
+                String grade = h.getQualityGradeCode() != null ? translateGrade(h.getQualityGradeCode()) : "---";
+                harvestModel.addRow(new Object[]{date, yieldStr, cust, grade});
+            }
+            contentPanel.add(createTableCard(harvestModel));
         } else {
-            lblHarvestDate = createInfoLabel("Ngày thu hoạch: ", "Đang trong kỳ canh tác");
-            lblYield = createInfoLabel("Sản lượng: ", "---");
-            lblCustomer = createInfoLabel("Khách hàng: ", "---");
+            JPanel outCard = UiUtils.createCard();
+            outCard.setLayout(new GridLayout(3, 1, 0, 8));
+            outCard.add(createInfoLabel("Ngày thu hoạch: ", "Đang trong kỳ canh tác"));
+            outCard.add(createInfoLabel("Sản lượng: ", "---"));
+            outCard.add(createInfoLabel("Khách hàng: ", "---"));
+            contentPanel.add(outCard);
         }
-        
-        outCard.add(lblHarvestDate);
-        outCard.add(lblYield);
-        outCard.add(lblCustomer);
-        contentPanel.add(outCard);
         contentPanel.add(Box.createVerticalStrut(40));
 
         contentPanel.revalidate();
@@ -276,6 +278,17 @@ public class TraceabilityDetailView extends JPanel {
             case "PESTICIDE" -> "Phun thuốc trừ sâu";
             case "FUNGICIDE" -> "Phun thuốc trừ nấm";
             case "FOLIAR"    -> "Phun phân bón lá";
+            default -> code;
+        };
+    }
+
+    private String translateGrade(String code) {
+        if (code == null) return "---";
+        return switch (code) {
+            case "GRADE_A" -> "Loại A";
+            case "GRADE_B" -> "Loại B";
+            case "GRADE_C" -> "Loại C";
+            case "GRADE_D" -> "Loại D";
             default -> code;
         };
     }

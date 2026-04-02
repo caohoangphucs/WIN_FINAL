@@ -16,7 +16,17 @@ public class HarvestRecordService extends BaseService<HarvestRecord, HarvestReco
         this.harvestDAO = (HarvestRecordDAO) dao;
     }
 
-    @Override protected HarvestRecordDTO toDTO(HarvestRecord e) { return mapper.toDTO(e); }
+    @Override 
+    protected HarvestRecordDTO toDTO(HarvestRecord e) { 
+        HarvestRecordDTO d = mapper.toDTO(e); 
+        if (d != null && e != null) {
+            if (e.getLot() != null) d.setLotCode(e.getLot().getLotCode());
+            if (e.getEmployee() != null) d.setEmployeeName(e.getEmployee().getFullName());
+            if (e.getCustomer() != null) d.setCustomerName(e.getCustomer().getName());
+            if (e.getQualityGrade() != null) d.setQualityGradeCode(e.getQualityGrade().getCode());
+        }
+        return d;
+    }
     @Override protected HarvestRecord toEntity(HarvestRecordDTO d) { return mapper.toEntity(d); }
     @Override protected void updateEntityFromDTO(HarvestRecordDTO d, HarvestRecord e) { mapper.updateEntityFromDTO(d, e); }
     @Override protected Object getEntityId(HarvestRecordDTO d) { return d.getId(); }

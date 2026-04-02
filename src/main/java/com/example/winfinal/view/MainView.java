@@ -18,7 +18,6 @@ public class MainView extends JFrame {
     private static final String PAGE_HARVEST = "Thu ho\u1EA1ch";
     private static final String PAGE_CULTIVATION = "Canh t\u00E1c";
     private static final String PAGE_PEST = "S\u00E2u b\u1EC7nh";
-    private static final String PAGE_TRACEABILITY = "Truy xu\u1EA5t";
     private static final String PAGE_REPORT = "B\u00E1o c\u00E1o";
 
     private final CardLayout cardLayout = new CardLayout();
@@ -80,7 +79,6 @@ public class MainView extends JFrame {
                 PAGE_HARVEST,
                 PAGE_CULTIVATION,
                 PAGE_PEST,
-                PAGE_TRACEABILITY,
                 PAGE_REPORT,
         };
 
@@ -218,7 +216,6 @@ public class MainView extends JFrame {
         contentPane.add(new HarvestRecordView(), PAGE_HARVEST);
         contentPane.add(new CultivationLogView(), PAGE_CULTIVATION);
         contentPane.add(new PestReportView(), PAGE_PEST);
-        contentPane.add(new TraceabilityView(), PAGE_TRACEABILITY);
         contentPane.add(new ReportView(), PAGE_REPORT);
 
         return contentPane;

@@ -123,7 +123,7 @@ public class AgriSupplyView extends JPanel {
     private JSplitPane buildSplitPanel() {
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 buildMasterPanel(), buildDetailPanel());
-        split.setDividerLocation(380);
+        split.setDividerLocation(480);
         split.setDividerSize(6);
         split.setBorder(BorderFactory.createEmptyBorder());
         split.setOpaque(false);
@@ -136,7 +136,7 @@ public class AgriSupplyView extends JPanel {
         JPanel card = makeCard();
         card.setLayout(new BorderLayout());
 
-        String[] cols = {"Mã vật tư  ·  Tên vật tư", "Tồn kho", "Đơn vị", "Tồn kho tối thiểu", "Trạng thái"};
+        String[] cols = {"Mã VT", "Tên vật tư", "Tồn kho", "Đơn vị", "Định mức", "Trạng thái"};
         masterModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -152,25 +152,35 @@ public class AgriSupplyView extends JPanel {
         masterTable.getTableHeader().setForeground(AppTheme.TEXT_SECONDARY);
         masterTable.setDefaultRenderer(Object.class, new MasterRowRenderer());
 
-        // Status column
-        masterTable.getColumnModel().getColumn(4).setCellRenderer(new StatusDotRenderer());
-        masterTable.getColumnModel().getColumn(4).setMinWidth(90);
-        masterTable.getColumnModel().getColumn(4).setMaxWidth(90);
-        masterTable.getColumnModel().getColumn(4).setPreferredWidth(90);
+        // Column settings
+        // Trạng thái
+        masterTable.getColumnModel().getColumn(5).setCellRenderer(new StatusDotRenderer());
+        masterTable.getColumnModel().getColumn(5).setMinWidth(80);
+        masterTable.getColumnModel().getColumn(5).setMaxWidth(80);
+        masterTable.getColumnModel().getColumn(5).setPreferredWidth(80);
         
-        masterTable.getColumnModel().getColumn(1).setMinWidth(80);
-        masterTable.getColumnModel().getColumn(1).setMaxWidth(80);
-        masterTable.getColumnModel().getColumn(1).setPreferredWidth(80);
+        // Tồn kho
+        masterTable.getColumnModel().getColumn(2).setMinWidth(70);
+        masterTable.getColumnModel().getColumn(2).setMaxWidth(70);
+        masterTable.getColumnModel().getColumn(2).setPreferredWidth(70);
         
-        masterTable.getColumnModel().getColumn(2).setMinWidth(60);
-        masterTable.getColumnModel().getColumn(2).setMaxWidth(60);
-        masterTable.getColumnModel().getColumn(2).setPreferredWidth(60);
+        // Đơn vị
+        masterTable.getColumnModel().getColumn(3).setMinWidth(55);
+        masterTable.getColumnModel().getColumn(3).setMaxWidth(55);
+        masterTable.getColumnModel().getColumn(3).setPreferredWidth(55);
         
-        masterTable.getColumnModel().getColumn(3).setMinWidth(80);
-        masterTable.getColumnModel().getColumn(3).setMaxWidth(80);
-        masterTable.getColumnModel().getColumn(3).setPreferredWidth(80);
+        // Định mức
+        masterTable.getColumnModel().getColumn(4).setMinWidth(70);
+        masterTable.getColumnModel().getColumn(4).setMaxWidth(70);
+        masterTable.getColumnModel().getColumn(4).setPreferredWidth(70);
+
+        // Mã VT
+        masterTable.getColumnModel().getColumn(0).setMinWidth(75);
+        masterTable.getColumnModel().getColumn(0).setMaxWidth(75);
+        masterTable.getColumnModel().getColumn(0).setPreferredWidth(75);
         
-        masterTable.getColumnModel().getColumn(0).setPreferredWidth(170);
+        // Tên vật tư
+        masterTable.getColumnModel().getColumn(1).setPreferredWidth(200);
 
         masterTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && masterTable.getSelectedRow() >= 0) {
@@ -235,15 +245,33 @@ public class AgriSupplyView extends JPanel {
         titleBar.add(btnClose, BorderLayout.EAST);
         card.add(titleBar, BorderLayout.NORTH);
 
-        // Tab buttons
-        JPanel tabRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        // Redesigned tab control (pill style track)
+        JPanel tabRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0)) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D)g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(0xF1F5F9)); // Track background
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 8, 8));
+                g2.dispose();
+            }
+        };
         tabRow.setOpaque(false);
-        tabRow.setBorder(new EmptyBorder(0,0,8,0));
-        tabBtnImport  = makeTabBtn("Lịch sử nhập kho", true);
-        tabBtnConsume = makeTabBtn("Mức độ tiêu thụ", false);
-        tabBtnCost    = makeTabBtn("Báo cáo chi phí", false);
+        tabRow.setBorder(new EmptyBorder(4, 4, 4, 4));
+        
+        tabBtnImport  = makeTabBtn("Lịch sử nhập", true);
+        tabBtnConsume = makeTabBtn("Tiêu thụ", false);
+        tabBtnCost    = makeTabBtn("Chi phí", false);
         tabRow.add(tabBtnImport); tabRow.add(tabBtnConsume); tabRow.add(tabBtnCost);
 
+        // Container margin
+        JPanel tabOuter = new JPanel(new BorderLayout());
+        tabOuter.setOpaque(false);
+        tabOuter.setBorder(new EmptyBorder(0, 0, 16, 0));
+        tabOuter.add(tabRow, BorderLayout.WEST);
+        
+        JPanel center = new JPanel(new BorderLayout(0, 6));
+        center.setOpaque(false);
+        center.add(tabOuter, BorderLayout.NORTH);
         // Tab content
         tabLayout = new CardLayout();
         tabContent = new JPanel(tabLayout);
@@ -256,9 +284,6 @@ public class AgriSupplyView extends JPanel {
         tabBtnConsume.addActionListener(e ->{ tabLayout.show(tabContent,"consume"); activateTab(tabBtnConsume); });
         tabBtnCost.addActionListener(e ->   { tabLayout.show(tabContent,"cost");    activateTab(tabBtnCost); });
 
-        JPanel center = new JPanel(new BorderLayout(0, 6));
-        center.setOpaque(false);
-        center.add(tabRow, BorderLayout.NORTH);
         center.add(tabContent, BorderLayout.CENTER);
         card.add(center, BorderLayout.CENTER);
 
@@ -357,9 +382,10 @@ public class AgriSupplyView extends JPanel {
 
                 boolean isLow = s.getStockQty()!=null && s.getMinStock()!=null
                         && s.getStockQty() <= s.getMinStock();
-                String nameCell = (s.getSupplyCode()==null ? "" : s.getSupplyCode())+" - "+nm;
+                
                 masterModel.addRow(new Object[]{
-                    nameCell,
+                    s.getSupplyCode() == null ? "" : s.getSupplyCode(),
+                    nm,
                     s.getStockQty()==null ? "N/A" : (isLow
                             ? "<html><b>"+s.getStockQty()+"</b></html>"
                             : s.getStockQty()),
@@ -377,19 +403,31 @@ public class AgriSupplyView extends JPanel {
     // ── Helpers ───────────────────────────────────────────────
 
     private JButton makeTabBtn(String text, boolean active) {
-        JButton b = new JButton(text);
-        b.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        JButton b = new JButton(text) {
+            @Override protected void paintComponent(Graphics g) {
+                if (getBackground().equals(AppTheme.PRIMARY)) {
+                    Graphics2D g2 = (Graphics2D)g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 6, 6));
+                    g2.dispose();
+                }
+                super.paintComponent(g);
+            }
+        };
+        b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setFocusPainted(false);
+        b.setBorderPainted(false);
+        b.setContentAreaFilled(false);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        Color activeBg = new Color(0x2563EB);
+        b.setPreferredSize(new Dimension(110, 32));
+        
         if (active) {
-            b.setBackground(activeBg);
+            b.setBackground(AppTheme.PRIMARY);
             b.setForeground(Color.WHITE);
-            b.setBorder(BorderFactory.createEmptyBorder(5,12,5,12));
         } else {
             b.setBackground(new Color(0xF1F5F9));
             b.setForeground(AppTheme.TEXT_SECONDARY);
-            b.setBorder(BorderFactory.createLineBorder(new Color(0xD1D5DB),1));
         }
         return b;
     }
@@ -397,9 +435,10 @@ public class AgriSupplyView extends JPanel {
     private void activateTab(JButton active) {
         for (JButton b : new JButton[]{tabBtnImport, tabBtnConsume, tabBtnCost}) {
             boolean isActive = (b == active);
-            b.setBackground(isActive ? new Color(0x2563EB) : new Color(0xF1F5F9));
+            b.setBackground(isActive ? AppTheme.PRIMARY : new Color(0xF1F5F9));
             b.setForeground(isActive ? Color.WHITE : AppTheme.TEXT_SECONDARY);
         }
+        repaint();
     }
 
     private JTable buildSimpleTable(String[] cols, String[][] rows) {
@@ -449,11 +488,11 @@ public class AgriSupplyView extends JPanel {
         @Override public Component getTableCellRendererComponent(JTable t, Object val,
                 boolean sel, boolean foc, int row, int col) {
             JLabel c = (JLabel) super.getTableCellRendererComponent(t, val, sel, foc, row, col);
-            String status = t.getModel().getValueAt(row, 4)==null ? "ok" : t.getModel().getValueAt(row, 4).toString();
+            String status = t.getModel().getValueAt(row, 5)==null ? "ok" : t.getModel().getValueAt(row, 5).toString();
             if (!sel) {
                 c.setBackground("low".equals(status) ? LOW_BG : Color.WHITE);
             }
-            c.setFont("low".equals(status) && col==1 ? new Font("Segoe UI",Font.BOLD,13) : AppTheme.FONT_BODY);
+            c.setFont("low".equals(status) && col==2 ? new Font("Segoe UI",Font.BOLD,13) : AppTheme.FONT_BODY);
             c.setBorder(new EmptyBorder(0,12,0,12));
             return c;
         }
@@ -465,18 +504,22 @@ public class AgriSupplyView extends JPanel {
             String status = val==null ? "ok" : val.toString();
             boolean isLow = "low".equals(status);
 
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+            JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
             p.setBackground(isLow ? new Color(0xFFF5F5) : Color.WHITE);
 
             JLabel dot = new JLabel("●");
-            dot.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            dot.setForeground(isLow ? new Color(0xE63946) : new Color(0x52B788));
+            dot.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            dot.setForeground(isLow ? new Color(0xE63946) : new Color(0xA8DADC));
 
-            JLabel lbl = new JLabel(isLow ? "Tồn thấp" : "");
-            lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
-            lbl.setForeground(isLow ? new Color(0xE63946) : new Color(0x52B788));
-
-            p.add(dot); if (isLow) p.add(lbl);
+            if (isLow) {
+                JLabel lbl = new JLabel("Thấp");
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 10));
+                lbl.setForeground(new Color(0xE63946));
+                p.add(dot); 
+                p.add(lbl);
+            } else {
+                p.add(dot);
+            }
             return p;
         }
     }

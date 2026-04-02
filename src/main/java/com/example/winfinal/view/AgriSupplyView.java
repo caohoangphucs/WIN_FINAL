@@ -25,20 +25,17 @@ public class AgriSupplyView extends JPanel {
 
     // Right panel content areas
     private JPanel detailPanel;
-    private JButton tabBtnImport, tabBtnCost;
-    private CardLayout tabLayout;
-    private JPanel tabContent;
 
     private List<AgriSupplyDTO> currentList;
     private AgriSupplyDTO selectedSupply;
 
     public AgriSupplyView() {
-        setLayout(new BorderLayout(0,0));
+        setLayout(new BorderLayout(0, 0));
         setBackground(AppTheme.BG_MAIN);
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        add(buildTopBar(),   BorderLayout.NORTH);
-        add(buildBody(),     BorderLayout.CENTER);
+        add(buildTopBar(), BorderLayout.NORTH);
+        add(buildBody(), BorderLayout.CENTER);
 
         refreshTable();
     }
@@ -48,12 +45,12 @@ public class AgriSupplyView extends JPanel {
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setOpaque(false);
-        bar.setBorder(new EmptyBorder(0,0,16,0));
+        bar.setBorder(new EmptyBorder(0, 0, 16, 0));
 
         JLabel title = new JLabel("Quản lý kho vật tư");
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setForeground(AppTheme.TEXT_PRIMARY);
-        
+
         JLabel sub = new JLabel("Tổng quan và chi tiết xuất nhập");
         sub.setFont(AppTheme.FONT_BODY);
         sub.setForeground(AppTheme.TEXT_SECONDARY);
@@ -66,7 +63,7 @@ public class AgriSupplyView extends JPanel {
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 0));
         right.setOpaque(false);
-        for (String ico : new String[]{"❔", "🔔", "⚙", "≡"}) {
+        for (String ico : new String[] { "❔", "🔔", "⚙", "≡" }) {
             JLabel ic = new JLabel(ico);
             ic.setForeground(AppTheme.TEXT_SECONDARY);
             ic.setFont(AppTheme.FONT_BODY);
@@ -81,11 +78,11 @@ public class AgriSupplyView extends JPanel {
     // ── Body: filter row + split panel ───────────────────────
 
     private JPanel buildBody() {
-        JPanel body = new JPanel(new BorderLayout(0,0));
+        JPanel body = new JPanel(new BorderLayout(0, 0));
         body.setBackground(AppTheme.BG_MAIN);
-        body.setBorder(new EmptyBorder(0,0,0,0));
+        body.setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        body.add(buildFilterRow(),  BorderLayout.NORTH);
+        body.add(buildFilterRow(), BorderLayout.NORTH);
         body.add(buildSplitPanel(), BorderLayout.CENTER);
         return body;
     }
@@ -98,7 +95,7 @@ public class AgriSupplyView extends JPanel {
         lblCat.setFont(AppTheme.FONT_BODY);
         lblCat.setForeground(AppTheme.TEXT_SECONDARY);
 
-        cboCat = new JComboBox<>(new String[]{"Tất cả","Phân bón","Thuốc BVTV","Hạt giống","Thiết bị"});
+        cboCat = new JComboBox<>(new String[] { "Tất cả", "Phân bón", "Thuốc BVTV", "Hạt giống", "Thiết bị" });
         cboCat.setFont(AppTheme.FONT_BODY);
         cboCat.setPreferredSize(new Dimension(170, 32));
         cboCat.addActionListener(e -> refreshTable());
@@ -134,9 +131,12 @@ public class AgriSupplyView extends JPanel {
         JPanel card = makeCard();
         card.setLayout(new BorderLayout());
 
-        String[] cols = {"Mã VT", "Tên vật tư", "Tồn kho", "Đơn vị", "Định mức", "Trạng thái"};
+        String[] cols = { "Mã VT", "Tên vật tư", "Tồn kho", "Đơn vị", "Định mức", "Trạng thái" };
         masterModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         masterTable = new JTable(masterModel);
         masterTable.setFont(AppTheme.FONT_BODY);
@@ -156,17 +156,17 @@ public class AgriSupplyView extends JPanel {
         masterTable.getColumnModel().getColumn(5).setMinWidth(80);
         masterTable.getColumnModel().getColumn(5).setMaxWidth(80);
         masterTable.getColumnModel().getColumn(5).setPreferredWidth(80);
-        
+
         // Tồn kho
         masterTable.getColumnModel().getColumn(2).setMinWidth(70);
         masterTable.getColumnModel().getColumn(2).setMaxWidth(70);
         masterTable.getColumnModel().getColumn(2).setPreferredWidth(70);
-        
+
         // Đơn vị
         masterTable.getColumnModel().getColumn(3).setMinWidth(55);
         masterTable.getColumnModel().getColumn(3).setMaxWidth(55);
         masterTable.getColumnModel().getColumn(3).setPreferredWidth(55);
-        
+
         // Định mức
         masterTable.getColumnModel().getColumn(4).setMinWidth(70);
         masterTable.getColumnModel().getColumn(4).setMaxWidth(70);
@@ -176,7 +176,7 @@ public class AgriSupplyView extends JPanel {
         masterTable.getColumnModel().getColumn(0).setMinWidth(75);
         masterTable.getColumnModel().getColumn(0).setMaxWidth(75);
         masterTable.getColumnModel().getColumn(0).setPreferredWidth(75);
-        
+
         // Tên vật tư
         masterTable.getColumnModel().getColumn(1).setPreferredWidth(200);
 
@@ -196,7 +196,7 @@ public class AgriSupplyView extends JPanel {
     // ── Detail (right) ────────────────────────────────────────
 
     private JPanel buildDetailPanel() {
-        detailPanel = new JPanel(new BorderLayout(0,0));
+        detailPanel = new JPanel(new BorderLayout(0, 0));
         detailPanel.setOpaque(false);
 
         JPanel placeholder = makeCard();
@@ -210,13 +210,14 @@ public class AgriSupplyView extends JPanel {
     }
 
     private void showDetail(int row) {
-        if (currentList == null || row < 0 || row >= currentList.size()) return;
+        if (currentList == null || row < 0 || row >= currentList.size())
+            return;
         AgriSupplyDTO supply = currentList.get(row);
         selectedSupply = supply;
 
         detailPanel.removeAll();
 
-        String name    = supply.getName() == null ? "N/A" : supply.getName();
+        String name = supply.getName() == null ? "N/A" : supply.getName();
 
         JPanel card = makeCard();
         card.setLayout(new BorderLayout(0, 0));
@@ -224,62 +225,48 @@ public class AgriSupplyView extends JPanel {
         // Title bar
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setOpaque(false);
-        titleBar.setBorder(new EmptyBorder(0,0,12,0));
-        JLabel titleLbl = new JLabel("Chi tiết vật tư - " + (name.length()>40 ? name.substring(0,40)+"…" : name));
+        titleBar.setBorder(new EmptyBorder(0, 0, 12, 0));
+        JLabel titleLbl = new JLabel("Chi tiết vật tư - " + (name.length() > 40 ? name.substring(0, 40) + "…" : name));
         titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
         titleLbl.setForeground(AppTheme.TEXT_PRIMARY);
         JButton btnClose = new JButton("×");
         btnClose.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnClose.setForeground(AppTheme.TEXT_SECONDARY);
-        btnClose.setBorderPainted(false); btnClose.setContentAreaFilled(false);
+        btnClose.setBorderPainted(false);
+        btnClose.setContentAreaFilled(false);
         btnClose.setFocusPainted(false);
         btnClose.addActionListener(e -> {
             detailPanel.removeAll();
             detailPanel.add(buildDetailPanel());
-            detailPanel.revalidate(); detailPanel.repaint();
+            detailPanel.revalidate();
+            detailPanel.repaint();
         });
         titleBar.add(titleLbl, BorderLayout.WEST);
         titleBar.add(btnClose, BorderLayout.EAST);
         card.add(titleBar, BorderLayout.NORTH);
+        // Vertical content panel for the two sections
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setOpaque(false);
 
-        // Redesigned tab control (pill style track)
-        JPanel tabRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0)) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(0xF1F5F9)); // Track background
-                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 8, 8));
-                g2.dispose();
-            }
-        };
-        tabRow.setOpaque(false);
-        tabRow.setBorder(new EmptyBorder(4, 4, 4, 4));
-        
-        tabBtnImport  = makeTabBtn("Lịch sử nhập", true);
-        tabBtnCost    = makeTabBtn("Chi phí", false);
-        tabRow.add(tabBtnImport); tabRow.add(tabBtnCost);
+        // Section 1: Lịch sử nhập kho
+        JPanel s1 = buildImportTab(supply);
+        s1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        contentPanel.add(s1);
+        contentPanel.add(Box.createVerticalStrut(24)); // Visual separation
 
-        // Container margin
-        JPanel tabOuter = new JPanel(new BorderLayout());
-        tabOuter.setOpaque(false);
-        tabOuter.setBorder(new EmptyBorder(0, 0, 16, 0));
-        tabOuter.add(tabRow, BorderLayout.WEST);
-        
-        JPanel center = new JPanel(new BorderLayout(0, 6));
-        center.setOpaque(false);
-        center.add(tabOuter, BorderLayout.NORTH);
-        // Tab content
-        tabLayout = new CardLayout();
-        tabContent = new JPanel(tabLayout);
-        tabContent.setOpaque(false);
-        tabContent.add(buildImportTab(supply), "import");
-        tabContent.add(buildCostTab(),       "cost");
+        // Section 2: Chi phí
+        JPanel s2 = buildCostTab();
+        s2.setAlignmentX(Component.LEFT_ALIGNMENT);
+        contentPanel.add(s2);
 
-        tabBtnImport.addActionListener(e -> { tabLayout.show(tabContent,"import");  activateTab(tabBtnImport); });
-        tabBtnCost.addActionListener(e ->   { tabLayout.show(tabContent,"cost");    activateTab(tabBtnCost); });
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
 
-        center.add(tabContent, BorderLayout.CENTER);
-        card.add(center, BorderLayout.CENTER);
+        card.add(scrollPane, BorderLayout.CENTER);
 
         detailPanel.add(card);
         detailPanel.revalidate();
@@ -287,11 +274,13 @@ public class AgriSupplyView extends JPanel {
     }
 
     private JPanel buildImportTab(AgriSupplyDTO supply) {
-        JPanel p = new JPanel(new BorderLayout(0,6));
+        JPanel p = new JPanel(new BorderLayout(0, 8));
         p.setOpaque(false);
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220)); // Limit height but allow expansion
+
         JLabel header = new JLabel("Lịch sử nhập kho (Thực tế)");
         header.setFont(AppTheme.FONT_SUBTITLE);
-        header.setForeground(AppTheme.TEXT_SECONDARY);
+        header.setForeground(AppTheme.TEXT_PRIMARY);
 
         com.example.winfinal.controller.SupplyImportController impCtrl = new com.example.winfinal.controller.SupplyImportController();
         List<com.example.winfinal.dto.SupplyImportDTO> imports = null;
@@ -299,21 +288,22 @@ public class AgriSupplyView extends JPanel {
             if (supply != null && supply.getId() != null) {
                 imports = impCtrl.findBySupply(supply.getId());
             }
-        } catch(Exception ignored){}
+        } catch (Exception ignored) {
+        }
 
-        String[] cols = {"Ngày nhập","Mã phiếu nhập", "Nhà cung cấp ID"};
+        String[] cols = { "Ngày nhập", "Mã phiếu nhập", "Nhà cung cấp ID" };
         DefaultTableModel m = new DefaultTableModel(cols, 0);
         if (imports != null && !imports.isEmpty()) {
             java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd/MM/yyyy");
             for (com.example.winfinal.dto.SupplyImportDTO i : imports) {
-                m.addRow(new Object[]{
-                    i.getImportDate() == null ? "" : format.format(i.getImportDate()),
-                    i.getImportCode() == null ? "" : i.getImportCode(),
-                    i.getSupplierId() == null ? "" : "NCC: " + i.getSupplierId()
+                m.addRow(new Object[] {
+                        i.getImportDate() == null ? "" : format.format(i.getImportDate()),
+                        i.getImportCode() == null ? "" : i.getImportCode(),
+                        i.getSupplierId() == null ? "" : "NCC: " + i.getSupplierId()
                 });
             }
         } else {
-            m.addRow(new Object[]{"Chưa có dữ liệu","",""});
+            m.addRow(new Object[] { "Chưa có dữ liệu", "", "" });
         }
 
         JTable t = buildSimpleTable(cols, null);
@@ -325,19 +315,20 @@ public class AgriSupplyView extends JPanel {
         return p;
     }
 
-
     private JPanel buildCostTab() {
-        JPanel p = new JPanel(new BorderLayout(0,6));
+        JPanel p = new JPanel(new BorderLayout(0, 8));
         p.setOpaque(false);
-        JLabel header = new JLabel("Báo cáo chi phí");
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+
+        JLabel header = new JLabel("Chi phí");
         header.setFont(AppTheme.FONT_SUBTITLE);
-        header.setForeground(AppTheme.TEXT_SECONDARY);
-        String[] cols = {"Nhà cung cấp","Số lượng","Thành tiền"};
+        header.setForeground(AppTheme.TEXT_PRIMARY);
+        String[] cols = { "Nhà cung cấp", "Số lượng", "Thành tiền" };
         String[][] data = {
-            {"Công Ty Nông Dược","150 L","7,500,000 đ"},
-            {"Hóa Chất XYZ","80 L","4,000,000 đ"},
-            {"Công Ty Việt Nông","60 L","3,000,000 đ"},
-            {"Tổng cộng:","","14,500,000 đ"},
+                { "Công Ty Nông Dược", "150 L", "7,500,000 đ" },
+                { "Hóa Chất XYZ", "80 L", "4,000,000 đ" },
+                { "Công Ty Việt Nông", "60 L", "3,000,000 đ" },
+                { "Tổng cộng:", "", "14,500,000 đ" },
         };
         JTable t = buildSimpleTable(cols, data);
         JScrollPane sc = new JScrollPane(t);
@@ -355,27 +346,29 @@ public class AgriSupplyView extends JPanel {
         try {
             String kw = txtSearch.getText().trim();
             List<AgriSupplyDTO> list = kw.isEmpty() ? ctrl.getAllAgriSupplies() : ctrl.search(kw);
-            
+
             for (AgriSupplyDTO s : list) {
-                String nm = s.getName()==null ? "" : s.getName();
+                String nm = s.getName() == null ? "" : s.getName();
                 // Filter by category
                 String cat = (String) cboCat.getSelectedItem();
                 if (cat != null && !cat.equals("Tất cả")) {
-                    // Logic to check category if available (placeholder simulation if category not mapped)
+                    // Logic to check category if available (placeholder simulation if category not
+                    // mapped)
                 }
 
-                boolean isLow = s.getStockQty()!=null && s.getMinStock()!=null
+                boolean isLow = s.getStockQty() != null && s.getMinStock() != null
                         && s.getStockQty() <= s.getMinStock();
-                
-                masterModel.addRow(new Object[]{
-                    s.getSupplyCode() == null ? "" : s.getSupplyCode(),
-                    nm,
-                    s.getStockQty()==null ? "N/A" : (isLow
-                            ? "<html><b>"+s.getStockQty()+"</b></html>"
-                            : s.getStockQty()),
-                    s.getUnit()==null ? "" : s.getUnit(),
-                    s.getMinStock()==null ? "" : s.getMinStock(),
-                    isLow ? "low" : "ok"
+
+                masterModel.addRow(new Object[] {
+                        s.getSupplyCode() == null ? "" : s.getSupplyCode(),
+                        nm,
+                        s.getStockQty() == null ? "N/A"
+                                : (isLow
+                                        ? "<html><b>" + s.getStockQty() + "</b></html>"
+                                        : s.getStockQty()),
+                        s.getUnit() == null ? "" : s.getUnit(),
+                        s.getMinStock() == null ? "" : s.getMinStock(),
+                        isLow ? "low" : "ok"
                 });
                 currentList.add(s);
             }
@@ -386,62 +379,29 @@ public class AgriSupplyView extends JPanel {
 
     // ── Helpers ───────────────────────────────────────────────
 
-    private JButton makeTabBtn(String text, boolean active) {
-        JButton b = new JButton(text) {
-            @Override protected void paintComponent(Graphics g) {
-                if (getBackground().equals(AppTheme.PRIMARY)) {
-                    Graphics2D g2 = (Graphics2D)g.create();
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(getBackground());
-                    g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 6, 6));
-                    g2.dispose();
-                }
-                super.paintComponent(g);
-            }
-        };
-        b.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        b.setFocusPainted(false);
-        b.setBorderPainted(false);
-        b.setContentAreaFilled(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setPreferredSize(new Dimension(110, 32));
-        
-        if (active) {
-            b.setBackground(AppTheme.PRIMARY);
-            b.setForeground(Color.WHITE);
-        } else {
-            b.setBackground(new Color(0xF1F5F9));
-            b.setForeground(AppTheme.TEXT_SECONDARY);
-        }
-        return b;
-    }
-
-    private void activateTab(JButton active) {
-        for (JButton b : new JButton[]{tabBtnImport, tabBtnCost}) {
-            boolean isActive = (b == active);
-            b.setBackground(isActive ? AppTheme.PRIMARY : new Color(0xF1F5F9));
-            b.setForeground(isActive ? Color.WHITE : AppTheme.TEXT_SECONDARY);
-        }
-        repaint();
-    }
-
     private JTable buildSimpleTable(String[] cols, String[][] rows) {
         DefaultTableModel m = new DefaultTableModel(rows, cols) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         JTable t = new JTable(m);
-        t.setFont(AppTheme.FONT_BODY); t.setRowHeight(30);
+        t.setFont(AppTheme.FONT_BODY);
+        t.setRowHeight(30);
         t.setShowVerticalLines(false);
         t.setGridColor(new Color(0xEEF2F7));
         t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         t.getTableHeader().setBackground(new Color(0xF1F5F9));
         t.getTableHeader().setForeground(AppTheme.TEXT_SECONDARY);
         t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable tb, Object val,
+            @Override
+            public Component getTableCellRendererComponent(JTable tb, Object val,
                     boolean sel, boolean foc, int row, int col) {
                 Component c = super.getTableCellRendererComponent(tb, val, sel, foc, row, col);
-                if (!sel) c.setBackground(row%2==0 ? Color.WHITE : new Color(0xF8FAFC));
-                ((JLabel)c).setBorder(new EmptyBorder(0,10,0,10));
+                if (!sel)
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(0xF8FAFC));
+                ((JLabel) c).setBorder(new EmptyBorder(0, 10, 0, 10));
                 return c;
             }
         });
@@ -450,18 +410,19 @@ public class AgriSupplyView extends JPanel {
 
     private JPanel makeCard() {
         JPanel p = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(Color.WHITE);
-                g2.fill(new RoundRectangle2D.Double(0,0,getWidth(),getHeight(),10,10));
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 10, 10));
                 g2.setColor(AppTheme.BORDER_LIGHT);
-                g2.draw(new RoundRectangle2D.Double(0,0,getWidth()-1,getHeight()-1,10,10));
+                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 10, 10));
                 g2.dispose();
             }
         };
         p.setOpaque(false);
-        p.setBorder(new EmptyBorder(14,14,14,14));
+        p.setBorder(new EmptyBorder(14, 14, 14, 14));
         return p;
     }
 
@@ -469,23 +430,26 @@ public class AgriSupplyView extends JPanel {
 
     static class MasterRowRenderer extends DefaultTableCellRenderer {
         static final Color LOW_BG = new Color(0xFFF5F5);
-        @Override public Component getTableCellRendererComponent(JTable t, Object val,
+
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object val,
                 boolean sel, boolean foc, int row, int col) {
             JLabel c = (JLabel) super.getTableCellRendererComponent(t, val, sel, foc, row, col);
-            String status = t.getModel().getValueAt(row, 5)==null ? "ok" : t.getModel().getValueAt(row, 5).toString();
+            String status = t.getModel().getValueAt(row, 5) == null ? "ok" : t.getModel().getValueAt(row, 5).toString();
             if (!sel) {
                 c.setBackground("low".equals(status) ? LOW_BG : Color.WHITE);
             }
-            c.setFont("low".equals(status) && col==2 ? new Font("Segoe UI",Font.BOLD,13) : AppTheme.FONT_BODY);
-            c.setBorder(new EmptyBorder(0,12,0,12));
+            c.setFont("low".equals(status) && col == 2 ? new Font("Segoe UI", Font.BOLD, 13) : AppTheme.FONT_BODY);
+            c.setBorder(new EmptyBorder(0, 12, 0, 12));
             return c;
         }
     }
 
     static class StatusDotRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable t, Object val,
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object val,
                 boolean sel, boolean foc, int row, int col) {
-            String status = val==null ? "ok" : val.toString();
+            String status = val == null ? "ok" : val.toString();
             boolean isLow = "low".equals(status);
 
             JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
@@ -499,7 +463,7 @@ public class AgriSupplyView extends JPanel {
                 JLabel lbl = new JLabel("Thấp");
                 lbl.setFont(new Font("Segoe UI", Font.BOLD, 10));
                 lbl.setForeground(new Color(0xE63946));
-                p.add(dot); 
+                p.add(dot);
                 p.add(lbl);
             } else {
                 p.add(dot);

@@ -78,8 +78,11 @@ public class AgriSupplyView extends JPanel {
     }
 
     private JPanel buildFilterRow() {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        JPanel row = new JPanel(new BorderLayout());
         row.setBackground(AppTheme.BG_MAIN);
+
+        JPanel leftFilters = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        leftFilters.setOpaque(false);
 
         JLabel lblCat = new JLabel("Loại vật tư:");
         lblCat.setFont(AppTheme.FONT_BODY);
@@ -99,9 +102,26 @@ public class AgriSupplyView extends JPanel {
         txtSearch.setPreferredSize(new Dimension(200, 32));
         txtSearch.addActionListener(e -> refreshTable());
 
-        row.add(lblCat);
-        row.add(cboCat);
-        row.add(txtSearch);
+        leftFilters.add(lblCat);
+        leftFilters.add(cboCat);
+        leftFilters.add(txtSearch);
+
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        rightActions.setOpaque(false);
+        JButton btnAdd = new JButton("+ Thêm vật tư");
+        btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setBackground(AppTheme.SUCCESS);
+        btnAdd.setBorderPainted(false);
+        btnAdd.setFocusPainted(false);
+        btnAdd.setOpaque(true);
+        btnAdd.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnAdd.setPreferredSize(new Dimension(130, 32));
+        btnAdd.addActionListener(e -> showAddDialog());
+        rightActions.add(btnAdd);
+
+        row.add(leftFilters, BorderLayout.WEST);
+        row.add(rightActions, BorderLayout.EAST);
         return row;
     }
 
@@ -238,6 +258,38 @@ public class AgriSupplyView extends JPanel {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
+
+        // Header Section: Image + Supply info if needed
+        JPanel headerInfoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        headerInfoPanel.setOpaque(false);
+        headerInfoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel imgLabel = new JLabel();
+        imgLabel.setPreferredSize(new Dimension(100, 100));
+        imgLabel.setBorder(BorderFactory.createLineBorder(AppTheme.BORDER_LIGHT, 1));
+        imgLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        String imgPath = "pic/" + supply.getSupplyCode();
+        String[] exts = {".jpg", ".png", ".webp", ".jpeg"};
+        ImageIcon icon = null;
+        for (String ext : exts) {
+            java.io.File f = new java.io.File(imgPath + ext);
+            if (f.exists()) {
+                icon = new ImageIcon(imgPath + ext);
+                Image img = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                imgLabel.setIcon(new ImageIcon(img));
+                break;
+            }
+        }
+        if (icon == null) {
+            imgLabel.setText("Không có ảnh");
+            imgLabel.setFont(AppTheme.FONT_SMALL);
+            imgLabel.setForeground(AppTheme.TEXT_SECONDARY);
+        }
+        
+        headerInfoPanel.add(imgLabel);
+        contentPanel.add(headerInfoPanel);
+        contentPanel.add(Box.createVerticalStrut(24));
 
         // Section 1: Lịch sử nhập kho
         JPanel s1 = buildImportTab(supply);
@@ -460,5 +512,119 @@ public class AgriSupplyView extends JPanel {
             }
             return p;
         }
+    }
+
+    private void showAddDialog() {
+        JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm mới Vật tư", true);
+        d.setSize(500, 420);
+        d.setLocationRelativeTo(this);
+        d.setLayout(new BorderLayout());
+        
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(20, 20, 20, 20));
+        form.setBackground(Color.WHITE);
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(5, 5, 5, 5);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.weightx = 1.0;
+
+        JTextField txtCode = new JTextField();
+        JTextField txtName = new JTextField();
+        JTextField txtUnit = new JTextField();
+        JTextField txtMinStock = new JTextField();
+        JTextField txtStock = new JTextField("0.0"); // Initial stock
+
+        addGridRow(form, g, "Mã VT (VD: AS015):", txtCode, 0);
+        addGridRow(form, g, "Tên vật tư:", txtName, 1);
+        addGridRow(form, g, "Đơn vị tính:", txtUnit, 2);
+        addGridRow(form, g, "Định mức tối thiểu:", txtMinStock, 3);
+        addGridRow(form, g, "Tồn kho ban đầu:", txtStock, 4);
+
+        JPanel pnlImg = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pnlImg.setBackground(Color.WHITE);
+        JLabel lblImgFile = new JLabel("Chưa chọn file...");
+        lblImgFile.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        JButton btnImg = new JButton("Chọn file...");
+        java.util.concurrent.atomic.AtomicReference<java.io.File> selectedImage = new java.util.concurrent.atomic.AtomicReference<>();
+        btnImg.addActionListener(ev -> {
+            JFileChooser jfc = new JFileChooser();
+            jfc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image files", "jpg", "jpeg", "png", "webp"));
+            if (jfc.showOpenDialog(d) == JFileChooser.APPROVE_OPTION) {
+                selectedImage.set(jfc.getSelectedFile());
+                lblImgFile.setText(jfc.getSelectedFile().getName());
+            }
+        });
+        pnlImg.add(btnImg);
+        pnlImg.add(Box.createHorizontalStrut(10));
+        pnlImg.add(lblImgFile);
+        addGridRow(form, g, "Ảnh đại diện:", pnlImg, 5);
+
+        d.add(form, BorderLayout.CENTER);
+
+        JPanel bot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bot.setBackground(Color.WHITE);
+        bot.setBorder(new EmptyBorder(10, 20, 20, 20));
+        
+        JButton btnCancel = new JButton("Hủy");
+        btnCancel.addActionListener(e -> d.dispose());
+        JButton btnSave = new JButton("Lưu");
+        btnSave.addActionListener(e -> {
+            try {
+                AgriSupplyDTO dto = new AgriSupplyDTO();
+                dto.setSupplyCode(txtCode.getText().trim());
+                dto.setName(txtName.getText().trim());
+                dto.setUnit(txtUnit.getText().trim());
+                dto.setMinStock(Double.parseDouble(txtMinStock.getText().trim()));
+                dto.setStockQty(Double.parseDouble(txtStock.getText().trim()));
+                
+                ctrl.createAgriSupply(dto);
+                
+                // Lưu ảnh nếu có chọn
+                if (selectedImage.get() != null) {
+                    try {
+                        String code = dto.getSupplyCode().trim();
+                        String originalName = selectedImage.get().getName();
+                        String ext = "";
+                        int idx = originalName.lastIndexOf('.');
+                        if (idx > 0) ext = originalName.substring(idx);
+                        
+                        java.io.File picDir = new java.io.File("pic");
+                        if (!picDir.exists()) picDir.mkdirs();
+                        
+                        java.io.File dest = new java.io.File(picDir, code + ext);
+                        java.nio.file.Files.copy(selectedImage.get().toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception exx) {
+                        System.err.println("Không thể lưu ảnh vật tư: " + exx.getMessage());
+                    }
+                }
+                
+                d.dispose();
+                refreshTable();
+                JOptionPane.showMessageDialog(this, "Thêm vật tư thành công!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lưu vật tư: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        bot.add(btnCancel);
+        bot.add(btnSave);
+        d.add(bot, BorderLayout.SOUTH);
+        d.setVisible(true);
+    }
+
+    private void addGridRow(JPanel form, GridBagConstraints g, String label, JComponent field, int row) {
+        g.gridy = row;
+        g.gridx = 0; g.weightx = 0.3;
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(AppTheme.FONT_BODY);
+        form.add(lbl, g);
+        g.gridx = 1; g.weightx = 0.7;
+        if(field instanceof JTextField) {
+            field.setFont(AppTheme.FONT_BODY);
+            field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(AppTheme.BORDER, 1, true),
+                new EmptyBorder(5, 10, 5, 10)));
+        }
+        form.add(field, g);
     }
 }

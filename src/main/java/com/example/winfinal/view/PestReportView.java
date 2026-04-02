@@ -85,6 +85,7 @@ public class PestReportView extends JPanel {
 
         JButton btnAdd = UiUtils.createDangerButton("+ Báo cáo mới");
         btnAdd.setPreferredSize(new Dimension(140, 32));
+        btnAdd.addActionListener(e -> showAddDialog());
         
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         right.setOpaque(false);
@@ -279,5 +280,96 @@ public class PestReportView extends JPanel {
                 } catch (Exception ex) { ex.printStackTrace(); }
             }
         }.execute();
+    }
+
+    private void showAddDialog() {
+        JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm Báo cáo Sâu bệnh", true);
+        d.setSize(450, 450);
+        d.setLocationRelativeTo(this);
+        d.setLayout(new BorderLayout());
+        
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(20, 20, 20, 20));
+        form.setBackground(Color.WHITE);
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(5, 5, 5, 5);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.weightx = 1.0;
+
+        // Lot Selection
+        JComboBox<String> cbFormLot = new JComboBox<>();
+        try {
+            for (ProductionLotDTO l : lotCtrl.getAllLots()) cbFormLot.addItem(l.getId() + " - " + l.getLotCode());
+        } catch (Exception ignored) {}
+        
+        // Pest Name
+        JTextField txtName = new JTextField();
+        
+        // Damage Percentage
+        JTextField txtDamage = new JTextField();
+        
+        // Severity
+        JComboBox<String> cbFormSev = new JComboBox<>(new String[]{"CRITICAL", "HIGH", "MEDIUM", "LOW"});
+        
+        // Treatment
+        JTextField txtTreatment = new JTextField();
+
+        addGridRow(form, g, "Lô SX:", cbFormLot, 0);
+        addGridRow(form, g, "Tên sâu bệnh:", txtName, 1);
+        addGridRow(form, g, "Mức độ thiệt hại (%):", txtDamage, 2);
+        addGridRow(form, g, "Nghiêm trọng:", cbFormSev, 3);
+        addGridRow(form, g, "Biện pháp xử lý:", txtTreatment, 4);
+
+        d.add(form, BorderLayout.CENTER);
+
+        JPanel bot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bot.setBackground(Color.WHITE);
+        bot.setBorder(new EmptyBorder(10, 20, 20, 20));
+        
+        JButton btnCancel = UiUtils.createSecondaryButton("Hủy");
+        btnCancel.addActionListener(e -> d.dispose());
+        JButton btnSave = UiUtils.createPrimaryButton("Lưu báo cáo");
+        btnSave.addActionListener(e -> {
+            try {
+                PestReportDTO p = new PestReportDTO();
+                if (cbFormLot.getSelectedItem() != null) {
+                    String sel = cbFormLot.getSelectedItem().toString();
+                    p.setLotId(Long.parseLong(sel.split(" - ")[0]));
+                }
+                p.setPestName(txtName.getText().trim());
+                p.setDamagePct(Double.parseDouble(txtDamage.getText().trim()));
+                p.setSeverityCode(cbFormSev.getSelectedItem().toString());
+                p.setTreatment(txtTreatment.getText().trim());
+                p.setEmployeeId(2L); // Default or mocked currently configured employee
+
+                ctrl.createReport(p);
+                d.dispose();
+                refreshData();
+                JOptionPane.showMessageDialog(this, "Thêm báo cáo thành công!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lưu báo cáo: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        bot.add(btnCancel);
+        bot.add(btnSave);
+        d.add(bot, BorderLayout.SOUTH);
+        d.setVisible(true);
+    }
+
+    private void addGridRow(JPanel form, GridBagConstraints g, String label, JComponent field, int row) {
+        g.gridy = row;
+        g.gridx = 0; g.weightx = 0.3;
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(AppTheme.FONT_BODY);
+        form.add(lbl, g);
+        g.gridx = 1; g.weightx = 0.7;
+        if(field instanceof JTextField) {
+            field.setFont(AppTheme.FONT_BODY);
+            field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(AppTheme.BORDER, 1, true),
+                new EmptyBorder(5, 10, 5, 10)));
+        }
+        form.add(field, g);
     }
 }

@@ -153,10 +153,10 @@ public class ReportView extends JPanel {
         c3.add(c3center,BorderLayout.CENTER);
         grid.add(c3);
 
-        // Card 4 – [3.3] Chi phí nhà cung cấp / Weather
+        // Card 4 – Weather
         JPanel c4=makeCard();
         c4.setLayout(new BorderLayout(0,8));
-        JLabel t4=new JLabel("Báo cáo Chi phí theo Nhà cung cấp");
+        JLabel t4=new JLabel("Thống kê Lượng mưa theo tháng (Tổng hợp)");
         t4.setFont(AppTheme.FONT_SUBTITLE); t4.setForeground(AppTheme.TEXT_PRIMARY);
         weatherChart=new WeatherLiveChart();
         c4.add(t4,BorderLayout.NORTH);
@@ -170,7 +170,8 @@ public class ReportView extends JPanel {
 
     private void loadData() {
         new SwingWorker<Void,Void>(){
-            List<Object[]> custStats, topLots, costBySupplier, costByLot;
+            List<Object[]> custStats, topLots, costByLot;
+            List<com.example.winfinal.entity.operation.WeatherLog> weatherLogs;
 
             @Override
             protected Void doInBackground(){
@@ -178,8 +179,8 @@ public class ReportView extends JPanel {
                 try{ custStats=harvestCtrl.getCustomerYieldStats(); }catch(Exception e){custStats=List.of();}
                 // [6.2] Top lô sản lượng cao
                 try{ topLots=lotCtrl.getTopYieldingLots(6); }catch(Exception e){topLots=List.of();}
-                // [3.3] Chi phí nhà cung cấp
-                try{ costBySupplier=importCtrl.getTotalCostBySupplier(); }catch(Exception e){costBySupplier=List.of();}
+                // Lấy tất cả dữ liệu thời tiết
+                try{ weatherLogs=weatherCtrl.getAllLogs(); }catch(Exception e){weatherLogs=List.of();}
                 // [6.6] Ước tính chi phí theo lô
                 try{ costByLot=importCtrl.getCostEstimateByLot(); }catch(Exception e){costByLot=List.of();}
                 return null;
@@ -216,15 +217,28 @@ public class ReportView extends JPanel {
                 if(financeModel.getRowCount()==0)
                     financeModel.addRow(new Object[]{"Chưa có dữ liệu","",""});
 
-                // [3.3] → Weather/supplier cost chart
-                if(costBySupplier!=null && !costBySupplier.isEmpty()){
-                    int n=costBySupplier.size();
-                    String[]lbl=new String[n]; double[]val=new double[n];
-                    for(int i=0;i<n;i++){
-                        lbl[i]=costBySupplier.get(i)[0]==null?"?":costBySupplier.get(i)[0].toString();
-                        val[i]=costBySupplier.get(i)[1]==null?0:((Number)costBySupplier.get(i)[1]).doubleValue();
+                // → Weather chart
+                if(weatherLogs!=null && !weatherLogs.isEmpty()){
+                    java.util.Map<Integer, Double> monthRain = new java.util.TreeMap<>(); // Key: Month (1-12)
+                    for(var w : weatherLogs){
+                        if(w.getWeatherDate() != null) {
+                            java.util.Calendar cal = java.util.Calendar.getInstance();
+                            cal.setTime(w.getWeatherDate());
+                            int m = cal.get(java.util.Calendar.MONTH) + 1;
+                            monthRain.merge(m, w.getRainfallMm() == null ? 0 : w.getRainfallMm(), Double::sum);
+                        }
                     }
-                    weatherChart.setData(lbl,val);
+                    int n = monthRain.size();
+                    if(n > 0){
+                        String[] lbl = new String[n]; double[] val = new double[n];
+                        int idx = 0;
+                        for(java.util.Map.Entry<Integer, Double> e : monthRain.entrySet()){
+                            lbl[idx] = "Th " + e.getKey();
+                            val[idx] = e.getValue();
+                            idx++;
+                        }
+                        weatherChart.setData(lbl,val);
+                    }
                 }
             }
         }.execute();
@@ -413,15 +427,15 @@ public class ReportView extends JPanel {
             }
             g2.setColor(AppTheme.TEXT_SECONDARY);
             g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
-            g2.drawString("Triệu VND",padL,padT-2);
+            g2.drawString("Lượng mưa (mm)",padL-10,padT-2);
             for(int i=0;i<n;i++){
                 int bH=(int)(values[i]/maxV*H); int x=padL+i*(barW+barGap),y=padT+H-bH;
                 g2.setColor(COLORS[i%COLORS.length]);
                 g2.fill(new RoundRectangle2D.Double(x,y,barW,bH,5,5));
                 g2.setColor(AppTheme.TEXT_PRIMARY); g2.setFont(new Font("Segoe UI",Font.BOLD,10));
-                String vs=String.format("%.0ftr",values[i]/1000000);
+                String vs=String.format("%.1f",values[i]);
                 g2.drawString(vs,x+(barW-g2.getFontMetrics().stringWidth(vs))/2,y-3);
-                g2.setColor(AppTheme.TEXT_SECONDARY); g2.setFont(new Font("Segoe UI",Font.PLAIN,8));
+                g2.setColor(AppTheme.TEXT_SECONDARY); g2.setFont(new Font("Segoe UI",Font.PLAIN,9));
                 String lbl=labels[i].length()>10?labels[i].substring(0,9)+"…":labels[i];
                 g2.drawString(lbl,x+(barW-g2.getFontMetrics().stringWidth(lbl))/2,padT+H+18);
             }

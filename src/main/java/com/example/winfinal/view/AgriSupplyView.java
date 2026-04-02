@@ -637,12 +637,34 @@ public class AgriSupplyView extends JPanel {
         JTextField txtNewStock = new JTextField();
         txtNewStock.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
+        JTextField txtDate = new JTextField(new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date()));
+        JTextField txtImportCode = new JTextField();
+        txtImportCode.putClientProperty("JTextField.placeholderText", "Ví dụ: PN-" + System.currentTimeMillis() / 100000);
+        
+        JComboBox<com.example.winfinal.dto.SupplierDTO> cboSupplier = new JComboBox<>();
+        try {
+            var suppliers = new com.example.winfinal.controller.SupplierController().getAllSuppliers();
+            for (var s : suppliers) cboSupplier.addItem(s);
+        } catch (Exception ignored) {}
+        cboSupplier.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object val, int idx, boolean sel, boolean foc) {
+                super.getListCellRendererComponent(list, val, idx, sel, foc);
+                if (val instanceof com.example.winfinal.dto.SupplierDTO s) setText(s.getName());
+                return this;
+            }
+        });
+
         addGridRow(form, g, "Mã vật tư:", txtCode, 0);
         addGridRow(form, g, "Tên vật tư:", txtName, 1);
         addGridRow(form, g, "Tồn kho hiện tại:", txtCurrentStock, 2);
         addGridRow(form, g, "Số lượng tồn mới:", txtNewStock, 3);
+        addGridRow(form, g, "Ngày nhập kho:", txtDate, 4);
+        addGridRow(form, g, "Mã phiếu nhập:", txtImportCode, 5);
+        addGridRow(form, g, "Nhà cung cấp:", cboSupplier, 6);
 
         d.add(form, BorderLayout.CENTER);
+        d.setSize(440, 480);
 
         JPanel bot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         bot.setBackground(Color.WHITE);
@@ -679,8 +701,39 @@ public class AgriSupplyView extends JPanel {
                     throw new Exception("Số lượng tồn kho không được nhỏ hơn 0.");
                 }
 
+                double oldQty = selectedSupply.getStockQty() != null ? selectedSupply.getStockQty() : 0.0;
                 selectedSupply.setStockQty(newQty);
                 ctrl.updateAgriSupply(selectedSupply);
+                
+                // Record the import if metadata is provided
+                double diff = newQty - oldQty;
+                String iCode = txtImportCode.getText().trim();
+                com.example.winfinal.dto.SupplierDTO selectedSup = (com.example.winfinal.dto.SupplierDTO) cboSupplier.getSelectedItem();
+                
+                if (!iCode.isEmpty() || selectedSup != null) {
+                    try {
+                        com.example.winfinal.dto.SupplyImportDTO importRecord = new com.example.winfinal.dto.SupplyImportDTO();
+                        importRecord.setImportCode(iCode.isEmpty() ? "PN-AUTODEV-" + System.currentTimeMillis() / 10000 : iCode);
+                        if (selectedSup != null) importRecord.setSupplierId(selectedSup.getId());
+                        
+                        try {
+                            importRecord.setImportDate(new java.text.SimpleDateFormat("dd/MM/yyyy").parse(txtDate.getText().trim()));
+                        } catch (Exception dpe) {
+                            importRecord.setImportDate(new java.util.Date());
+                        }
+                        
+                        com.example.winfinal.dto.SupplyImportDetailDTO detail = new com.example.winfinal.dto.SupplyImportDetailDTO();
+                        detail.setSupplyId(selectedSupply.getId());
+                        detail.setQuantity(diff); // Representing the change
+                        detail.setUnitPrice(java.math.BigDecimal.ZERO);
+                        
+                        importRecord.setDetails(java.util.List.of(detail));
+                        
+                        new com.example.winfinal.controller.SupplyImportController().createImport(importRecord);
+                    } catch (Exception exx) {
+                        System.err.println("Warning: Metadata update history could not be saved: " + exx.getMessage());
+                    }
+                }
 
                 d.dispose();
                 int selectedRow = masterTable.getSelectedRow();
